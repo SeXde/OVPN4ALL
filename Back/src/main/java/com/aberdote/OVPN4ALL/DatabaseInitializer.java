@@ -20,7 +20,7 @@ public class DatabaseInitializer {
 
     @PostConstruct
     public void populateDatabase () {
-       userService.addUser(new CreateUserRequestDTO("Admin",
+       userService.addUser(new CreateUserRequestDTO("Admin","dummy@mail.com",
                "Admin",
                List.of(new RoleDTO(RoleConstants.ROLE_OWNER))));
     }

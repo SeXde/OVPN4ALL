@@ -19,14 +19,18 @@ public class UserEntity {
 
     @NotNull @Column(unique = true)
     private String name;
+
+    @NotNull
+    private String email;
     @NotNull
     private String password;
     private LocalDate createdAt;
     @ManyToMany(cascade = CascadeType.ALL)
     private Set<RoleEntity> roles = new HashSet<>();
 
-    public UserEntity(String name, String password, Set<RoleEntity> roles) {
+    public UserEntity(String name, String password, Set<RoleEntity> roles, String email) {
         this.name = name;
+        this.email = email;
         this.password = password;
         this.roles = roles;
         createdAt = LocalDate.now();
