@@ -11,6 +11,7 @@ import com.aberdote.OVPN4ALL.repository.RoleRepository;
 import com.aberdote.OVPN4ALL.service.UserService;
 import com.aberdote.OVPN4ALL.util.Converter;
 import com.aberdote.OVPN4ALL.repository.UserRepository;
+import com.aberdote.OVPN4ALL.util.validator.user.UserValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,8 +28,6 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
-import static com.aberdote.OVPN4ALL.util.Validator.validateRole;
-
 @Slf4j @Service
 @Transactional @RequiredArgsConstructor
 public class UserServiceImpl implements UserService, UserDetailsService {
@@ -44,6 +43,11 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     @Override
     public ErrorDTO addUser(CreateUserRequestDTO createUserRequestDTO) {
         final ErrorDTO errorDTO = new ErrorDTO(null);
+        if (!UserValidator.validateEmail(createUserRequestDTO.getEmail())) {
+            log.error("email {} is mot valid", createUserRequestDTO.getEmail());
+            errorDTO.setError("email "+createUserRequestDTO.getEmail()+" is not valid");
+            return errorDTO;
+        }
         if (userRepository.findByNameIgnoreCase(createUserRequestDTO.getName()).isPresent()) {
             log.error("Cannot add user "+createUserRequestDTO.getName() + " already exists");
             errorDTO.setError("User "+createUserRequestDTO.getName()+" already exists");
@@ -114,7 +118,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
             return errorDTO;
         }
         UserEntity senderUser = senderUserOpt.get();
-        if (!validateRole(senderUser, roleName)) {
+        if (!UserValidator.validateRole(senderUser, roleName)) {
             log.error("User is not allowed to add role "+roleName);
             errorDTO.setError("User is not allowed to add role "+roleName);
             return errorDTO;

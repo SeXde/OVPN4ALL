@@ -6,7 +6,7 @@ import com.aberdote.OVPN4ALL.dto.SetupDTO;
 import com.aberdote.OVPN4ALL.repository.ConfigRepository;
 import com.aberdote.OVPN4ALL.service.ConfigService;
 import com.aberdote.OVPN4ALL.util.Converter;
-import com.aberdote.OVPN4ALL.util.Validator;
+import com.aberdote.OVPN4ALL.util.validator.config.ConfigValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -35,17 +35,17 @@ public class ConfigServiceImpl implements ConfigService {
     public ErrorDTO setConfig(SetupDTO setupDTO) {
         ErrorDTO error = new ErrorDTO(null);
         // config stuff
-        if (!Validator.validatePort(setupDTO.getPort())) {
+        if (!ConfigValidator.validatePort(setupDTO.getPort())) {
             error.setError("Port is not valid.");
             log.error("Cannot save setup, port is not valid");
             return error;
         }
-        if (!Validator.validateIp(setupDTO.getGateway())) {
+        if (!ConfigValidator.validateIp(setupDTO.getGateway())) {
             error.setError("Gateway is not valid.");
             log.error("Cannot save setup, gateway is not valid");
             return error;
         }
-        if (!Validator.validateNetmask(setupDTO.getSubnet())) {
+        if (!ConfigValidator.validateNetmask(setupDTO.getSubnet())) {
             error.setError("Netmask is not valid.");
             log.error("Cannot save setup, netmask is not valid");
             return error;
