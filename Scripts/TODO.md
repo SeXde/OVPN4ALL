@@ -1,0 +1,4 @@
+- Client auto-config
+- Revoke certificate
+- Directory structure for users and server under (~/OVPN4ALL)
+- Don't forget to delete temp files
