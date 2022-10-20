@@ -28,7 +28,8 @@ public class Converter {
                 createUserDTO.getRoles()
                         .stream()
                         .map(roleDTO -> new RoleEntity(roleDTO.getRoleName()))
-                        .collect(Collectors.toSet()));
+                        .collect(Collectors.toSet()),
+                createUserDTO.getEmail());
     }
 
     public static SetupDTO convertDTOSetup(ConfigEntity configEntity) {
