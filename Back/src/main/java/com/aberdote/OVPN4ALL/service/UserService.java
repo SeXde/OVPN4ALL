@@ -10,12 +10,12 @@ import java.util.Collection;
 
 @Service
 public interface UserService {
-    ErrorDTO addUser(CreateUserRequestDTO createUserRequestDTO);
-    ErrorDTO deleteUser(String userName);
-    ErrorDTO deleteUser(Long id);
+    UserResponseDTO addUser(CreateUserRequestDTO createUserRequestDTO);
+    void deleteUser(String userName);
+    void deleteUser(Long id);
     UserResponseDTO getUser(String userName);
     UserResponseDTO getUser(Long id);
     Collection<UserResponseDTO> getUsers();
-    ErrorDTO validateUser(LoginUserRequestDTO loginUserRequestDTO);
-    ErrorDTO addRoleToUser(String sender, String receiver, String roleName);
+    void validateUser(LoginUserRequestDTO loginUserRequestDTO);
+    UserResponseDTO addRoleToUser(String sender, String receiver, String roleName);
 }
