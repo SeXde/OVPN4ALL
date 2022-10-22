@@ -1,12 +1,14 @@
 package com.aberdote.OVPN4ALL.dto.user;
 
 public class JwtResponseDTO {
-    private static final long serialVersionUID = 1L;
-    private final String token;
-    public JwtResponseDTO(String token) {
-        this.token = token;
+    private static final long serialVersionUID = -8091879091924046844L;
+    private final String jwttoken;
+
+    public JwtResponseDTO(String jwttoken) {
+        this.jwttoken = jwttoken;
     }
+
     public String getToken() {
-        return token;
+        return this.jwttoken;
     }
 }

@@ -29,6 +29,7 @@ public class UserServiceImpl implements UserService {
 
 
 
+
     @Override
     public UserResponseDTO addUser(CreateUserRequestDTO createUserRequestDTO) {
         if (!UserValidator.validateEmail(createUserRequestDTO.getEmail())) {
@@ -82,7 +83,7 @@ public class UserServiceImpl implements UserService {
             log.error("User {} has not privileges", user.getName());
             throw new CustomException("User "+user.getName()+" has not privileges", HttpStatus.UNAUTHORIZED);
         }
-        else if (user.getPassword().equals(loginUserRequestDTO.getPassword())){
+        else if (!user.getPassword().equals(loginUserRequestDTO.getPassword())){
             log.info("Password is not correct for user {}", user.getName());
             throw new CustomException("Password is not correct for user "+user.getName(), HttpStatus.UNAUTHORIZED);
         }

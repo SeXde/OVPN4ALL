@@ -2,8 +2,11 @@ package com.aberdote.OVPN4ALL.controller;
 
 import com.aberdote.OVPN4ALL.dto.ErrorDTO;
 import com.aberdote.OVPN4ALL.dto.user.CreateUserRequestDTO;
+import com.aberdote.OVPN4ALL.dto.user.JwtResponseDTO;
 import com.aberdote.OVPN4ALL.dto.user.LoginUserRequestDTO;
 import com.aberdote.OVPN4ALL.dto.user.UserResponseDTO;
+import com.aberdote.OVPN4ALL.security.service.JwtUserDetailsService;
+import com.aberdote.OVPN4ALL.security.utils.JwtTokenUtil;
 import com.aberdote.OVPN4ALL.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -16,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collection;
@@ -23,10 +27,15 @@ import java.util.Collection;
 @Slf4j
 @RestController
 @RequestMapping("/api/users")
+@CrossOrigin
 public class UserController {
 
     @Autowired
     private UserService userService;
+    @Autowired
+    private JwtUserDetailsService userDetailsService;
+    @Autowired
+    private JwtTokenUtil jwtTokenUtil;
 
     @Operation(summary = "Save user passed in the body")
     @ApiResponses(value = {
@@ -74,16 +83,18 @@ public class UserController {
 
     @Operation(summary = "Log in user")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "202", description = "User logged in"),
+            @ApiResponse(responseCode = "202", description = "User logged in", content = {@Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = String.class)))}),
             @ApiResponse(responseCode = "400", description = "Wrong data was passed", content = {@Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = ErrorDTO.class)))}),
             @ApiResponse(responseCode = "403", description = "Wrong user credentials", content = {@Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = ErrorDTO.class)))}),
             @ApiResponse(responseCode = "500", description = "Error trying to log in user", content = {@Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = ErrorDTO.class)))})
     })
     @PostMapping("/signIn")
-    public ResponseEntity<Void> signIn(@RequestBody LoginUserRequestDTO loginDTO) {
+    public ResponseEntity<?> signIn(@RequestBody LoginUserRequestDTO loginDTO) {
         log.info("Request to authenticate user {}", loginDTO.getName());
         userService.validateUser(loginDTO);
-        return ResponseEntity.status(HttpStatus.ACCEPTED).build();
+        final UserDetails userDetails = userDetailsService.loadUserByUsername(loginDTO.getName());
+        final String token = jwtTokenUtil.generateToken(userDetails);
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(new JwtResponseDTO(token));
     }
 
     @Operation(summary = "Delete user")
