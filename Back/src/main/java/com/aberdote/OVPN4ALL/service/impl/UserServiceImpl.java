@@ -15,21 +15,20 @@ import com.aberdote.OVPN4ALL.utils.validator.user.UserValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.util.Collection;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j @Service
 @Transactional @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
-
-
-
-
+    private final PasswordEncoder bCryptPasswordEncoder;
     @Override
     public UserResponseDTO addUser(CreateUserRequestDTO createUserRequestDTO) {
         if (!UserValidator.validateEmail(createUserRequestDTO.getEmail())) {
@@ -40,9 +39,21 @@ public class UserServiceImpl implements UserService {
             log.error("Cannot add user {} already exists", createUserRequestDTO.getName());
             throw new CustomException("User "+createUserRequestDTO.getName()+" already exists", HttpStatus.BAD_REQUEST);
         }
+        if (!createUserRequestDTO.getRoles().stream().allMatch(role -> roleRepository.findByRoleName(role.getRoleName()).isPresent())) {
+            log.error("Cannot add user {} some roles are not correct", createUserRequestDTO.getName());
+            throw new CustomException("Cannot add user "+createUserRequestDTO.getName()+" some roles are not correct", HttpStatus.BAD_REQUEST);
+        }
         log.info("Adding user {}", createUserRequestDTO.getName());
         final UserEntity userEntity = Converter.convertFromDTOUser(createUserRequestDTO);
-        userEntity.setPassword(userEntity.getPassword());
+        userEntity.setRoles(createUserRequestDTO.getRoles().stream()
+                .map(role -> roleRepository.findByRoleName(role.getRoleName())
+                        .orElseThrow(() -> {
+                            log.error("Cannot add user {}, role {} doesn't exist", createUserRequestDTO.getName(), role.getRoleName());
+                            throw new CustomException("Cannot add user "+createUserRequestDTO.getName()+" role "+role.getRoleName()+" doesn't exist", HttpStatus.BAD_REQUEST);
+                        }))
+                .collect(Collectors.toSet())
+        );
+        userEntity.setPassword(bCryptPasswordEncoder.encode(userEntity.getPassword()));
         return Converter.convertDTOUser(userRepository.save(userEntity));
     }
 
@@ -83,7 +94,7 @@ public class UserServiceImpl implements UserService {
             log.error("User {} has not privileges", user.getName());
             throw new CustomException("User "+user.getName()+" has not privileges", HttpStatus.UNAUTHORIZED);
         }
-        else if (!user.getPassword().equals(loginUserRequestDTO.getPassword())){
+        if (!bCryptPasswordEncoder.matches(loginUserRequestDTO.getPassword(), user.getPassword())){
             log.info("Password is not correct for user {}", user.getName());
             throw new CustomException("Password is not correct for user "+user.getName(), HttpStatus.UNAUTHORIZED);
         }
@@ -110,7 +121,7 @@ public class UserServiceImpl implements UserService {
                         throw new CustomException("Role "+roleName+" not found", HttpStatus.NOT_FOUND);
                     }
                     user.getRoles().add(roleEntityOpt.get());
-                    userRepository.save(user);
+                    // userRepository.save(user);
                     log.info("User "+receiver+" has got new role: "+roleName);
                     return Converter.convertDTOUser(user);
                 })
@@ -120,28 +131,24 @@ public class UserServiceImpl implements UserService {
                 });
     }
 
-    private boolean isAdmin(UserEntity userEntity) {
+    private boolean isRole(UserEntity userEntity, String roleName) {
         return userEntity.getRoles()
                 .stream()
                 .map(RoleEntity::getRoleName)
                 .toList()
-                .contains(RoleConstants.ROLE_ADMIN);
+                .contains(roleName);
+    }
+
+    private boolean isAdmin(UserEntity userEntity) {
+        return isRole(userEntity, RoleConstants.ROLE_ADMIN);
     }
 
     private boolean isUser(UserEntity userEntity) {
-        return userEntity.getRoles()
-                .stream()
-                .map(RoleEntity::getRoleName)
-                .toList()
-                .contains(RoleConstants.ROLE_USER);
+        return isRole(userEntity, RoleConstants.ROLE_USER);
     }
 
     private boolean isOwner(UserEntity userEntity) {
-        return userEntity.getRoles()
-                .stream()
-                .map(RoleEntity::getRoleName)
-                .toList()
-                .contains(RoleConstants.ROLE_OWNER);
+        return isRole(userEntity, RoleConstants.ROLE_OWNER);
     }
 
     private boolean isLastOwner(UserEntity userEntity) {

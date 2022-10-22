@@ -1,14 +1,12 @@
 package com.aberdote.OVPN4ALL.utils;
 
-import com.aberdote.OVPN4ALL.dto.user.CreateUserRequestDTO;
 import com.aberdote.OVPN4ALL.dto.RoleDTO;
 import com.aberdote.OVPN4ALL.dto.SetupDTO;
+import com.aberdote.OVPN4ALL.dto.user.CreateUserRequestDTO;
 import com.aberdote.OVPN4ALL.dto.user.UserResponseDTO;
 import com.aberdote.OVPN4ALL.entity.ConfigEntity;
 import com.aberdote.OVPN4ALL.entity.RoleEntity;
 import com.aberdote.OVPN4ALL.entity.UserEntity;
-
-import java.util.stream.Collectors;
 
 public class Converter {
 
@@ -24,16 +22,21 @@ public class Converter {
 
     public static UserEntity convertFromDTOUser(CreateUserRequestDTO createUserDTO) {
         return new UserEntity(createUserDTO.getName(),
-                createUserDTO.getPassword(),
-                createUserDTO.getRoles()
-                        .stream()
-                        .map(roleDTO -> new RoleEntity(roleDTO.getRoleName()))
-                        .collect(Collectors.toSet()),
-                createUserDTO.getEmail());
+                createUserDTO.getEmail(),
+                createUserDTO.getPassword()
+        );
     }
 
     public static SetupDTO convertDTOSetup(ConfigEntity configEntity) {
         return new SetupDTO(configEntity.getPort(), configEntity.getGateway(), configEntity.getNetmask());
+    }
+
+    public static RoleDTO convertDTOSetup(RoleEntity roleEntity) {
+        return new RoleDTO(roleEntity.getRoleName());
+    }
+
+    public static RoleEntity convertFromDTORole(RoleDTO roleDTO) {
+        return new RoleEntity(roleDTO.getRoleName());
     }
 
     public static ConfigEntity convertFromDTOSetup(SetupDTO setupDTO) {
