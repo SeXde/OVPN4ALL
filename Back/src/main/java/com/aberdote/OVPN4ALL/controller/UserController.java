@@ -1,38 +1,48 @@
 package com.aberdote.OVPN4ALL.controller;
 
-import com.aberdote.OVPN4ALL.dto.SetupDTO;
-import com.aberdote.OVPN4ALL.dto.user.CreateUserRequestDTO;
 import com.aberdote.OVPN4ALL.dto.ErrorDTO;
+import com.aberdote.OVPN4ALL.dto.user.CreateUserRequestDTO;
+import com.aberdote.OVPN4ALL.dto.user.JwtResponseDTO;
 import com.aberdote.OVPN4ALL.dto.user.LoginUserRequestDTO;
 import com.aberdote.OVPN4ALL.dto.user.UserResponseDTO;
+import com.aberdote.OVPN4ALL.security.service.JwtUserDetailsService;
+import com.aberdote.OVPN4ALL.security.utils.JwtTokenUtil;
 import com.aberdote.OVPN4ALL.service.UserService;
-import com.aberdote.OVPN4ALL.service.impl.UserServiceImpl;
-import io.swagger.annotations.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.RequiredArgsConstructor;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collection;
 
 @Slf4j
-@RestController @RequiredArgsConstructor
-@RequestMapping("/api/users") @CrossOrigin(maxAge = 3600)
-@Api(value="User management API", tags = {"With this API we can set server configuration or change it once it's configured"})
+@RestController
+@RequestMapping("/api/users")
+@CrossOrigin
 public class UserController {
 
-    private final UserService userService;
+    @Autowired
+    private UserService userService;
+    @Autowired
+    private JwtUserDetailsService userDetailsService;
+    @Autowired
+    private JwtTokenUtil jwtTokenUtil;
 
-    @ApiOperation(value = "Save user passed in the body", response = UserResponseDTO.class)
+    @Operation(summary = "Save user passed in the body")
     @ApiResponses(value = {
-            @ApiResponse(code = 201, message = "User was saved", response = UserResponseDTO.class),
-            @ApiResponse(code = 400, message = "Wrong data was passed", response = ErrorDTO.class),
-            @ApiResponse(code = 403, message = "Unauthorized access", response = ErrorDTO.class),
-            @ApiResponse(code = 500, message = "Error trying to save user", response = ErrorDTO.class)
+            @ApiResponse(responseCode = "201", description = "User was saved", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = UserResponseDTO.class))}),
+            @ApiResponse(responseCode = "400", description = "Wrong data was passed", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorDTO.class))}),
+            @ApiResponse(responseCode = "403", description = "Unauthorized access", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorDTO.class))}),
+            @ApiResponse(responseCode = "500", description = "Error trying to save user", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorDTO.class))})
     })
     @PostMapping("")
     public ResponseEntity<UserResponseDTO> saveUser(@RequestBody CreateUserRequestDTO createUserDTO) {
@@ -42,12 +52,12 @@ public class UserController {
     }
 
     // TODO paginate users
-    @ApiOperation(value = "Get all users", response = UserResponseDTO.class, responseContainer = "List")
+    @Operation(summary = "Get all users")
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "Users found", response = UserResponseDTO.class, responseContainer = "List"),
-            @ApiResponse(code = 400, message = "Wrong data was passed", response = ErrorDTO.class),
-            @ApiResponse(code = 403, message = "Unauthorized access", response = ErrorDTO.class),
-            @ApiResponse(code = 500, message = "Error trying to get all users", response = ErrorDTO.class)
+            @ApiResponse(responseCode = "200", description = "Users found", content = {@Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = UserResponseDTO.class)))}),
+            @ApiResponse(responseCode = "400", description = "Wrong data was passed", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorDTO.class))}),
+            @ApiResponse(responseCode = "403", description = "Unauthorized access", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorDTO.class))}),
+            @ApiResponse(responseCode = "500", description = "Error trying to get all users", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorDTO.class))})
     })
     @GetMapping("")
     public ResponseEntity<Collection<UserResponseDTO>> getUsers() {
@@ -56,44 +66,46 @@ public class UserController {
         return new ResponseEntity<>(userEntityList, HttpStatus.OK);
     }
 
-    @ApiOperation(value = "Get user by id", response = UserResponseDTO.class)
+    @Operation(summary = "Get user by id")
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "User found", response = UserResponseDTO.class),
-            @ApiResponse(code = 400, message = "Wrong Parameter", response = ErrorDTO.class),
-            @ApiResponse(code = 403, message = "Unauthorized access", response = ErrorDTO.class),
-            @ApiResponse(code = 404, message = "User not found", response = ErrorDTO.class),
-            @ApiResponse(code = 500, message = "Error trying to get user", response = ErrorDTO.class)
+            @ApiResponse(responseCode = "200", description = "User found", content = {@Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = UserResponseDTO.class)))}),
+            @ApiResponse(responseCode = "400", description = "Wrong Parameter", content = {@Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = ErrorDTO.class)))}),
+            @ApiResponse(responseCode = "403", description = "Unauthorized access", content = {@Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = ErrorDTO.class)))}),
+            @ApiResponse(responseCode = "404", description = "User not found", content = {@Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = ErrorDTO.class)))}),
+            @ApiResponse(responseCode = "500", description = "Error trying to get user", content = {@Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = ErrorDTO.class)))})
     })
     @GetMapping("/{id}")
-    public ResponseEntity<UserResponseDTO> getUser(@ApiParam(value = "The id of the user") @PathVariable(required = true) Long id) {
+    public ResponseEntity<UserResponseDTO> getUser(@Parameter(description = "The id of the user") @PathVariable(required = true) Long id) {
         log.info("Request to get user {}", id);
         final UserResponseDTO searchedUser = userService.getUser(id);
         return new ResponseEntity<>(searchedUser, HttpStatus.OK);
     }
 
-    @ApiOperation(value = "Log in user")
+    @Operation(summary = "Log in user")
     @ApiResponses(value = {
-            @ApiResponse(code = 202, message = "User logged in"),
-            @ApiResponse(code = 400, message = "Wrong data was passed", response = ErrorDTO.class),
-            @ApiResponse(code = 403, message = "Wrong user credentials", response = ErrorDTO.class),
-            @ApiResponse(code = 500, message = "Error trying to log in user", response = ErrorDTO.class)
+            @ApiResponse(responseCode = "202", description = "User logged in", content = {@Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = String.class)))}),
+            @ApiResponse(responseCode = "400", description = "Wrong data was passed", content = {@Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = ErrorDTO.class)))}),
+            @ApiResponse(responseCode = "403", description = "Wrong user credentials", content = {@Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = ErrorDTO.class)))}),
+            @ApiResponse(responseCode = "500", description = "Error trying to log in user", content = {@Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = ErrorDTO.class)))})
     })
     @PostMapping("/signIn")
-    public ResponseEntity<Void> signIn(@RequestBody LoginUserRequestDTO loginDTO) {
+    public ResponseEntity<?> signIn(@RequestBody LoginUserRequestDTO loginDTO) {
         log.info("Request to authenticate user {}", loginDTO.getName());
         userService.validateUser(loginDTO);
-        return ResponseEntity.status(HttpStatus.ACCEPTED).build();
+        final UserDetails userDetails = userDetailsService.loadUserByUsername(loginDTO.getName());
+        final String token = jwtTokenUtil.generateToken(userDetails);
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(new JwtResponseDTO(token));
     }
 
-    @ApiOperation(value = "Delete user")
+    @Operation(summary = "Delete user")
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "User deleted"),
-            @ApiResponse(code = 400, message = "Wrong Parameter", response = ErrorDTO.class),
-            @ApiResponse(code = 403, message = "Unauthorized access", response = ErrorDTO.class),
-            @ApiResponse(code = 500, message = "Error trying to delete user", response = ErrorDTO.class)
+            @ApiResponse(responseCode = "200", description = "User deleted"),
+            @ApiResponse(responseCode = "400", description = "Wrong Parameter", content = {@Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = ErrorDTO.class)))}),
+            @ApiResponse(responseCode = "403", description = "Unauthorized access", content = {@Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = ErrorDTO.class)))}),
+            @ApiResponse(responseCode = "500", description = "Error trying to delete user", content = {@Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = ErrorDTO.class)))})
     })
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@ApiParam(value = "The id of the user") @PathVariable(required = true) Long id) {
+    public ResponseEntity<Void> deleteUser(@Parameter(description = "The id of the user") @PathVariable(required = true) Long id) {
         log.info("Request to delete user {}", id);
         userService.deleteUser(id);
         return ResponseEntity.ok().build();

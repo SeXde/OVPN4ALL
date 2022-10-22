@@ -2,43 +2,31 @@ package com.aberdote.OVPN4ALL.service.impl;
 
 import com.aberdote.OVPN4ALL.common.constanst.RoleConstants;
 import com.aberdote.OVPN4ALL.dto.user.CreateUserRequestDTO;
-import com.aberdote.OVPN4ALL.dto.ErrorDTO;
 import com.aberdote.OVPN4ALL.dto.user.LoginUserRequestDTO;
 import com.aberdote.OVPN4ALL.dto.user.UserResponseDTO;
 import com.aberdote.OVPN4ALL.entity.RoleEntity;
 import com.aberdote.OVPN4ALL.entity.UserEntity;
 import com.aberdote.OVPN4ALL.exception.CustomException;
 import com.aberdote.OVPN4ALL.repository.RoleRepository;
-import com.aberdote.OVPN4ALL.service.UserService;
-import com.aberdote.OVPN4ALL.util.Converter;
 import com.aberdote.OVPN4ALL.repository.UserRepository;
-import com.aberdote.OVPN4ALL.util.validator.user.UserValidator;
+import com.aberdote.OVPN4ALL.service.UserService;
+import com.aberdote.OVPN4ALL.utils.Converter;
+import com.aberdote.OVPN4ALL.utils.validator.user.UserValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
+
 import javax.transaction.Transactional;
-import java.nio.charset.StandardCharsets;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.util.*;
+import java.util.Collection;
+import java.util.Optional;
 
 @Slf4j @Service
 @Transactional @RequiredArgsConstructor
-public class UserServiceImpl implements UserService, UserDetailsService {
-
-    @Value("$(auth.cookie.hmac-key:secret.key)")
-    private String secretKey;
+public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
-
     private final RoleRepository roleRepository;
+
 
 
 
@@ -54,7 +42,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         }
         log.info("Adding user {}", createUserRequestDTO.getName());
         final UserEntity userEntity = Converter.convertFromDTOUser(createUserRequestDTO);
-        userEntity.setPassword(this.cipher(userEntity.getPassword()));
+        userEntity.setPassword(userEntity.getPassword());
         return Converter.convertDTOUser(userRepository.save(userEntity));
     }
 
@@ -95,7 +83,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
             log.error("User {} has not privileges", user.getName());
             throw new CustomException("User "+user.getName()+" has not privileges", HttpStatus.UNAUTHORIZED);
         }
-        else if (user.getPassword().equals(this.cipher(loginUserRequestDTO.getPassword()))){
+        else if (!user.getPassword().equals(loginUserRequestDTO.getPassword())){
             log.info("Password is not correct for user {}", user.getName());
             throw new CustomException("Password is not correct for user "+user.getName(), HttpStatus.UNAUTHORIZED);
         }
@@ -130,39 +118,6 @@ public class UserServiceImpl implements UserService, UserDetailsService {
                     log.error("User {} not found", receiver);
                     throw new CustomException("User "+receiver+" not found", HttpStatus.NOT_FOUND);
                 });
-    }
-
-    @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        return userRepository.findByNameIgnoreCase(username)
-                .map((user) -> {
-                    log.info("User {} found in the database", username);
-                    return new org.springframework.security.core.userdetails.User(user.getName(),
-                            user.getPassword(),
-                            user.getRoles()
-                                    .stream()
-                                    .map(role -> new SimpleGrantedAuthority(role.getRoleName())).toList());
-                })
-                .orElseThrow(() -> {
-                    log.error("User {} not found in the database", username);
-                    throw new UsernameNotFoundException("User "+username+" not found");
-                });
-    }
-
-    private String cipher(String username) {
-        byte[] secretKeyBytes = Objects.requireNonNull(secretKey)
-                .getBytes(StandardCharsets.UTF_8);
-        byte [] valueBytes = username
-                .getBytes(StandardCharsets.UTF_8);
-        try {
-            Mac mac = Mac.getInstance("HmacSHA512");
-            SecretKeySpec sec = new SecretKeySpec(secretKeyBytes, "HmacSHA512");
-            mac.init(sec);
-            byte [] hmacBytes = mac.doFinal(valueBytes);
-            return Base64.getEncoder().encodeToString(hmacBytes);
-        } catch (NoSuchAlgorithmException | InvalidKeyException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     private boolean isAdmin(UserEntity userEntity) {

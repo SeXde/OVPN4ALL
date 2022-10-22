@@ -1,7 +1,6 @@
 package com.aberdote.OVPN4ALL.service;
 
 import com.aberdote.OVPN4ALL.dto.user.CreateUserRequestDTO;
-import com.aberdote.OVPN4ALL.dto.ErrorDTO;
 import com.aberdote.OVPN4ALL.dto.user.LoginUserRequestDTO;
 import com.aberdote.OVPN4ALL.dto.user.UserResponseDTO;
 import org.springframework.stereotype.Service;

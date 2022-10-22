@@ -1,1 +1,1 @@
-auth.cookie.hmac-key: my-secret-key
+wt.secret.key: super-secret-key

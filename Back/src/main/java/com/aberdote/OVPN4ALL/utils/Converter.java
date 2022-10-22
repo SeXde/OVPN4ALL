@@ -1,4 +1,4 @@
-package com.aberdote.OVPN4ALL.util;
+package com.aberdote.OVPN4ALL.utils;
 
 import com.aberdote.OVPN4ALL.dto.user.CreateUserRequestDTO;
 import com.aberdote.OVPN4ALL.dto.RoleDTO;
