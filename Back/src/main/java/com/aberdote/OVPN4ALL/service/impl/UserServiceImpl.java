@@ -14,12 +14,15 @@ import com.aberdote.OVPN4ALL.utils.Converter;
 import com.aberdote.OVPN4ALL.utils.validator.user.UserValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -80,6 +83,14 @@ public class UserServiceImpl implements UserService {
     public Collection<UserResponseDTO> getUsers() {
         log.info("Getting all users");
         return userRepository.findAll().stream().map(Converter::convertDTOUser).toList();
+    }
+
+    @Override
+    public Page<UserResponseDTO> getUsersPaginated(int pageNumber, int usersPerPage) {
+        Page<UserEntity> all = userRepository.findAll(PageRequest.of(pageNumber, usersPerPage));
+        Page<UserResponseDTO> map = all.map(Converter::convertDTOUser);
+        List<UserResponseDTO> userResponseDTOS = map.toList();
+        return userRepository.findAll(PageRequest.of(pageNumber, usersPerPage)).map(Converter::convertDTOUser);
     }
 
     @Override

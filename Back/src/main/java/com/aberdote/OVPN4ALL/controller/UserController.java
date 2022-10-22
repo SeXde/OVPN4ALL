@@ -51,8 +51,7 @@ public class UserController {
         return new ResponseEntity<>(userResponseDTO, HttpStatus.CREATED);
     }
 
-    // TODO paginate users
-    @Operation(summary = "Get all users")
+    @Operation(summary = "Get users by page")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Users found", content = {@Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = UserResponseDTO.class)))}),
             @ApiResponse(responseCode = "400", description = "Wrong data was passed", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorDTO.class))}),
@@ -60,10 +59,12 @@ public class UserController {
             @ApiResponse(responseCode = "500", description = "Error trying to get all users", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorDTO.class))})
     })
     @GetMapping("")
-    public ResponseEntity<Collection<UserResponseDTO>> getUsers() {
-        log.info("Request to get all users");
-        final Collection<UserResponseDTO> userEntityList = userService.getUsers();
-        return new ResponseEntity<>(userEntityList, HttpStatus.OK);
+    public ResponseEntity<Collection<UserResponseDTO>> getUsers(@Parameter(description = "Page number index")@RequestParam(required = true)Integer page,
+                                                                @Parameter(description = "NUmber of users retrieved per page")@RequestParam(required = false, defaultValue = "10")Integer limit) {
+
+        log.info("Request to get page {} with {} users", page, limit);
+        final Collection<UserResponseDTO> users = userService.getUsersPaginated(page, limit).toList();
+        return new ResponseEntity<>(users, HttpStatus.OK);
     }
 
     @Operation(summary = "Get user by id")
