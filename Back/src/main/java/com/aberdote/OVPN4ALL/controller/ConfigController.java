@@ -3,10 +3,11 @@ package com.aberdote.OVPN4ALL.controller;
 import com.aberdote.OVPN4ALL.dto.ErrorDTO;
 import com.aberdote.OVPN4ALL.dto.SetupDTO;
 import com.aberdote.OVPN4ALL.service.ConfigService;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,20 +17,20 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j
-@RestController @RequiredArgsConstructor
-@RequestMapping("/api/setup") @CrossOrigin(maxAge = 3600)
-@Api(value="Server configuration API", tags = {"With this API we can set server configuration or change it once it's configured"})
+@RestController
+@RequestMapping("/api/setup")
 public class ConfigController {
 
+    @Autowired
     private ConfigService configService;
 
-    @ApiOperation(value = "Get current server configuration if present", response = SetupDTO.class)
+    @Operation(summary = "Get current server configuration if present")
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "Configuration was found", response = SetupDTO.class),
-            @ApiResponse(code = 400, message = "Wrong data was passed", response = ErrorDTO.class),
-            @ApiResponse(code = 403, message = "Unauthorized access", response = ErrorDTO.class),
-            @ApiResponse(code = 404, message = "Configuration not found", response = ErrorDTO.class),
-            @ApiResponse(code = 500, message = "Error trying to find configuration", response = ErrorDTO.class)
+            @ApiResponse(responseCode = "200", description = "Configuration was found", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = SetupDTO.class))}),
+            @ApiResponse(responseCode = "400", description = "Wrong data was passed", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorDTO.class))}),
+            @ApiResponse(responseCode = "403", description = "Unauthorized access", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorDTO.class))}),
+            @ApiResponse(responseCode = "404", description = "Configuration not found", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorDTO.class))}),
+            @ApiResponse(responseCode = "500", description = "Error trying to find configuration", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorDTO.class))})
     })
     @ResponseStatus(HttpStatus.CREATED)
     @GetMapping(path = "")
@@ -39,12 +40,12 @@ public class ConfigController {
         return new ResponseEntity<>(setupDTO, HttpStatus.OK);
     }
 
-    @ApiOperation(value = "Set or change server configuration", response = SetupDTO.class)
+    @Operation(summary = "Set or change server configuration")
     @ApiResponses(value = {
-            @ApiResponse(code = 201, message = "Configuration was found", response = SetupDTO.class),
-            @ApiResponse(code = 400, message = "Wrong data was passed", response = ErrorDTO.class),
-            @ApiResponse(code = 403, message = "Unauthorized access", response = ErrorDTO.class),
-            @ApiResponse(code = 500, message = "Error trying to set configuration", response = ErrorDTO.class)
+            @ApiResponse(responseCode = "201", description = "Configuration was found", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = SetupDTO.class))}),
+            @ApiResponse(responseCode = "400", description = "Wrong data was passed", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorDTO.class))}),
+            @ApiResponse(responseCode = "403", description = "Unauthorized access", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorDTO.class))}),
+            @ApiResponse(responseCode = "500", description = "Error trying to set configuration", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorDTO.class))})
     })
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("") @Validated

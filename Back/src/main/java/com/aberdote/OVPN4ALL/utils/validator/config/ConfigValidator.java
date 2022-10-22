@@ -1,4 +1,4 @@
-package com.aberdote.OVPN4ALL.util.validator.config;
+package com.aberdote.OVPN4ALL.utils.validator.config;
 
 public class ConfigValidator {
 

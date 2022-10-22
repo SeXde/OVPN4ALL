@@ -1,4 +1,4 @@
-package com.aberdote.OVPN4ALL.util.validator.user;
+package com.aberdote.OVPN4ALL.utils.validator.user;
 
 import com.aberdote.OVPN4ALL.common.constanst.RoleConstants;
 import com.aberdote.OVPN4ALL.entity.RoleEntity;

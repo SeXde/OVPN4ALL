@@ -1,24 +1,26 @@
 package com.aberdote.OVPN4ALL.service.impl;
 
 
-import com.aberdote.OVPN4ALL.dto.ErrorDTO;
 import com.aberdote.OVPN4ALL.dto.SetupDTO;
 import com.aberdote.OVPN4ALL.exception.CustomException;
 import com.aberdote.OVPN4ALL.repository.ConfigRepository;
 import com.aberdote.OVPN4ALL.service.ConfigService;
-import com.aberdote.OVPN4ALL.util.Converter;
-import com.aberdote.OVPN4ALL.util.validator.config.ConfigValidator;
-import lombok.RequiredArgsConstructor;
+import com.aberdote.OVPN4ALL.utils.Converter;
+import com.aberdote.OVPN4ALL.utils.validator.config.ConfigValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 
-@Slf4j @Service @RequiredArgsConstructor @Transactional
+@Slf4j @Service @Transactional
 public class ConfigServiceImpl implements ConfigService {
 
     private final ConfigRepository configRepository;
+
+    public ConfigServiceImpl(ConfigRepository configRepository) {
+        this.configRepository = configRepository;
+    }
 
     @Override
     public SetupDTO getConfig() {
@@ -27,7 +29,7 @@ public class ConfigServiceImpl implements ConfigService {
                 .stream()
                 .findFirst()
                 .map(Converter::convertDTOSetup)
-                .orElseGet(() -> {
+                .orElseThrow(() -> {
                     log.error("No setup was configured");
                     throw new CustomException("No setup was configured", HttpStatus.NOT_FOUND);
                 });
