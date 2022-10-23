@@ -2,7 +2,7 @@
 	import { goto } from '$app/navigation';
 	import ErrorMessage from '$lib/components/errorMessage.svelte';
 	import Header from "$lib/components/header.svelte";
-	import { logAndSetToken } from '../../utils/requestUtils';
+	import { logAndSetToken } from '$lib/utils/requestUtils';
 
 	let username: string, password: string;
 	let postError: string | null = null;

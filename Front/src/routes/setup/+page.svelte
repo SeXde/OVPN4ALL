@@ -3,7 +3,7 @@
     import ErrorMessage from '$lib/components/errorMessage.svelte';
     import {portValidator, gatewayValidator, netmaskValidator} from '$lib/helpers/validators';
     import Header from "$lib/components/header.svelte";
-    import { postWithJWT } from '../../utils/requestUtils';
+    import { postWithJWT } from '$lib/utils/requestUtils';
 
 
     let portTitleErrorMessage: string, gatewayTitleErrorMessage: string, netmaskTitleErrorMessage: string, portBodyErrorMessage: string, gatewayBodyErrorMessage: string, netmaskBodyErrorMessage: string, postError: string;

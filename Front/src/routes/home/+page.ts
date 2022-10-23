@@ -1,4 +1,4 @@
-import { getWithJWT } from '../../utils/requestUtils';
+import { getWithJWT } from '$lib/utils/requestUtils';
 
 export const load = async ({ fetch }) => {
     
