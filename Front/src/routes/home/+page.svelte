@@ -2,6 +2,7 @@
 	import Header from "$lib/components/header.svelte";
 	import Chart from '$lib/components/Chart.svelte';
 	import { goto } from "$app/navigation";
+	
 
 	export let data
 	const [setup, error] = data.setup
