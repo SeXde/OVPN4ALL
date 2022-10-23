@@ -8,7 +8,6 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -32,7 +31,7 @@ public class ConfigController {
             @ApiResponse(responseCode = "404", description = "Configuration not found", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorDTO.class))}),
             @ApiResponse(responseCode = "500", description = "Error trying to find configuration", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorDTO.class))})
     })
-    @ResponseStatus(HttpStatus.CREATED)
+    @ResponseStatus(HttpStatus.OK)
     @GetMapping(path = "")
     public ResponseEntity<SetupDTO> getSetup() {
         log.info("Request to get server config");

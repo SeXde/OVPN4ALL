@@ -27,7 +27,6 @@ import java.util.Collection;
 @Slf4j
 @RestController
 @RequestMapping("/api/users")
-@CrossOrigin
 public class UserController {
 
     @Autowired
@@ -109,6 +108,19 @@ public class UserController {
     public ResponseEntity<Void> deleteUser(@Parameter(description = "The id of the user") @PathVariable(required = true) Long id) {
         log.info("Request to delete user {}", id);
         userService.deleteUser(id);
+        return ResponseEntity.ok().build();
+    }
+
+    @Operation(summary = "Test if token is working")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Token is working"),
+            @ApiResponse(responseCode = "400", description = "Wrong Parameter", content = {@Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = ErrorDTO.class)))}),
+            @ApiResponse(responseCode = "403", description = "Unauthorized access", content = {@Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = ErrorDTO.class)))}),
+            @ApiResponse(responseCode = "500", description = "Error trying to test token", content = {@Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = ErrorDTO.class)))})
+    })
+    @GetMapping("/token")
+    public ResponseEntity<Void> testToken() {
+        log.info("Testing token ...");
         return ResponseEntity.ok().build();
     }
 
