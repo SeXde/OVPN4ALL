@@ -2,8 +2,10 @@
 	import { goto } from '$app/navigation';
 	import ErrorMessage from '$lib/components/errorMessage.svelte';
 	import Header from "$lib/components/header.svelte";
+	import { logAndSetToken } from '../../utils/requestUtils';
+
 	let username: string, password: string;
-	let postError: string = null;
+	let postError: string | null = null;
 	let validData: boolean = false;
 	let isLoading: boolean = false;
 	
@@ -16,26 +18,16 @@
 		postError = null;
 		isLoading = true;
 		const data: string = JSON.stringify({
-			'name' : username,
-			'password' : password,
-		});
-		
-		await fetch("http://localhost:8082/api/users/signIn",
-		{
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: data
-        })
-		.then(res => res.json())
-		.then(res => postError = !res ? null : res.error)
-		.catch(e => {postError = "Cannot reach server";console.log(e)})
+        'name' : username,
+        'password' : password,
+    });
+    
+		isLoading = true;
+		postError = await logAndSetToken(username, password);
 		isLoading = false;
 		if (!postError) {
 			goto("/home");
 		}
-		
 	}
 
 </script>

@@ -44,7 +44,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:5173")); //or * if you want to allow all
+        configuration.setAllowedOrigins(List.of("http://localhost:5173", "http://127.0.0.1:5173")); //or * if you want to allow all
         configuration.setAllowCredentials(true);
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Cache-Control", "Content-Type"));
@@ -61,7 +61,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.cors().configurationSource(corsConfigurationSource());
         httpSecurity.csrf().disable()
-                .authorizeRequests().antMatchers("/api/users/signIn", "/h2-console").permitAll().
+                .authorizeRequests().antMatchers("/api/users/signIn", "/swagger-ui.html").permitAll().
                         anyRequest().authenticated().and().
                         exceptionHandling().authenticationEntryPoint(jwtAuthenticationEntryPoint).and().sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS);

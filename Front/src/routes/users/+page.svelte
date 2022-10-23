@@ -5,7 +5,7 @@
     export let data;
     let searchedUser: string = "";
     let filteredUsers = [];
-    let { users } = data;
+    let [users, error] = data.users;
     let isOrderByName: boolean, isOrderByDate: boolean;
     let isDeleteError: boolean = false;
     let deleteError: string = null;

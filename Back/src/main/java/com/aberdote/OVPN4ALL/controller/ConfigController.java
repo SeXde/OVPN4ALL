@@ -31,7 +31,7 @@ public class ConfigController {
             @ApiResponse(responseCode = "404", description = "Configuration not found", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorDTO.class))}),
             @ApiResponse(responseCode = "500", description = "Error trying to find configuration", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorDTO.class))})
     })
-    @ResponseStatus(HttpStatus.CREATED)
+    @ResponseStatus(HttpStatus.OK)
     @GetMapping(path = "")
     public ResponseEntity<SetupDTO> getSetup() {
         log.info("Request to get server config");

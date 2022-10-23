@@ -3,6 +3,8 @@
     import ErrorMessage from '$lib/components/errorMessage.svelte';
     import {portValidator, gatewayValidator, netmaskValidator} from '$lib/helpers/validators';
     import Header from "$lib/components/header.svelte";
+    import { postWithJWT } from '../../utils/requestUtils';
+
 
     let portTitleErrorMessage: string, gatewayTitleErrorMessage: string, netmaskTitleErrorMessage: string, portBodyErrorMessage: string, gatewayBodyErrorMessage: string, netmaskBodyErrorMessage: string, postError: string;
     let port: string, gateway:string, netmask: string;
@@ -40,24 +42,13 @@
         const data: string = JSON.stringify({
             'port' : port,
             'gateway' : gateway,
-            'netmask' : netmask
+            'subnet' : netmask
         });
-
-        const options = {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: data
-        }
-
-        postError = null;
-        const res = await fetch("http://localhost:8082/api/setup", options)
-        .then(res => res.json())
-        .then(res => postError = res.error)
-        .catch(e => postError = "Server resquest failed.");
+        const [res, error] = await postWithJWT('http://localhost:8082/api/setup', 201, data)
+        console.log(res)
+        console.log(error)
         isLoading = false;
-        if (postError) return;
+        if (error.message) return;
         goto("/home")
 
     };

@@ -1,8 +1,10 @@
 <script lang="ts">
 	import Header from "$lib/components/header.svelte";
 	import Chart from '$lib/components/Chart.svelte';
+	import { goto } from "$app/navigation";
 
 	export let data
+	const [setup, error] = data.setup
 	let connected: boolean = true;
 	let users: number = 5;
 	
@@ -11,12 +13,12 @@
 	let subnet: string = "---";
 	let wanIp: string = "---";
 
-	connected = data.setup != null
+	connected = !error.message
 
 	if (data.setup != null) {
-		port = data.setup.port;
-		gateway = data.setup.gateway;
-		subnet = data.setup.subnet;
+		port = setup.port;
+		gateway = setup.gateway;
+		subnet = setup.subnet;
 		wanIp = "200.1.2.2";
 	}
 	
