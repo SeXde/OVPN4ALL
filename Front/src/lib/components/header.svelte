@@ -13,7 +13,11 @@
         goto('/sign-in')
     }
     onMount(() => {
-        actions[window.location.pathname]()
+        if (navbar){
+            let action = window.location.pathname
+            if (action === '/sign-up') action = '/users'
+            actions[action]()
+        } 
 	});
 </script>
 
