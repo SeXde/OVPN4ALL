@@ -13,7 +13,7 @@ public class UserResponseDTO {
 
     private Long id;
     @NotNull
-    private String name;
+    private String name, email;
     @NotNull
     private Collection<RoleDTO> roles;
     @NotNull

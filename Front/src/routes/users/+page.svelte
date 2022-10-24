@@ -6,10 +6,10 @@
     let searchedUser: string = "";
     let filteredUsers = [];
     let [users, error] = data.users;
-    let isOrderByName: boolean, isOrderByDate: boolean;
+    let isOrderByName: boolean, isOrderByDate: boolean, isOrderByMail: booelan;
     let isDeleteError: boolean = false;
     let deleteError: string = null;
-    isOrderByName = isOrderByDate = false;
+    isOrderByName = isOrderByDate = isOrderByMail = false;
 
     $: {
         if (searchedUser) {
@@ -26,6 +26,15 @@
             filteredUsers = filteredUsers.sort((a, b) => a.name.localeCompare(b.name));
         } else {
             filteredUsers = filteredUsers.sort((a, b) => b.name.localeCompare(a.name));
+        }
+    }
+
+    const orderByMail = () => {
+        isOrderByMail = !isOrderByMail;
+        if (isOrderByMail) {
+            filteredUsers = filteredUsers.sort((a, b) => a.email.localeCompare(b.email));
+        } else {
+            filteredUsers = filteredUsers.sort((a, b) => b.email.localeCompare(a.email));
         }
     }
 
@@ -90,6 +99,14 @@
                         Name
                     </div>
                 </th>
+                <th scope="col" class="py-3 px-6">
+                    <div on:click={orderByMail} class="flex flex-col items-center hover:underline hover:text-secondary hover:cursor-pointer">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                            <path stroke-linecap="round" d="M16.5 12a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zm0 0c0 1.657 1.007 3 2.25 3S21 13.657 21 12a9 9 0 10-2.636 6.364M16.5 12V8.25" />
+                          </svg>                                                 
+                        Email
+                    </div>
+                </th>
                 <th scope="col" class="py-3 px-6 flex justify-center">
                     <div on:click={orderByDate} class="flex flex-col items-center hover:underline hover:text-secondary hover:cursor-pointer">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
@@ -124,6 +141,9 @@
                 <th scope="row" class="flex flex-col items-center py-4 px-6 text-gray-900 whitespace-nowrap dark:text-white">
                     <p class="text-base font-semibold">{user.name}</p>
                 </th>
+                <td class="py-4 px-6 text-center">
+                    {user.email}
+                </td>
                 <td class="py-4 px-6 text-center">
                     {user.createdAt}
                 </td>

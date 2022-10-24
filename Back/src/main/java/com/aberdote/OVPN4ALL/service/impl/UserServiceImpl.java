@@ -60,6 +60,10 @@ public class UserServiceImpl implements UserService {
         return Converter.convertDTOUser(userRepository.save(userEntity));
     }
 
+    public void addAllUsers(List<CreateUserRequestDTO> createUsersRequestDTO) {
+        createUsersRequestDTO.forEach(this::addUser);
+    }
+
     @Override
     public void deleteUser(String userName) {
         deleteUser(this.userRepository.findByNameIgnoreCase(userName));
