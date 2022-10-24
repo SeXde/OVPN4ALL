@@ -4,10 +4,12 @@
     import { onMount } from 'svelte';
     export let navbar: boolean;
 
-    const actions = {}
-        actions['/home'] = () => document.getElementById('home-button').classList.add('text-secondary')
-        actions['/users'] = () => document.getElementById('users-button').classList.add('text-secondary')
-        actions['/setup'] = () => document.getElementById('setup-button').classList.add('text-secondary')
+    const actions = {
+        '/home' : () => document.getElementById('home-button').classList.add('text-secondary'),
+        '/users' : () => document.getElementById('users-button').classList.add('text-secondary'),
+        '/setup' : () => document.getElementById('setup-button').classList.add('text-secondary')
+    }
+    
     const logout  = () => {
         Cookies.remove('jwt')
         goto('/sign-in')
