@@ -44,7 +44,7 @@ export const logAndSetToken = async (username: string, password: string): Promis
 
 export const getWithJWT = async (url: string, expectedCode: number): Promise<[any, any]> => {
     if (!await canIAccess()) {
-        return [{}, {message : 'invalid token'}]
+        return [null, {message : 'invalid token'}]
     }
     let response
     try {
@@ -57,26 +57,26 @@ export const getWithJWT = async (url: string, expectedCode: number): Promise<[an
                 }
             })
     } catch (e) {
-        return [{}, {message: 'Server error'}]
+        return [null, {message: 'Server error'}]
     }
     let jsonResponse
     try {
         jsonResponse = await response.json()
     } catch(e) {
-        jsonResponse = {}
+        jsonResponse = null
     }
     if (response.status === expectedCode) {
-        return [jsonResponse, {}]
+        return [jsonResponse, null]
     } 
     if (response.status === 400 || response.status === 401) {
-        return [{}, {message: 'Server error'}]
+        return [null, {message: 'Server error'}]
     }
-    return [{}, jsonResponse]
+    return [null, jsonResponse]
 }
 
 export const postWithJWT = async (url: string, expectedCode: number, body: any) => {
     if (!await canIAccess()) {
-        return [{}, {message : 'invalid token'}]
+        return [null, {message : 'invalid token'}]
     }
     const response = await fetch(url,
     {
@@ -95,14 +95,14 @@ export const postWithJWT = async (url: string, expectedCode: number, body: any) 
         jsonResponse = {}
     }
     if (response.status === expectedCode) {
-        return [jsonResponse, {}]
+        return [jsonResponse, null]
     }
-    return [{}, jsonResponse]
+    return [null, jsonResponse]
 }
 
 export const deleteWithJWT = async (url: string, expectedCode: number): Promise<[any, any]> => {
     if (!await canIAccess()) {
-        return [{}, {message : 'invalid token'}]
+        return [null, {message : 'invalid token'}]
     }
     let response
     try {
@@ -115,7 +115,7 @@ export const deleteWithJWT = async (url: string, expectedCode: number): Promise<
                 }
             })
     } catch (e) {
-        return [{}, {message: 'Server error'}]
+        return [null, {message: 'Server error'}]
     }
     let jsonResponse
     try {
@@ -127,8 +127,8 @@ export const deleteWithJWT = async (url: string, expectedCode: number): Promise<
         return [jsonResponse, null]
     }
     if (response.status === 400 || response.status === 401) {
-        return [{}, {message: 'Server error'}]
+        return [null, {message: 'Server error'}]
     }
-    return [{}, jsonResponse]
+    return [null, jsonResponse]
 }
 

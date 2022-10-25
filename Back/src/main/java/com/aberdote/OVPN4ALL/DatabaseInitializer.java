@@ -26,7 +26,7 @@ public class DatabaseInitializer {
     private UserService userService;
     @Autowired
     private RoleRepository roleRepository;
-    private final static int USERS_NUMBER = 10;
+    private final static int USERS_NUMBER = 100;
 
 
     @PostConstruct

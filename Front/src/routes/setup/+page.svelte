@@ -48,7 +48,7 @@
         console.log(res)
         console.log(error)
         isLoading = false;
-        if (error.message) return;
+        if (error) return;
         goto("/home")
 
     };
