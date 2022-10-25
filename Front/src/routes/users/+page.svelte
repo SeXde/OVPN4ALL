@@ -1,20 +1,21 @@
 <script lang="ts">
 	import Header from "$lib/components/header.svelte";
     import ErrorMessage from "$lib/components/errorMessage.svelte";
-	import { Title } from "chart.js";
+	import { deleteWithJWT } from "$lib/utils/requestUtils";
+    import { fly } from 'svelte/transition';
+
     export let data;
     let searchedUser: string = "";
     let filteredUsers = [];
     let [users, error] = data.users;
-    let isOrderByName: boolean, isOrderByDate: boolean, isOrderByMail: booelan;
+    let isOrderByName: boolean, isOrderByDate: boolean, isOrderByMail: boolean;
     let isDeleteError: boolean = false;
     let deleteError: string = null;
     isOrderByName = isOrderByDate = isOrderByMail = false;
-
     $: {
         if (searchedUser) {
-            filteredUsers = users.filter(user => user.name.toLowerCase().includes(searchedUser.toLocaleLowerCase()));
-            isOrderByName = isOrderByDate = false;
+        filteredUsers = users.filter(user => user.name.toLowerCase().includes(searchedUser.toLocaleLowerCase()));
+        isOrderByName = isOrderByDate = false;
         } else {
             filteredUsers = [... users];
         }
@@ -47,11 +48,10 @@
         }
     }
 
-    async function deleteUser(userId) {
-        await fetch("http://localhost:8082/api/users/" + userId, {method: "DELETE"})
-        .then(res => res.json())
-        .then(res => deleteError = res.error)
-        .catch(e => deleteError = "Cannot connect with server")
+    const deleteUser = async (userId: number): Promise<void> => {
+        const [{}, error] = await deleteWithJWT('http://localhost:8082/api/users/' + userId, 200)
+        if (error) deleteError = error.message
+        console.log("Error = ", error)
         isDeleteError = deleteError !== null
         if (!isDeleteError) {
             users = users.filter(user => user.id != userId)

@@ -26,7 +26,7 @@ public class DatabaseInitializer {
     private UserService userService;
     @Autowired
     private RoleRepository roleRepository;
-    private final static int USERS_NUMBER = 500;
+    private final static int USERS_NUMBER = 10;
 
 
     @PostConstruct
@@ -40,14 +40,14 @@ public class DatabaseInitializer {
         userService.addAllUsers(createUserRequestDTOS);
         userService.addUser(new CreateUserRequestDTO("Admin","dummy@mail.com",
                 "Admin",
-                List.of(new RoleDTO(RoleConstants.ROLE_OWNER))));
+                List.of(new RoleDTO(RoleConstants.ROLE_ADMIN))));
     }
 
     private Set<RoleDTO> genRandomRoles() {
-        final List<String> roleNames = List.of(RoleConstants.ROLE_USER, RoleConstants.ROLE_ADMIN, RoleConstants.ROLE_OWNER);
-        int randomRoles = (int) ((Math.random() * (3 - 1)) + 1);
+        final List<String> roleNames = List.of(RoleConstants.ROLE_USER, RoleConstants.ROLE_ADMIN);
+        int randomRoles = (int) ((Math.random() * (RoleConstants.ROLES.size() - 1)) + 1);
         return IntStream.range(0, randomRoles).mapToObj(i -> {
-            int randomRole = (int) ((Math.random() * (3)) + 0);
+            int randomRole = (int) ((Math.random() * (RoleConstants.ROLES.size())) + 0);
             return new RoleDTO(roleNames.get(randomRole));
         }).collect(Collectors.toSet());
     }

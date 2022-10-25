@@ -105,7 +105,7 @@ public class UserServiceImpl implements UserService {
             throw new CustomException("User "+loginUserRequestDTO.getName()+" does not exist", HttpStatus.NOT_FOUND);
         }
         UserEntity user = optUser.get();
-        if (!this.isAdmin(user) && !this.isOwner(user)){
+        if (!this.isAdmin(user)){
             log.error("User {} has not privileges", user.getName());
             throw new CustomException("User "+user.getName()+" has not privileges", HttpStatus.UNAUTHORIZED);
         }
@@ -162,15 +162,11 @@ public class UserServiceImpl implements UserService {
         return isRole(userEntity, RoleConstants.ROLE_USER);
     }
 
-    private boolean isOwner(UserEntity userEntity) {
-        return isRole(userEntity, RoleConstants.ROLE_OWNER);
-    }
-
-    private boolean isLastOwner(UserEntity userEntity) {
-        return  this.isOwner(userEntity)
+    private boolean isLastAdmin(UserEntity userEntity) {
+        return  this.isAdmin(userEntity)
                 && userRepository.findAll()
                 .stream()
-                .filter(this::isOwner)
+                .filter(this::isAdmin)
                 .toList()
                 .size() == 1;
     }
@@ -180,9 +176,9 @@ public class UserServiceImpl implements UserService {
             log.error("Cannot find user to delete");
             throw new CustomException("Cannot find user to delete", HttpStatus.NOT_FOUND);
         }
-        if (this.isLastOwner(optionalUserEntity.get())) {
-            log.error("User is last Admin or Owner");
-            throw new CustomException("User is last Admin or Owner", HttpStatus.FORBIDDEN);
+        if (this.isLastAdmin(optionalUserEntity.get())) {
+            log.error("User is last Admin");
+            throw new CustomException("User is last Admin", HttpStatus.FORBIDDEN);
         }
         log.info("Deleting user "+optionalUserEntity.get().getName());
         userRepository.delete(optionalUserEntity.get());

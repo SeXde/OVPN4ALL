@@ -23,10 +23,6 @@ public class UserValidator {
         allowedRoles.put(RoleConstants.ROLE_ADMIN,
                 Set.of(RoleConstants.ROLE_USER,
                         RoleConstants.ROLE_ADMIN));
-        allowedRoles.put(RoleConstants.ROLE_OWNER,
-                Set.of(RoleConstants.ROLE_USER,
-                        RoleConstants.ROLE_ADMIN,
-                        RoleConstants.ROLE_OWNER));
         return user.getRoles()
                 .stream()
                 .map(RoleEntity::getRoleName)
