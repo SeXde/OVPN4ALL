@@ -3,6 +3,24 @@
     import ErrorMessage from "$lib/components/errorMessage.svelte";
 	import { deleteWithJWT, getWithJWT } from "$lib/utils/requestUtils";
     import { fly } from 'svelte/transition';
+	import { goto } from "$app/navigation";
+
+    const transFormUsers = (users: Array<any>):Array<any> => {
+        return users.map(user => {
+            let roles = user.roles.map(role => {
+                let lowerRole = role.roleName.replace('ROLE_', '').toLowerCase()
+                return lowerRole.substring(0, 1).toUpperCase() + lowerRole.substring(1)
+            }).join(', ')
+            return {
+                name : user.name,
+                email : user.email,
+                id : user.id,
+                createdAt : user.createdAt,
+                roles,
+                isUser : roles.includes('User')
+            }
+        })
+    }
 
     export let data
     let searchedUser: string = ""
@@ -17,7 +35,8 @@
     isOrderByName = isOrderByDate = isOrderByMail = false;
     noPrev = true
     noUsers = users === null || users.length < 10
-    console.log("Condisiones: ", users)
+    users = [... transFormUsers(users)]
+    console.log("Users up:", users)
 
     $: {
         if (searchedUser) {
@@ -26,7 +45,10 @@
         } else {
             filteredUsers = [... users]
         }
+        console.log("Filtered: ", filteredUsers)
     }
+
+    
 
     const orderByName = () => {
         isOrderByName = !isOrderByName;
@@ -56,8 +78,12 @@
     }
 
     const deleteUser = async (userId: number): Promise<void> => {
-        const [{}, error] = await deleteWithJWT('http://localhost:8082/api/users/' + userId, 200)
-        if (error) deleteError = error.message
+        const [, error] = await deleteWithJWT('http://localhost:8082/api/users/' + userId, 200)
+        if (error) {
+            deleteError = error.message
+            if (error.message === 'invalid token') goto('/signIn')
+        }
+        console.log("Errorsito: ", error)
         isDeleteError = deleteError !== null
         if (!isDeleteError) {
             users = users.filter(user => user.id != userId)
@@ -81,10 +107,14 @@
 
     const fetchPage = async(pageNum: number): Promise<void> => {
         const [data, error] = await getWithJWT('http://localhost:8082/api/users?page='+pageNum, 200)
-        if (error !== null) getError = error.message
+        if (error !== null) {
+            getError = error.message
+            if (error.message === 'invalid token') goto('/signIn')
+        }
         isGetError = getError !== null
         if (!isGetError) {
-            users = [... data]
+            users = [... transFormUsers(data)]
+            console.log("users down: ", users)
             noUsers = users === null || users.length < 10
         }
     }
@@ -97,7 +127,7 @@
 </svelte:head>
 
 <Header navbar={true}/>
-<div class="overflow-x-auto relative shadow-md sm:rounded-lg my-5">
+<div on:click={() => {isGetError = false; isDeleteError = false; getError = null; deleteError = null}} class="overflow-x-auto relative shadow-md sm:rounded-lg my-5">
     <div class="flex justify-between items-center pb-4 bg-transparent">
         <label for="table-search" class="sr-only">Search</label>
         <div class="relative ml-5">
@@ -181,25 +211,29 @@
                     {user.createdAt}
                 </td>
                 <td class="py-4 px-6 text-center">
-                    {#if user.admin}
-                        Administrator
-                    {:else}
-                        VPN user
-                    {/if}
+                   {user.roles}
                 </td>
                 <td class="py-4 px-6">
                     <div class="flex justify-center">
+                        {#if user.isUser}
+                            <div class="flex flex-col items-center mr-4 hover:underline hover:text-secondary hover:cursor-pointer">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                                </svg>
+                                Download ovpn
+                            </div>
+                            <div class="flex flex-col items-center mr-4 hover:underline hover:text-secondary hover:cursor-pointer">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                                </svg>                              
+                                Send ovpn
+                            </div>
+                        {/if}
                         <div class="flex flex-col items-center mr-4 hover:underline hover:text-secondary hover:cursor-pointer">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-                            </svg>
-                            Download ovpn
-                        </div>
-                        <div class="flex flex-col items-center mr-4 hover:underline hover:text-secondary hover:cursor-pointer">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
-                            </svg>                              
-                            Send ovpn
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
+                            </svg>  
+                            Edit
                         </div>
                         <div on:click={() => deleteUser(user.id)} class="flex flex-col items-center ml-4 text-red-500 hover:underline hover:text-secondary hover:cursor-pointer">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
@@ -222,7 +256,12 @@
             </div>
         {/if} 
         <div class="w-10 py-2 flex justify-center text-light font-semibold transition-colors">
-            {pageNumber + 1}
+            <div class="flex flex-col  justify-center items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+                </svg>              
+                {pageNumber + 1}
+            </div>
         </div>
         {#if !noUsers}
         <div on:click={() => getNextPage()} class="w-10 py-2 flex justify-center text-light rounded-lg border-2 border-light hover:text-primary hover:border-primary disabled:border-stone-500 disabled:text-stone-500 font-semibold transition-colors">

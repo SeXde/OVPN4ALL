@@ -26,7 +26,7 @@ public class DatabaseInitializer {
     private UserService userService;
     @Autowired
     private RoleRepository roleRepository;
-    private final static int USERS_NUMBER = 100;
+    private final static int USERS_NUMBER = 20;
 
 
     @PostConstruct
@@ -41,6 +41,8 @@ public class DatabaseInitializer {
         userService.addUser(new CreateUserRequestDTO("Admin","dummy@mail.com",
                 "Admin",
                 List.of(new RoleDTO(RoleConstants.ROLE_ADMIN))));
+        userService.addUser(new CreateUserRequestDTO("AdminUser", "iberia@unboxing.com", "AdminUser",
+                List.of(new RoleDTO(RoleConstants.ROLE_USER), new RoleDTO(RoleConstants.ROLE_ADMIN))));
     }
 
     private Set<RoleDTO> genRandomRoles() {

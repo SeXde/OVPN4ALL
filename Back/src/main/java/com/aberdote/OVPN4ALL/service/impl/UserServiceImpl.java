@@ -15,6 +15,7 @@ import com.aberdote.OVPN4ALL.utils.validator.user.UserValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -91,10 +92,14 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Page<UserResponseDTO> getUsersPaginated(int pageNumber, int usersPerPage) {
-        Page<UserEntity> all = userRepository.findAll(PageRequest.of(pageNumber, usersPerPage));
-        Page<UserResponseDTO> map = all.map(Converter::convertDTOUser);
-        List<UserResponseDTO> userResponseDTOS = map.toList();
-        return userRepository.findAll(PageRequest.of(pageNumber, usersPerPage)).map(Converter::convertDTOUser);
+        final List<UserResponseDTO> userResponseDTOList = userRepository.findAll(PageRequest.of(pageNumber, usersPerPage)).stream().map(Converter::convertDTOUser).sorted((u1, u2) -> {
+            final boolean u1ContainsUserRole = u1.getRoles().stream().anyMatch(roleDTO -> roleDTO.getRoleName().equals(RoleConstants.ROLE_USER));
+            final boolean u2ContainsUserRole = u2.getRoles().stream().anyMatch(roleDTO -> roleDTO.getRoleName().equals(RoleConstants.ROLE_USER));
+            if (u1ContainsUserRole == u2ContainsUserRole) return 0;
+            if (u1ContainsUserRole) return -1;
+            return 1;
+        }).toList();
+        return  new PageImpl<U>(userResponseDTOList);
     }
 
     @Override
