@@ -11,3 +11,8 @@ export const netmaskValidator = (netmask: string) : boolean =>  {
     const maskRegex = new RegExp(/^(255)\.(0|128|192|224|240|248|252|254|255)\.(0|128|192|224|240|248|252|254|255)\.(0|128|192|224|240|248|252|254|255)$/);
     return maskRegex.test(netmask);
 }
+
+export const emailValidator = (email: string) : boolean => {
+    const emailRegex = new RegExp(/^[\w!#$%&'*+/=?`{|}~^-]+(?:\.[\w!#$%&'*+/=?`{|}~^-]+)*@(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,6}$/);
+    return emailRegex.test(email)
+}

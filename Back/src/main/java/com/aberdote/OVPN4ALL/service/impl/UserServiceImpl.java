@@ -15,6 +15,7 @@ import com.aberdote.OVPN4ALL.utils.validator.user.UserValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -60,6 +61,10 @@ public class UserServiceImpl implements UserService {
         return Converter.convertDTOUser(userRepository.save(userEntity));
     }
 
+    public void addAllUsers(List<CreateUserRequestDTO> createUsersRequestDTO) {
+        createUsersRequestDTO.forEach(this::addUser);
+    }
+
     @Override
     public void deleteUser(String userName) {
         deleteUser(this.userRepository.findByNameIgnoreCase(userName));
@@ -87,10 +92,14 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Page<UserResponseDTO> getUsersPaginated(int pageNumber, int usersPerPage) {
-        Page<UserEntity> all = userRepository.findAll(PageRequest.of(pageNumber, usersPerPage));
-        Page<UserResponseDTO> map = all.map(Converter::convertDTOUser);
-        List<UserResponseDTO> userResponseDTOS = map.toList();
-        return userRepository.findAll(PageRequest.of(pageNumber, usersPerPage)).map(Converter::convertDTOUser);
+        final List<UserResponseDTO> userResponseDTOList = userRepository.findAll(PageRequest.of(pageNumber, usersPerPage)).stream().map(Converter::convertDTOUser).sorted((u1, u2) -> {
+            final boolean u1ContainsUserRole = u1.getRoles().stream().anyMatch(roleDTO -> roleDTO.getRoleName().equals(RoleConstants.ROLE_USER));
+            final boolean u2ContainsUserRole = u2.getRoles().stream().anyMatch(roleDTO -> roleDTO.getRoleName().equals(RoleConstants.ROLE_USER));
+            if (u1ContainsUserRole == u2ContainsUserRole) return 0;
+            if (u1ContainsUserRole) return -1;
+            return 1;
+        }).toList();
+        return  new PageImpl<U>(userResponseDTOList);
     }
 
     @Override
@@ -101,7 +110,7 @@ public class UserServiceImpl implements UserService {
             throw new CustomException("User "+loginUserRequestDTO.getName()+" does not exist", HttpStatus.NOT_FOUND);
         }
         UserEntity user = optUser.get();
-        if (!this.isAdmin(user) && !this.isOwner(user)){
+        if (!this.isAdmin(user)){
             log.error("User {} has not privileges", user.getName());
             throw new CustomException("User "+user.getName()+" has not privileges", HttpStatus.UNAUTHORIZED);
         }
@@ -158,15 +167,11 @@ public class UserServiceImpl implements UserService {
         return isRole(userEntity, RoleConstants.ROLE_USER);
     }
 
-    private boolean isOwner(UserEntity userEntity) {
-        return isRole(userEntity, RoleConstants.ROLE_OWNER);
-    }
-
-    private boolean isLastOwner(UserEntity userEntity) {
-        return  this.isOwner(userEntity)
+    private boolean isLastAdmin(UserEntity userEntity) {
+        return  this.isAdmin(userEntity)
                 && userRepository.findAll()
                 .stream()
-                .filter(this::isOwner)
+                .filter(this::isAdmin)
                 .toList()
                 .size() == 1;
     }
@@ -176,9 +181,9 @@ public class UserServiceImpl implements UserService {
             log.error("Cannot find user to delete");
             throw new CustomException("Cannot find user to delete", HttpStatus.NOT_FOUND);
         }
-        if (this.isLastOwner(optionalUserEntity.get())) {
-            log.error("User is last Admin or Owner");
-            throw new CustomException("User is last Admin or Owner", HttpStatus.FORBIDDEN);
+        if (this.isLastAdmin(optionalUserEntity.get())) {
+            log.error("User is last Admin");
+            throw new CustomException("User is last Admin", HttpStatus.FORBIDDEN);
         }
         log.info("Deleting user "+optionalUserEntity.get().getName());
         userRepository.delete(optionalUserEntity.get());

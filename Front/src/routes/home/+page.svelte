@@ -1,9 +1,11 @@
 <script lang="ts">
 	import Header from "$lib/components/header.svelte";
 	import Chart from '$lib/components/Chart.svelte';
+	import ErrorMessage from "$lib/components/errorMessage.svelte";
 	
 
 	export let data
+	console.log("data: ", data)
 	const [setup, error] = data.setup
 	let connected: boolean = true;
 	let users: number = 5;
@@ -13,9 +15,11 @@
 	let subnet: string = "---";
 	let wanIp: string = "---";
 
-	connected = !error.message
+	
 
-	if (data.setup != null) {
+	connected = error === null
+
+	if (setup != null) {
 		port = setup.port;
 		gateway = setup.gateway;
 		subnet = setup.subnet;
@@ -32,7 +36,10 @@
 
 <Header navbar={true}/>
 	<div class="flex flex-col items-center my-auto mr-5">
-		<div class="bg-light_dark px-5 py-5 border rounded-lg">
+		{#if error}
+				<ErrorMessage  title="Server error" body={error.message}/>
+		{/if}
+		<div class="mt-5 bg-light_dark px-5 py-5 border rounded-lg">
 			<div class="flex flex-col items-center mb-2 pb-2 border-b">
 				<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
 					<path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />

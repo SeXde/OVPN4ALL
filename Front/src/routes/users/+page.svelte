@@ -1,24 +1,54 @@
 <script lang="ts">
 	import Header from "$lib/components/header.svelte";
     import ErrorMessage from "$lib/components/errorMessage.svelte";
-	import { Title } from "chart.js";
-    export let data;
-    let searchedUser: string = "";
-    let filteredUsers = [];
+	import { deleteWithJWT, getWithJWT } from "$lib/utils/requestUtils";
+    import { fly } from 'svelte/transition';
+	import { goto } from "$app/navigation";
+
+    const transFormUsers = (users: Array<any>):Array<any> => {
+        return users.map(user => {
+            let roles = user.roles.map(role => {
+                let lowerRole = role.roleName.replace('ROLE_', '').toLowerCase()
+                return lowerRole.substring(0, 1).toUpperCase() + lowerRole.substring(1)
+            }).join(', ')
+            return {
+                name : user.name,
+                email : user.email,
+                id : user.id,
+                createdAt : user.createdAt,
+                roles,
+                isUser : roles.includes('User')
+            }
+        })
+    }
+
+    export let data
+    let searchedUser: string = ""
+    let filteredUsers = []
     let [users, error] = data.users;
-    let isOrderByName: boolean, isOrderByDate: boolean;
-    let isDeleteError: boolean = false;
-    let deleteError: string = null;
-    isOrderByName = isOrderByDate = false;
+    let isOrderByName: boolean, isOrderByDate: boolean, isOrderByMail: boolean, noUsers: boolean, noPrev
+    let isDeleteError: boolean = false
+    let isGetError: boolean = false
+    let deleteError: string = null
+    let getError: string = null
+    let pageNumber: number = 0
+    isOrderByName = isOrderByDate = isOrderByMail = false;
+    noPrev = true
+    noUsers = users === null || users.length < 10
+    users = [... transFormUsers(users)]
+    console.log("Users up:", users)
 
     $: {
         if (searchedUser) {
-            filteredUsers = users.filter(user => user.name.toLowerCase().includes(searchedUser.toLocaleLowerCase()));
-            isOrderByName = isOrderByDate = false;
+        filteredUsers = users.filter(user => user.name.toLowerCase().includes(searchedUser.toLocaleLowerCase()))
+        isOrderByName = isOrderByDate = false
         } else {
-            filteredUsers = [... users];
+            filteredUsers = [... users]
         }
+        console.log("Filtered: ", filteredUsers)
     }
+
+    
 
     const orderByName = () => {
         isOrderByName = !isOrderByName;
@@ -26,6 +56,15 @@
             filteredUsers = filteredUsers.sort((a, b) => a.name.localeCompare(b.name));
         } else {
             filteredUsers = filteredUsers.sort((a, b) => b.name.localeCompare(a.name));
+        }
+    }
+
+    const orderByMail = () => {
+        isOrderByMail = !isOrderByMail;
+        if (isOrderByMail) {
+            filteredUsers = filteredUsers.sort((a, b) => a.email.localeCompare(b.email));
+        } else {
+            filteredUsers = filteredUsers.sort((a, b) => b.email.localeCompare(a.email));
         }
     }
 
@@ -38,15 +77,45 @@
         }
     }
 
-    async function deleteUser(userId) {
-        await fetch("http://localhost:8082/api/users/" + userId, {method: "DELETE"})
-        .then(res => res.json())
-        .then(res => deleteError = res.error)
-        .catch(e => deleteError = "Cannot connect with server")
+    const deleteUser = async (userId: number): Promise<void> => {
+        const [, error] = await deleteWithJWT('http://localhost:8082/api/users/' + userId, 200)
+        if (error) {
+            deleteError = error.message
+            if (error.message === 'invalid token') goto('/signIn')
+        }
+        console.log("Errorsito: ", error)
         isDeleteError = deleteError !== null
         if (!isDeleteError) {
             users = users.filter(user => user.id != userId)
             filteredUsers = filteredUsers.filter(user => user.id != userId)
+        }
+    }
+
+    const getNextPage = async(): Promise<void> => {
+        pageNumber = pageNumber + 1
+        noPrev = false
+        fetchPage(pageNumber)
+    }
+
+    const getPrevPage = async(): Promise<void> => {
+        if (pageNumber > 0) {
+            pageNumber = pageNumber - 1
+            if (pageNumber == 0) noPrev = true
+            fetchPage(pageNumber)
+        }
+    }
+
+    const fetchPage = async(pageNum: number): Promise<void> => {
+        const [data, error] = await getWithJWT('http://localhost:8082/api/users?page='+pageNum, 200)
+        if (error !== null) {
+            getError = error.message
+            if (error.message === 'invalid token') goto('/signIn')
+        }
+        isGetError = getError !== null
+        if (!isGetError) {
+            users = [... transFormUsers(data)]
+            console.log("users down: ", users)
+            noUsers = users === null || users.length < 10
         }
     }
 
@@ -58,7 +127,7 @@
 </svelte:head>
 
 <Header navbar={true}/>
-<div class="overflow-x-auto relative shadow-md sm:rounded-lg my-5">
+<div on:click={() => {isGetError = false; isDeleteError = false; getError = null; deleteError = null}} class="overflow-x-auto relative shadow-md sm:rounded-lg my-5">
     <div class="flex justify-between items-center pb-4 bg-transparent">
         <label for="table-search" class="sr-only">Search</label>
         <div class="relative ml-5">
@@ -67,13 +136,16 @@
             </div>
             <input bind:value={searchedUser} type="text" id="table-search-users" class="block p-2 pl-10 w-80 text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-secondary dark:focus:border-secondary" placeholder="Search for users">
         </div>
+        {#if isGetError}
+            <ErrorMessage  title="Error getting users" body={getError}/>
+        {/if}
         {#if isDeleteError}
             <ErrorMessage  title="Delete error" body={deleteError}/>
         {/if}
         <a href="/sign-up" class="mr-5 my-3 mt-5 w-36 py-2 flex flex-col items-center justify-center text-light rounded-lg border-2 border-light hover:text-primary hover:border-primary disabled:border-stone-500 disabled:text-stone-500 font-semibold transition-colors">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM4 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 0110.374 21c-2.331 0-4.512-.645-6.374-1.766z" />
-              </svg>              
+            </svg>              
             Add user  
         </a>
     </div>
@@ -88,6 +160,14 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5zm6-10.125a1.875 1.875 0 11-3.75 0 1.875 1.875 0 013.75 0zm1.294 6.336a6.721 6.721 0 01-3.17.789 6.721 6.721 0 01-3.168-.789 3.376 3.376 0 016.338 0z" />
                         </svg>                          
                         Name
+                    </div>
+                </th>
+                <th scope="col" class="py-3 px-6">
+                    <div on:click={orderByMail} class="flex flex-col items-center hover:underline hover:text-secondary hover:cursor-pointer">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                            <path stroke-linecap="round" d="M16.5 12a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zm0 0c0 1.657 1.007 3 2.25 3S21 13.657 21 12a9 9 0 10-2.636 6.364M16.5 12V8.25" />
+                          </svg>                                                 
+                        Email
                     </div>
                 </th>
                 <th scope="col" class="py-3 px-6 flex justify-center">
@@ -125,22 +205,35 @@
                     <p class="text-base font-semibold">{user.name}</p>
                 </th>
                 <td class="py-4 px-6 text-center">
+                    {user.email}
+                </td>
+                <td class="py-4 px-6 text-center">
                     {user.createdAt}
                 </td>
                 <td class="py-4 px-6 text-center">
-                    {#if user.admin}
-                        Administrator
-                    {:else}
-                        VPN user
-                    {/if}
+                   {user.roles}
                 </td>
                 <td class="py-4 px-6">
                     <div class="flex justify-center">
+                        {#if user.isUser}
+                            <div class="flex flex-col items-center mr-4 hover:underline hover:text-secondary hover:cursor-pointer">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                                </svg>
+                                Download ovpn
+                            </div>
+                            <div class="flex flex-col items-center mr-4 hover:underline hover:text-secondary hover:cursor-pointer">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                                </svg>                              
+                                Send ovpn
+                            </div>
+                        {/if}
                         <div class="flex flex-col items-center mr-4 hover:underline hover:text-secondary hover:cursor-pointer">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-                            </svg>
-                            Download ovpn
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
+                            </svg>  
+                            Edit
                         </div>
                         <div on:click={() => deleteUser(user.id)} class="flex flex-col items-center ml-4 text-red-500 hover:underline hover:text-secondary hover:cursor-pointer">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
@@ -154,4 +247,28 @@
             {/each}
         </tbody>
     </table>
+    <div class="flex items-center justify-center mt-5">
+        {#if !noPrev}
+            <div on:click={() => getPrevPage()} class="w-10 py-2 flex justify-center text-light rounded-lg border-2 border-light hover:text-primary hover:border-primary disabled:border-stone-500 disabled:text-stone-500 font-semibold transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                </svg>              
+            </div>
+        {/if} 
+        <div class="w-10 py-2 flex justify-center text-light font-semibold transition-colors">
+            <div class="flex flex-col  justify-center items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+                </svg>              
+                {pageNumber + 1}
+            </div>
+        </div>
+        {#if !noUsers}
+        <div on:click={() => getNextPage()} class="w-10 py-2 flex justify-center text-light rounded-lg border-2 border-light hover:text-primary hover:border-primary disabled:border-stone-500 disabled:text-stone-500 font-semibold transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+            </svg>              
+        </div>
+        {/if}
+    </div>
 </div>

@@ -25,6 +25,7 @@ export const logAndSetToken = async (username: string, password: string): Promis
         'password' : password,
     });
     
+    
     const response = await fetch(API_URL+"/users/signIn",
     {
         method: 'POST',
@@ -41,27 +42,41 @@ export const logAndSetToken = async (username: string, password: string): Promis
     return postError
 }
 
-export const getWithJWT = async (url: string, expectedCode: number) => {
+export const getWithJWT = async (url: string, expectedCode: number): Promise<[any, any]> => {
     if (!await canIAccess()) {
-        return [{}, {message : 'invalid token'}]
+        return [null, {message : 'invalid token'}]
     }
-    const response = await fetch(url,
-    {
-        method: 'GET',
-        mode: 'cors',
-        headers: {
-            Authorization: 'Bearer '+Cookies.get('jwt')
-        }
-    })
+    let response
+    try {
+        response = await fetch(url,
+            {
+                method: 'GET',
+                mode: 'cors',
+                headers: {
+                    Authorization: 'Bearer '+Cookies.get('jwt')
+                }
+            })
+    } catch (e) {
+        return [null, {message: 'Server error'}]
+    }
+    let jsonResponse
+    try {
+        jsonResponse = await response.json()
+    } catch(e) {
+        jsonResponse = null
+    }
     if (response.status === expectedCode) {
-        return [await response.json(), {}]
+        return [jsonResponse, null]
+    } 
+    if (response.status === 400 || response.status === 401) {
+        return [null, {message: 'Server error'}]
     }
-    return [{},await response.json()]
+    return [null, jsonResponse]
 }
 
 export const postWithJWT = async (url: string, expectedCode: number, body: any) => {
     if (!await canIAccess()) {
-        return [{}, {message : 'invalid token'}]
+        return [null, {message : 'invalid token'}]
     }
     const response = await fetch(url,
     {
@@ -73,9 +88,47 @@ export const postWithJWT = async (url: string, expectedCode: number, body: any) 
         },
         body
     })
-    if (response.status === expectedCode) {
-        return [await response.json(), {}]
+    let jsonResponse
+    try {
+        jsonResponse = await response.json()
+    } catch(e) {
+        jsonResponse = {}
     }
-    return [{}, await response.json()]
+    if (response.status === expectedCode) {
+        return [jsonResponse, null]
+    }
+    return [null, jsonResponse]
+}
+
+export const deleteWithJWT = async (url: string, expectedCode: number): Promise<[any, any]> => {
+    if (!await canIAccess()) {
+        return [null, {message : 'invalid token'}]
+    }
+    let response
+    try {
+        response = await fetch(url,
+            {
+                method: 'DELETE',
+                mode: 'cors',
+                headers: {
+                    Authorization: 'Bearer '+Cookies.get('jwt')
+                }
+            })
+    } catch (e) {
+        return [null, {message: 'Server error'}]
+    }
+    let jsonResponse
+    try {
+        jsonResponse = await response.json()
+    } catch(e) {
+        jsonResponse = {}
+    }
+    if (response.status === expectedCode) {
+        return [jsonResponse, null]
+    }
+    if (response.status === 400 || response.status === 401) {
+        return [null, {message: 'Server error'}]
+    }
+    return [null, jsonResponse]
 }
 

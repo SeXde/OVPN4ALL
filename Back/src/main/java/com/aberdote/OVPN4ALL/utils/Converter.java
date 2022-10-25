@@ -13,6 +13,7 @@ public class Converter {
     public static UserResponseDTO convertDTOUser(UserEntity userEntity) {
         return new UserResponseDTO(userEntity.getId(),
                 userEntity.getName(),
+                userEntity.getEmail(),
                 userEntity.getRoles()
                     .stream()
                     .map(roleEntity -> new RoleDTO(roleEntity.getRoleName()))

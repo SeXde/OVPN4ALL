@@ -1,10 +1,14 @@
 package com.aberdote.OVPN4ALL.security.filter;
 
+import com.aberdote.OVPN4ALL.dto.ErrorDTO;
 import com.aberdote.OVPN4ALL.security.service.JwtUserDetailsService;
 import com.aberdote.OVPN4ALL.security.utils.JwtTokenUtil;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.ExpiredJwtException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -17,6 +21,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.time.LocalDateTime;
 
 @Component @Slf4j
 public class JwtRequestFilter extends OncePerRequestFilter {
@@ -62,7 +67,24 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
             }
         }
-        chain.doFilter(request, response);
+        try {
+            chain.doFilter(request, response);
+        } catch (Exception e) {
+            logger.error("Excepción: {}");
+            ErrorDTO errorDTO = new ErrorDTO(HttpStatus.INTERNAL_SERVER_ERROR, LocalDateTime.now(), e.getMessage());
+            response.setStatus(errorDTO.getStatus().value());
+            response.getWriter().write(convertObjectToJson(errorDTO));
+        }
+
     }
+
+    private String convertObjectToJson(Object object) throws JsonProcessingException {
+        if (object == null) {
+            return null;
+        }
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.writeValueAsString(object);
+    }
+
 
 }

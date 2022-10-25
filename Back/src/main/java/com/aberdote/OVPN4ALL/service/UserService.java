@@ -7,10 +7,13 @@ import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
+import java.util.List;
 
 @Service
 public interface UserService {
     UserResponseDTO addUser(CreateUserRequestDTO createUserRequestDTO);
+
+    void addAllUsers(List<CreateUserRequestDTO> createUsersRequestDTO);
     void deleteUser(String userName);
     void deleteUser(Long id);
     UserResponseDTO getUser(String userName);

@@ -8,8 +8,7 @@ public class RoleConstants {
 
     public final static String ROLE_USER = "ROLE_USER";
     public final static String ROLE_ADMIN = "ROLE_ADMIN";
-    public final static String ROLE_OWNER = "ROLE_OWNER";
 
-    public final static Set<String> ROLES = new HashSet<>(Arrays.asList(ROLE_USER, ROLE_ADMIN, ROLE_OWNER));
+    public final static Set<String> ROLES = new HashSet<>(Arrays.asList(ROLE_USER, ROLE_ADMIN));
 
 }
