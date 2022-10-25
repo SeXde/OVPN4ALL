@@ -99,7 +99,7 @@ public class UserServiceImpl implements UserService {
             if (u1ContainsUserRole) return -1;
             return 1;
         }).toList();
-        return  new PageImpl<U>(userResponseDTOList);
+        return  new PageImpl<>(userResponseDTOList);
     }
 
     @Override
