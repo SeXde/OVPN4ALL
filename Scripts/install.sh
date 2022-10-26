@@ -35,4 +35,11 @@ install_smth "Installing OpenSSL" "apt install openssl -y" "Cannot install OpenS
 
 # Install Sed
 install_smth "Installing Sed" "apt install sed -y" "Cannot install Sed"
+
+install_smth "Installing Sed" "mkdir ~/OVPN4ALL/Install" "Cannot create install dir"
+install_smth "Installing Sed" "mkdir -p ~/OVPN4ALL/db/users" "Cannot create users dir"
+install_smth "Installing Sed" "mkdir -p ~/OVPN4ALL/db/certs" "Cannot create certs dir"
+install_smth "Installing Sed" "mkdir -p ~/OVPN4ALL/logs" "Cannot create logs dir"
+install_smth "Installing Sed" "mkdir -p ~/OVPN4ALL/Server" "Cannot create server dir"
+
 exit 0
