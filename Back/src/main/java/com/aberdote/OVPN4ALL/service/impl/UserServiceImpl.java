@@ -9,6 +9,7 @@ import com.aberdote.OVPN4ALL.entity.UserEntity;
 import com.aberdote.OVPN4ALL.exception.CustomException;
 import com.aberdote.OVPN4ALL.repository.RoleRepository;
 import com.aberdote.OVPN4ALL.repository.UserRepository;
+import com.aberdote.OVPN4ALL.service.CommandService;
 import com.aberdote.OVPN4ALL.service.UserService;
 import com.aberdote.OVPN4ALL.utils.Converter;
 import com.aberdote.OVPN4ALL.utils.validator.user.UserValidator;
@@ -18,10 +19,13 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.codec.Hex;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -33,6 +37,8 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder bCryptPasswordEncoder;
+    private final CommandService commandService;
+
     @Override
     public UserResponseDTO addUser(CreateUserRequestDTO createUserRequestDTO) {
         if (!UserValidator.validateEmail(createUserRequestDTO.getEmail())) {
@@ -47,18 +53,27 @@ public class UserServiceImpl implements UserService {
             log.error("Cannot add user {} some roles are not correct", createUserRequestDTO.getName());
             throw new CustomException("Cannot add user "+createUserRequestDTO.getName()+" some roles are not correct", HttpStatus.BAD_REQUEST);
         }
-        log.info("Adding user {}", createUserRequestDTO.getName());
-        final UserEntity userEntity = Converter.convertFromDTOUser(createUserRequestDTO);
-        userEntity.setRoles(createUserRequestDTO.getRoles().stream()
-                .map(role -> roleRepository.findByRoleName(role.getRoleName())
-                        .orElseThrow(() -> {
-                            log.error("Cannot add user {}, role {} doesn't exist", createUserRequestDTO.getName(), role.getRoleName());
-                            throw new CustomException("Cannot add user "+createUserRequestDTO.getName()+" role "+role.getRoleName()+" doesn't exist", HttpStatus.BAD_REQUEST);
-                        }))
-                .collect(Collectors.toSet())
-        );
-        userEntity.setPassword(bCryptPasswordEncoder.encode(userEntity.getPassword()));
-        return Converter.convertDTOUser(userRepository.save(userEntity));
+        try {
+            if (!commandService.addUser(encodeHex(createUserRequestDTO.getName()), encodeHex(createUserRequestDTO.getPassword()), "im_not_leaking_my_ip_on_github_xd", "neither_my_port_xdd")) {
+                throw new CustomException(String.format("Cannot add user '%s', execution failed, see logs for more details", createUserRequestDTO.getName()), HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+            log.info("Adding user {}", createUserRequestDTO.getName());
+            final UserEntity userEntity = Converter.convertFromDTOUser(createUserRequestDTO);
+            userEntity.setRoles(createUserRequestDTO.getRoles().stream()
+                    .map(role -> roleRepository.findByRoleName(role.getRoleName())
+                            .orElseThrow(() -> {
+                                log.error("Cannot add user {}, role {} doesn't exist", createUserRequestDTO.getName(), role.getRoleName());
+                                throw new CustomException("Cannot add user "+createUserRequestDTO.getName()+" role "+role.getRoleName()+" doesn't exist", HttpStatus.BAD_REQUEST);
+                            }))
+                    .collect(Collectors.toSet())
+            );
+            userEntity.setPassword(bCryptPasswordEncoder.encode(userEntity.getPassword()));
+            return Converter.convertDTOUser(userRepository.save(userEntity));
+        } catch (IOException | InterruptedException e) {
+            final String message = String.format("Cannot execute user config script, ErrorMessage: '%s'", e.getMessage());
+            log.error(message);
+            throw new CustomException(message, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     public void addAllUsers(List<CreateUserRequestDTO> createUsersRequestDTO) {
@@ -197,4 +212,15 @@ public class UserServiceImpl implements UserService {
             })
             .orElseThrow(() -> new CustomException("Cannot get user, it doesn't exists", HttpStatus.NOT_FOUND));
     }
+
+    private String encodeHex(String input) {
+        final StringBuilder stringBuilder = new StringBuilder();
+        input.toLowerCase().chars().forEach(character -> stringBuilder.append(Integer.toHexString(character)));
+        return stringBuilder.toString();
+    }
+
+    private String decodeHex(String input) {
+        return new String(Hex.decode(input), StandardCharsets.UTF_8);
+    }
+
 }

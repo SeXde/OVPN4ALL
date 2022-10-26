@@ -17,6 +17,4 @@ public class Ovpn4AllApplication {
 	public PasswordEncoder passwordEncoder() {
 		return new BCryptPasswordEncoder();
 	}
-
-
 }

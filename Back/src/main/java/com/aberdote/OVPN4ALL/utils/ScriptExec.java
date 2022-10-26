@@ -4,11 +4,10 @@ import java.io.IOException;
 
 public class ScriptExec {
 
-    public static int exec(String script) throws IOException, InterruptedException {
-            final ProcessBuilder processBuilder = new ProcessBuilder();
-            Process process = processBuilder.command("/bin/bash -c "+script).start();
-            process.waitFor();
-            return process.exitValue();
+    public static int exec(String scriptAndArguments) throws IOException, InterruptedException {
+        final Process process = Runtime.getRuntime().exec(scriptAndArguments);
+        process.waitFor();
+        return process.exitValue();
     }
 
 }
