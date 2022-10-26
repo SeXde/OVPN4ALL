@@ -15,7 +15,7 @@ if test "$#" -ne 2; then
     exit 1
 fi
 
-cd ~/OVPN4ALL || (printf "OVPN4ALL directory not found"; exit 1)
+cd /home/sexde/OVPN4ALL || (printf "OVPN4ALL directory not found"; exit 1)
 
 # Create user certificate
 cd Install/EasyRSA || (printf "EasyRSA directory not found" ; exit 1)
@@ -26,4 +26,5 @@ printf "Done!\n"
 printf "Signing %s certificate ...\n" "$1"
 echo -en "yes\n" | ./easyrsa sign-req client "$1" &> /dev/null || (printf "cannot sign user cert" ; exit 1)
 printf "Done!\n"
+
 exit 0

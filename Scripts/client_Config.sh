@@ -15,20 +15,20 @@ if test "$#" -ne 3; then
     exit 1
 fi
 
-cd ~/OVPN4ALL || (printf "OVPN4ALL directory not found" ; exit 1)
+cd /home/sexde/OVPN4ALL || (printf "OVPN4ALL directory not found" ; exit 1)
 
 # Fill server config file
 printf "Configuring server file ...\n"
-cp ~/OVPN4ALL/Scripts/client_example.ovpn /tmp/"$1".ovpn || (printf "Cannot copy client conf example" ; exit 1)
+cp /home/sexde/OVPN4ALL/Scripts/client_example.ovpn /tmp/"$1".ovpn || (printf "Cannot copy client conf example" ; exit 1)
 printf "writing server ...\n"
 sed -i "s/<fill_server>/$2/g" /tmp/"$1".ovpn || (printf "Cannot set server ip inside client conf" ; exit 1)
 printf "writing port ...\n"
 sed -i "s/<fill_port>/$3/g" /tmp/"$1".ovpn || (printf "Cannot copy port inside conf example" ; exit 1)
 
-ta=$(cat ~/OVPN4ALL/Install/EasyRSA/ta.key)
-ca=$(cat ~/OVPN4ALL/Install/EasyRSA/pki/ca.crt)
-cert=$(grep  -zo -- "-*BEGIN.*END.*-*$" ~/OVPN4ALL/Install/EasyRSA/pki/issued/"$1".crt)
-key=$(cat ~/OVPN4ALL/Install/EasyRSA/pki/private/"$1".key)
+ta=$(cat /home/sexde/OVPN4ALL/Install/EasyRSA/ta.key)
+ca=$(cat /home/sexde/OVPN4ALL/Install/EasyRSA/pki/ca.crt)
+cert=$(grep  -zo -- "-*BEGIN.*END.*-*$" /home/sexde/OVPN4ALL/Install/EasyRSA/pki/issued/"$1".crt)
+key=$(cat /home/sexde/OVPN4ALL/Install/EasyRSA/pki/private/"$1".key)
 
 printf "writing ta ...\n"
 echo -en "<tls-auth>\n$ta\n</tls-auth>\n" >> /tmp/"$1".ovpn || (printf "Cannot set ta" ; exit 1)
@@ -42,6 +42,5 @@ echo -en "<cert>\n$cert\n</cert>\n" >> /tmp/"$1".ovpn || (printf "Cannot set cer
 printf "writing key ...\n"
 echo -en "<key>\n$key\n</key>\n" >> /tmp/"$1".ovpn || (printf "Cannot set key" ; exit 1)
 printf "Done!\n"
-rm ~/OVPN4ALL/db/users/"$1".ovpn &> /dev/null
-cp /tmp/"$1".ovpn ~/OVPN4ALL/db/users/"$1".ovpn  || (printf "Cannot copy .ovpn file" ; exit 1)
-exit 0
+rm /home/sexde/OVPN4ALL/db/users/"$1".ovpn &> /dev/null
+cp /tmp/"$1".ovpn /home/sexde/OVPN4ALL/db/users/"$1".ovpn  || (printf "Cannot copy .ovpn file" ; exit 1)
