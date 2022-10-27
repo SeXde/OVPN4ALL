@@ -2,7 +2,7 @@ package com.aberdote.OVPN4ALL.service.impl;
 
 import com.aberdote.OVPN4ALL.common.constanst.ScriptsConstants;
 import com.aberdote.OVPN4ALL.service.CommandService;
-import com.aberdote.OVPN4ALL.utils.ScriptExec;
+import com.aberdote.OVPN4ALL.utils.script.ScriptExec;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 

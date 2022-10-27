@@ -1,4 +1,4 @@
-package com.aberdote.OVPN4ALL.utils;
+package com.aberdote.OVPN4ALL.utils.script;
 
 import java.io.IOException;
 
