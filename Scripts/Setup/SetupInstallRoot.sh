@@ -22,7 +22,7 @@ LOG_FILE="$1"
 
 function log() {
     printf "%s ...\n" "$1" &>> "$LOG_FILE"
-    "$2" &>> "$LOG_FILE" ||  { printf "%s" "$3" &>> "$LOG_FILE"; exit 1; }
+    bash -c "$2" &>> "$LOG_FILE" ||  { printf "%s" "$3" &>> "$LOG_FILE"; exit 1; }
     
 }
 

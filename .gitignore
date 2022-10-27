@@ -40,3 +40,4 @@ Install/
 db/
 logs/
 Server/
+*.log
