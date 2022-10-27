@@ -32,4 +32,4 @@ log "Creating Install folder" "mkdir $2/Install" "Cannot create Install folder"
 log "Creating Users folder" "mkdir $2/Users" "Cannot create Users folder"
 log "Creating Server folder" "mkdir $2/Server" "Cannot create Server folder"
 
-exit 0;
+exit 0

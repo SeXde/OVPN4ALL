@@ -39,5 +39,4 @@ build/
 Install/
 db/
 logs/
-Server/
 *.log
