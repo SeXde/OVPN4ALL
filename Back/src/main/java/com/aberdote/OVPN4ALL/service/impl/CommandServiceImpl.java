@@ -24,8 +24,9 @@ public class CommandServiceImpl implements CommandService {
 
     @Override
     public boolean addUser(String name, String password) throws IOException, InterruptedException {
-        log.info("Executing create user {}", name);
-        final int resultCode = ScriptExec.exec(String.format("%s/Scripts/User/%s.sh '%s' 'Logs/%s.log' '%s' '%s'", workingDir, workingDir, createUserCertScript, createUserConfigScript, name, password));
+        final String cmd = String.format("%s/Scripts/User/%s.sh %s Logs/%s.log %s %s", workingDir, createUserCertScript , workingDir, createUserCertScript, name.replaceAll(" ", "").replaceAll("'", " "), password);
+        log.info("Executing script: {}", cmd);
+        final int resultCode = ScriptExec.exec(cmd);
         if (resultCode != 0) {
             final String message = String.format("Create user config script did not finish correctly, see logs for more info.\nResult code: '%s'", resultCode);
             log.error(message);
