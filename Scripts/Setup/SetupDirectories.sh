@@ -27,8 +27,8 @@ function log() {
     
 }
 
-mkdir $2/Logs || { printf "Cannot create Logs folder"; exit 1; }
-log "Creating Install folder" "mkdir $2/Install" "Cannot create Install folder"
-log "Creating Users folder" "mkdir $2/Users" "Cannot create Users folder"
-log "Creating Server folder" "mkdir $2/Server" "Cannot create Server folder"
+mkdir "$WD_DIR"/Logs || { printf "Cannot create Logs folder"; exit 1; }
+log "Creating Install folder" "mkdir $WD_DIR/Install" "Cannot create Install folder"
+log "Creating Users folder" "mkdir $WD_DIR/Users" "Cannot create Users folder"
+log "Creating Server folder" "mkdir $WD_DIR/Server" "Cannot create Server folder"
 exit 0
