@@ -13,13 +13,13 @@ function ctrl_c() {
 
 # Check if arguments are wrong
 if test "$#" -ne $ARG_NUMBER; then
-    printf "Usage: %s [Log file].\n" "$0" >&2
+    printf "Usage: %s [Working directory] [Log file].\n" "$0" >&2
     printf "Expected %s argument/s but %s were passed" "$ARG_NUMBER" "$#"
     exit 1
 fi
 
-LOG_FILE="$1"
-WD_DIR="$2"
+LOG_FILE="$2"
+WD_DIR="$1"
 
 function log() {
     printf "%s ...\n" "$1" &>> "$WD_DIR/$LOG_FILE"

@@ -26,22 +26,10 @@ function log() {
     
 }
 
-# Check if user has sudo privileges
 (( EUID )) && { printf "Run this script with root priviliges.\n" &>> "$LOG_FILE" ; exit 1; }
-
-# Check if host has internet connection
 log "Checking internet connection" "ping -c 1 www.google.com" "Cannot create Install folder"
-
-# Update repositories
 log "Updating repositories" "apt update -y" "Cannot update repositories"
-
-# Install OpenVPN
 log "Installing OpenVPN" "apt install openvpn -y" "Cannot install OpenVPN"
-
-# Install OpenSSL
 log "Installing OpenSSL" "apt install openssl -y" "Cannot install OpenSSL"
-
-# Install Sed
 log "Installing Sed" "apt install sed -y" "Cannot install Sed"
-
 exit 0
