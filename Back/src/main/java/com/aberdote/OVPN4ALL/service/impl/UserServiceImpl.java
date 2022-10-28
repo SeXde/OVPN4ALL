@@ -1,6 +1,7 @@
 package com.aberdote.OVPN4ALL.service.impl;
 
 import com.aberdote.OVPN4ALL.common.constanst.RoleConstants;
+import com.aberdote.OVPN4ALL.common.constanst.UserReservedConstants;
 import com.aberdote.OVPN4ALL.dto.user.CreateUserRequestDTO;
 import com.aberdote.OVPN4ALL.dto.user.LoginUserRequestDTO;
 import com.aberdote.OVPN4ALL.dto.user.UserResponseDTO;
@@ -19,13 +20,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.crypto.codec.Hex;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -41,20 +40,9 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserResponseDTO addUser(CreateUserRequestDTO createUserRequestDTO) {
-        if (!UserValidator.validateEmail(createUserRequestDTO.getEmail())) {
-            log.error("email {} is mot valid", createUserRequestDTO.getEmail());
-            throw new CustomException("email "+createUserRequestDTO.getEmail()+" is not valid", HttpStatus.BAD_REQUEST);
-        }
-        if (userRepository.findByNameIgnoreCase(createUserRequestDTO.getName()).isPresent()) {
-            log.error("Cannot add user {} already exists", createUserRequestDTO.getName());
-            throw new CustomException("User "+createUserRequestDTO.getName()+" already exists", HttpStatus.BAD_REQUEST);
-        }
-        if (!createUserRequestDTO.getRoles().stream().allMatch(role -> roleRepository.findByRoleName(role.getRoleName()).isPresent())) {
-            log.error("Cannot add user {} some roles are not correct", createUserRequestDTO.getName());
-            throw new CustomException("Cannot add user "+createUserRequestDTO.getName()+" some roles are not correct", HttpStatus.BAD_REQUEST);
-        }
+        validateUser(createUserRequestDTO);
         try {
-            if (!commandService.addUser(encodeHex(createUserRequestDTO.getName()), encodeHex(createUserRequestDTO.getPassword()), "im_not_leaking_my_ip_on_github_xd", "neither_my_port_xdd")) {
+            if (!commandService.addUser(createUserRequestDTO.getName(), createUserRequestDTO.getPassword())) {
                 throw new CustomException(String.format("Cannot add user '%s', execution failed, see logs for more details", createUserRequestDTO.getName()), HttpStatus.INTERNAL_SERVER_ERROR);
             }
             log.info("Adding user {}", createUserRequestDTO.getName());
@@ -213,14 +201,23 @@ public class UserServiceImpl implements UserService {
             .orElseThrow(() -> new CustomException("Cannot get user, it doesn't exists", HttpStatus.NOT_FOUND));
     }
 
-    private String encodeHex(String input) {
-        final StringBuilder stringBuilder = new StringBuilder();
-        input.toLowerCase().chars().forEach(character -> stringBuilder.append(Integer.toHexString(character)));
-        return stringBuilder.toString();
-    }
-
-    private String decodeHex(String input) {
-        return new String(Hex.decode(input), StandardCharsets.UTF_8);
+    private void validateUser(CreateUserRequestDTO createUserRequestDTO) {
+        if (UserReservedConstants.USER_RESERVED.contains(createUserRequestDTO.getName().toLowerCase())) {
+            log.error("{} is not a valid name", createUserRequestDTO.getEmail());
+            throw new CustomException(String.format("%s is not a valid name", createUserRequestDTO.getName()), HttpStatus.BAD_REQUEST);
+        }
+        if (!UserValidator.validateEmail(createUserRequestDTO.getEmail())) {
+            log.error("email {} is not valid", createUserRequestDTO.getEmail());
+            throw new CustomException("email "+createUserRequestDTO.getEmail()+" is not valid", HttpStatus.BAD_REQUEST);
+        }
+        if (userRepository.findByNameIgnoreCase(createUserRequestDTO.getName()).isPresent()) {
+            log.error("Cannot add user {} already exists", createUserRequestDTO.getName());
+            throw new CustomException("User "+createUserRequestDTO.getName()+" already exists", HttpStatus.BAD_REQUEST);
+        }
+        if (!createUserRequestDTO.getRoles().stream().allMatch(role -> roleRepository.findByRoleName(role.getRoleName()).isPresent())) {
+            log.error("Cannot add user {} some roles are not correct", createUserRequestDTO.getName());
+            throw new CustomException("Cannot add user "+createUserRequestDTO.getName()+" some roles are not correct", HttpStatus.BAD_REQUEST);
+        }
     }
 
 }

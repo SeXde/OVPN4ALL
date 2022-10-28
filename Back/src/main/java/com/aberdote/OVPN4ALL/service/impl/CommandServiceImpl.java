@@ -1,9 +1,9 @@
 package com.aberdote.OVPN4ALL.service.impl;
 
-import com.aberdote.OVPN4ALL.common.constanst.ScriptsConstants;
 import com.aberdote.OVPN4ALL.service.CommandService;
 import com.aberdote.OVPN4ALL.utils.script.ScriptExec;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
@@ -12,12 +12,22 @@ import java.io.IOException;
 @Slf4j @Service
 @Transactional
 public class CommandServiceImpl implements CommandService {
+
+    @Value("${server.path.working-directory}")
+    private String workingDir;
+    @Value("${server.name.user.create.config}")
+    private String createUserConfigScript;
+    @Value("${server.name.user.create.cert}")
+    private String createUserCertScript;
+    @Value("${server.name.user.delete}")
+    private String deleteUserScript;
+
     @Override
-    public boolean addUser(String name, String password, String server, String port) throws IOException, InterruptedException {
+    public boolean addUser(String name, String password) throws IOException, InterruptedException {
         log.info("Executing create user {}", name);
-        final int resultCode = ScriptExec.exec(String.format("%s%s %s %s %s %s", ScriptsConstants.APP_PATH, ScriptsConstants.CREATE_USER_SH, name, password, server, port));
+        final int resultCode = ScriptExec.exec(String.format("%s/Scripts/User/%s.sh '%s' 'Logs/%s.log' '%s' '%s'", workingDir, workingDir, createUserCertScript, createUserConfigScript, name, password));
         if (resultCode != 0) {
-            final String message = String.format("User script did not finish correctly, see logs for more info.\nResult code: '%s'", resultCode);
+            final String message = String.format("Create user config script did not finish correctly, see logs for more info.\nResult code: '%s'", resultCode);
             log.error(message);
             return false;
         }
@@ -73,4 +83,5 @@ public class CommandServiceImpl implements CommandService {
     public boolean downloadLogs() {
         return false;
     }
+
 }

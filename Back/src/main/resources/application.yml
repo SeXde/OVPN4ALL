@@ -1,13 +1,13 @@
 server:
   path:
     working-directory: /home/sexde/OVPN4ALL
-  script:
+  name:
     user:
       create:
-        config: CreateUserVPNFile.sh
-        cert: CreateUserCert.sh
-      delete: DeleteUser.sh
+        config: CreateUserVPNFile
+        cert: CreateUserCert
+      delete: DeleteUser
     server:
       create:
-        config: CreateServerConfig.sh
-        cert: CreateServerCert.sh
+        config: CreateServerConfig
+        cert: CreateServerCert

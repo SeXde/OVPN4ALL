@@ -7,7 +7,7 @@ import java.io.IOException;
 @Service
 public interface CommandService {
 
-    boolean addUser(String name, String password, String server, String port) throws IOException, InterruptedException;
+    boolean addUser(String name, String password) throws IOException, InterruptedException;
     boolean editUser(String name, String password);
     boolean deleteUser(String name);
     boolean addConfig(String port, String gateway, String netmask);
