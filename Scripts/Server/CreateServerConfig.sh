@@ -36,8 +36,8 @@ log "Writing gateway" "sed -i 's/<fill_gateway>/$GATEWAY/g' /tmp/OVPN4ALL.conf" 
 log "Writing subnet" "sed -i 's/<fill_subnet>/$SUBNET/g' /tmp/OVPN4ALL.conf" "Cannot set subnet"
 TA=$(cat "$WD_DIR"/Install/EasyRSA/ta.key)
 CA=$(cat  "$WD_DIR"/Install/EasyRSA/pki/ca.crt)
-CERT=$(grep  -zo -- "-*BEGIN.*END.*-*$"  "$WD_DIR"/Install/EasyRSA/pki/issued/OVP4ALL-Server.crt)
-KEY=$(cat  "$WD_DIR"/Install/EasyRSA/pki/private/OVP4ALL-Server.key)
+CERT=$(grep  -zo -- "-*BEGIN.*END.*-*$"  "$WD_DIR"/Install/EasyRSA/pki/issued/OVPN4ALL-Server.crt)
+KEY=$(cat  "$WD_DIR"/Install/EasyRSA/pki/private/OVPN4ALL-Server.key)
 log "Writing ta" "echo -en '<tls-auth>\n$TA\n</tls-auth>\n' >> /tmp/OVPN4ALL.conf" "Cannot write ta"
 log "Writing ca" "echo -en '<ca>\n$CA\n</ca>\n' >> /tmp/OVPN4ALL.conf" "Cannot write ca"
 log "Writing cert" "echo -en '<cert>\n$CERT\n</cert>\n' >> /tmp/OVPN4ALL.conf " "Cannot write cert"
