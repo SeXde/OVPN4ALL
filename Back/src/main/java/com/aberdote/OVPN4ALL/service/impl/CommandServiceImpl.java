@@ -26,9 +26,11 @@ public class CommandServiceImpl implements CommandService {
     private String createUserCertScript;
     @Value("${server.name.user.delete}")
     private String deleteUserScript;
-    @Value("${server.name.server.create.config}")
+    @Value("${server.name.create.config}")
     private String createServerConfigScript;
-    @Value("${server.name.server.download.logs}")
+    @Value("${server.name.download.logs}")
+    private String downloadServerLogs;
+    @Value("${server.name.download.logs}")
     private String downloadServerLogs;
     @Autowired
     private ConfigService configService;
