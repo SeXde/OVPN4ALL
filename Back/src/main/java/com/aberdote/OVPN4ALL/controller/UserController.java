@@ -17,7 +17,10 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -122,6 +125,24 @@ public class UserController {
     public ResponseEntity<Void> testToken() {
         log.info("Testing token ...");
         return ResponseEntity.ok().build();
+    }
+
+    @Operation(summary = "Download OVPN file")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Config file found", content = {@Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = UserResponseDTO.class)))}),
+            @ApiResponse(responseCode = "400", description = "Wrong Parameter", content = {@Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = ErrorDTO.class)))}),
+            @ApiResponse(responseCode = "403", description = "Unauthorized access", content = {@Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = ErrorDTO.class)))}),
+            @ApiResponse(responseCode = "404", description = "Config not found", content = {@Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = ErrorDTO.class)))}),
+            @ApiResponse(responseCode = "500", description = "Error trying to download OVPN file", content = {@Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = ErrorDTO.class)))})
+    })
+    @GetMapping("/{id}/ovpn")
+    public  ResponseEntity<Resource> downloadOVPNFile(@Parameter(description = "The id of the user") @PathVariable(required = true) Long id) {
+        log.info("Request to download OPVNFile for user {}", id);
+        final ByteArrayResource ovpnFile = userService.downloadUserVPN(id);
+        return ResponseEntity.ok()
+                .contentLength(ovpnFile.contentLength())
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .body(ovpnFile);
     }
 
 }

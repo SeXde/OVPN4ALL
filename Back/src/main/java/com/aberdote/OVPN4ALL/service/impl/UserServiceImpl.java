@@ -12,10 +12,11 @@ import com.aberdote.OVPN4ALL.repository.RoleRepository;
 import com.aberdote.OVPN4ALL.repository.UserRepository;
 import com.aberdote.OVPN4ALL.service.CommandService;
 import com.aberdote.OVPN4ALL.service.UserService;
-import com.aberdote.OVPN4ALL.utils.Converter;
+import com.aberdote.OVPN4ALL.utils.validator.converter.EntityConverter;
 import com.aberdote.OVPN4ALL.utils.validator.user.UserValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -24,7 +25,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -46,7 +49,7 @@ public class UserServiceImpl implements UserService {
                 throw new CustomException(String.format("Cannot add user '%s', execution failed, see logs for more details", createUserRequestDTO.getName()), HttpStatus.INTERNAL_SERVER_ERROR);
             }
             log.info("Adding user {}", createUserRequestDTO.getName());
-            final UserEntity userEntity = Converter.convertFromDTOUser(createUserRequestDTO);
+            final UserEntity userEntity = EntityConverter.fromCreateUserDTOToUserEntity(createUserRequestDTO);
             userEntity.setRoles(createUserRequestDTO.getRoles().stream()
                     .map(role -> roleRepository.findByRoleName(role.getRoleName())
                             .orElseThrow(() -> {
@@ -56,9 +59,9 @@ public class UserServiceImpl implements UserService {
                     .collect(Collectors.toSet())
             );
             userEntity.setPassword(bCryptPasswordEncoder.encode(userEntity.getPassword()));
-            return Converter.convertDTOUser(userRepository.save(userEntity));
+            return EntityConverter.fromUserEntityToUserResponseDTO(userRepository.save(userEntity));
         } catch (IOException | InterruptedException e) {
-            final String message = String.format("Cannot execute user config script, ErrorMessage: '%s'", e.getMessage());
+            final String message = String.format("Cannot execute add user script, ErrorMessage: '%s'", e.getMessage());
             log.error(message);
             throw new CustomException(message, HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -90,12 +93,12 @@ public class UserServiceImpl implements UserService {
     @Override
     public Collection<UserResponseDTO> getUsers() {
         log.info("Getting all users");
-        return userRepository.findAll().stream().map(Converter::convertDTOUser).toList();
+        return userRepository.findAll().stream().map(EntityConverter::fromUserEntityToUserResponseDTO).toList();
     }
 
     @Override
     public Page<UserResponseDTO> getUsersPaginated(int pageNumber, int usersPerPage) {
-        final List<UserResponseDTO> userResponseDTOList = userRepository.findAll(PageRequest.of(pageNumber, usersPerPage)).stream().map(Converter::convertDTOUser).sorted((u1, u2) -> {
+        final List<UserResponseDTO> userResponseDTOList = userRepository.findAll(PageRequest.of(pageNumber, usersPerPage)).stream().map(EntityConverter::fromUserEntityToUserResponseDTO).sorted((u1, u2) -> {
             final boolean u1ContainsUserRole = u1.getRoles().stream().anyMatch(roleDTO -> roleDTO.getRoleName().equals(RoleConstants.ROLE_USER));
             final boolean u2ContainsUserRole = u2.getRoles().stream().anyMatch(roleDTO -> roleDTO.getRoleName().equals(RoleConstants.ROLE_USER));
             if (u1ContainsUserRole == u2ContainsUserRole) return 0;
@@ -112,7 +115,7 @@ public class UserServiceImpl implements UserService {
             log.error("User {} does not exist", loginUserRequestDTO.getName());
             throw new CustomException("User "+loginUserRequestDTO.getName()+" does not exist", HttpStatus.NOT_FOUND);
         }
-        UserEntity user = optUser.get();
+        final UserEntity user = optUser.get();
         if (!this.isAdmin(user)){
             log.error("User {} has not privileges", user.getName());
             throw new CustomException("User "+user.getName()+" has not privileges", HttpStatus.UNAUTHORIZED);
@@ -146,12 +149,69 @@ public class UserServiceImpl implements UserService {
                     user.getRoles().add(roleEntityOpt.get());
                     // userRepository.save(user);
                     log.info("User "+receiver+" has got new role: "+roleName);
-                    return Converter.convertDTOUser(user);
+                    return EntityConverter.fromUserEntityToUserResponseDTO(user);
                 })
                 .orElseGet(() -> {
                     log.error("User {} not found", receiver);
                     throw new CustomException("User "+receiver+" not found", HttpStatus.NOT_FOUND);
                 });
+    }
+
+    @Override
+    public ByteArrayResource downloadUserVPN(String user) {
+        return downloadUserVPN(userRepository.findByNameIgnoreCase(user));
+    }
+
+    @Override
+    public ByteArrayResource downloadUserVPN(Long id) {
+        return downloadUserVPN(userRepository.findById(id));
+    }
+
+    @Override
+    public List<File> downloadLogs() {
+        try {
+            final List<File> logs = commandService.downloadLogs();
+            if (logs == null || logs.isEmpty()) {
+                final String msg = "There are no logs to download";
+                log.error(msg);
+                throw new CustomException(msg, HttpStatus.NOT_FOUND);
+            }
+            return logs;
+        } catch (IOException e) {
+            final String msg = String.format("Cannot download logs, ErrorMessage: %s", e.getMessage());
+            log.error(msg);
+            throw new CustomException(msg, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    private ByteArrayResource downloadUserVPN(Optional<UserEntity> optionalUserEntity) {
+        if (optionalUserEntity.isEmpty()) {
+            final String msg = "Cannot find user to download vpn";
+            log.error(msg);
+            throw new CustomException(msg, HttpStatus.NOT_FOUND);
+        }
+        final UserEntity userEntity = optionalUserEntity.get();
+        try {
+            final File ovpnFile = commandService.downloadOVPNFile(userEntity.getName());
+            if (ovpnFile == null) {
+                final String msg = "Cannot create user config, for more details check logs";
+                log.error(msg);
+                throw new CustomException(msg, HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+            ByteArrayResource resource = null;
+            try {
+                resource = new ByteArrayResource(Files.readAllBytes(ovpnFile.toPath()));
+            } catch (IOException e) {
+                final String msg = String.format("Cannot download config file, ErrorMessage: %s", e.getMessage());
+                log.error(msg);
+                throw new CustomException(msg, HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+            return resource;
+        } catch (IOException | InterruptedException e) {
+            final String msg = String.format("Cannot download config file, ErrorMessage: %s", e.getMessage());
+            log.error(msg);
+            throw new CustomException(msg, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     private boolean isRole(UserEntity userEntity, String roleName) {
@@ -184,26 +244,36 @@ public class UserServiceImpl implements UserService {
             log.error("Cannot find user to delete");
             throw new CustomException("Cannot find user to delete", HttpStatus.NOT_FOUND);
         }
-        if (this.isLastAdmin(optionalUserEntity.get())) {
+        final UserEntity userEntity = optionalUserEntity.get();
+        if (this.isLastAdmin(userEntity)) {
             log.error("User is last Admin");
             throw new CustomException("User is last Admin", HttpStatus.FORBIDDEN);
         }
-        log.info("Deleting user "+optionalUserEntity.get().getName());
-        userRepository.delete(optionalUserEntity.get());
+        try {
+            if (!commandService.deleteUser(userEntity.getName())) {
+                throw new CustomException(String.format("Cannot delete user '%s', execution failed, see logs for more details", userEntity.getName()), HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+            log.info("Deleting user {}", userEntity.getName());
+            userRepository.delete(optionalUserEntity.get());
+        } catch (IOException | InterruptedException e) {
+            final String message = String.format("Cannot execute delete user script, ErrorMessage: '%s'", e.getMessage());
+            log.error(message);
+            throw new CustomException(message, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     private UserResponseDTO getUser(Optional<UserEntity> optionalUserEntity) {
         return optionalUserEntity
             .map(user -> {
                 log.info("Getting user {}", optionalUserEntity.get().getName());
-                return Converter.convertDTOUser(user);
+                return EntityConverter.fromUserEntityToUserResponseDTO(user);
             })
             .orElseThrow(() -> new CustomException("Cannot get user, it doesn't exists", HttpStatus.NOT_FOUND));
     }
 
     private void validateUser(CreateUserRequestDTO createUserRequestDTO) {
-        if (UserReservedConstants.USER_RESERVED.contains(createUserRequestDTO.getName().toLowerCase())) {
-            log.error("{} is not a valid name", createUserRequestDTO.getEmail());
+        if (UserReservedConstants.PASSWORD_FORBIDEN.contains(createUserRequestDTO.getPassword())) {
+            log.error("{} is not a valid password", createUserRequestDTO.getEmail());
             throw new CustomException(String.format("%s is not a valid name", createUserRequestDTO.getName()), HttpStatus.BAD_REQUEST);
         }
         if (!UserValidator.validateEmail(createUserRequestDTO.getEmail())) {

@@ -5,6 +5,6 @@ import java.util.Set;
 
 public class UserReservedConstants {
 
-    public final static Set<String> USER_RESERVED = new HashSet<>(Set.of("ca, ovpn4all-server"));
+    public final static Set<String> PASSWORD_FORBIDEN = new HashSet<>(Set.of("'"));
 
 }

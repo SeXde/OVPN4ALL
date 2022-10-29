@@ -12,12 +12,12 @@ import javax.persistence.Id;
 public class ConfigEntity {
     @Id @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
-    private String port, gateway, netmask;
+    private String port, gateway, netmask, server;
 
-    public ConfigEntity(String port, String gateway, String netmask) {
+    public ConfigEntity(String port, String gateway, String netmask, String server) {
         this.port = port;
         this.gateway = gateway;
         this.netmask = netmask;
+        this.server = server;
     }
-
 }

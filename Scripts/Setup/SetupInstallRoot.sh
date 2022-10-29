@@ -32,4 +32,6 @@ log "Updating repositories" "apt update -y" "Cannot update repositories"
 log "Installing OpenVPN" "apt install openvpn -y" "Cannot install OpenVPN"
 log "Installing OpenSSL" "apt install openssl -y" "Cannot install OpenSSL"
 log "Installing Sed" "apt install sed -y" "Cannot install Sed"
+log "Installing xdd" "apt install xdd -y" "Cannot install xdd"
+log "Installing pkill" "apt install pkill -y" "Cannot install pkill"
 exit 0

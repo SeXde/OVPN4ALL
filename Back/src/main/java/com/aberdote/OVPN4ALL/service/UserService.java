@@ -3,9 +3,11 @@ package com.aberdote.OVPN4ALL.service;
 import com.aberdote.OVPN4ALL.dto.user.CreateUserRequestDTO;
 import com.aberdote.OVPN4ALL.dto.user.LoginUserRequestDTO;
 import com.aberdote.OVPN4ALL.dto.user.UserResponseDTO;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
 import java.util.Collection;
 import java.util.List;
 
@@ -22,4 +24,7 @@ public interface UserService {
     Page<UserResponseDTO> getUsersPaginated(int pageNumber, int usersPerPage);
     void validateUser(LoginUserRequestDTO loginUserRequestDTO);
     UserResponseDTO addRoleToUser(String sender, String receiver, String roleName);
+    ByteArrayResource downloadUserVPN(String user);
+    ByteArrayResource downloadUserVPN(Long id);
+    List<File> downloadLogs();
 }
