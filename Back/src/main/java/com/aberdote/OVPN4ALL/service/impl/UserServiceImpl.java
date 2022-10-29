@@ -167,23 +167,6 @@ public class UserServiceImpl implements UserService {
         return downloadUserVPN(userRepository.findById(id));
     }
 
-    @Override
-    public List<File> downloadLogs() {
-        try {
-            final List<File> logs = commandService.downloadLogs();
-            if (logs == null || logs.isEmpty()) {
-                final String msg = "There are no logs to download";
-                log.error(msg);
-                throw new CustomException(msg, HttpStatus.NOT_FOUND);
-            }
-            return logs;
-        } catch (IOException e) {
-            final String msg = String.format("Cannot download logs, ErrorMessage: %s", e.getMessage());
-            log.error(msg);
-            throw new CustomException(msg, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
     private ByteArrayResource downloadUserVPN(Optional<UserEntity> optionalUserEntity) {
         if (optionalUserEntity.isEmpty()) {
             final String msg = "Cannot find user to download vpn";

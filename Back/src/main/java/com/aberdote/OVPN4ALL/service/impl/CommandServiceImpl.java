@@ -1,6 +1,7 @@
 package com.aberdote.OVPN4ALL.service.impl;
 
 import com.aberdote.OVPN4ALL.dto.SetupDTO;
+import com.aberdote.OVPN4ALL.exception.CustomException;
 import com.aberdote.OVPN4ALL.service.CommandService;
 import com.aberdote.OVPN4ALL.service.ConfigService;
 import com.aberdote.OVPN4ALL.utils.script.ScriptExec;
@@ -8,14 +9,19 @@ import com.aberdote.OVPN4ALL.utils.validator.converter.StringConverter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 @Slf4j @Service
 @Transactional
@@ -95,8 +101,28 @@ public class CommandServiceImpl implements CommandService {
     }
 
     @Override
-    public List<File> downloadLogs() throws IOException {
-        return Files.walk(Paths.get(String.format("%s/Logs", workingDir))).map(path -> new File(path.toUri())).toList();
+    public File downloadLogs() throws IOException {
+        final List<File> files = Files.walk(Paths.get(String.format("%s/Logs", workingDir))).map(path -> new File(path.toUri())).filter(File::isFile).toList();
+        try {
+            final ZipOutputStream logsZip = new ZipOutputStream(new FileOutputStream(String.format("%s/logs.zip", workingDir)));
+            for (File file : files) {
+                final FileInputStream fileInputStream = new FileInputStream(file);
+                final ZipEntry zipEntry = new ZipEntry(file.getName());
+                logsZip.putNextEntry(zipEntry);
+                final byte[] buffer = new byte[1024];
+                int len;
+                while ((len = fileInputStream.read(buffer)) > 0) {
+                    logsZip.write(buffer, 0, len);
+                }
+                logsZip.closeEntry();
+                fileInputStream.close();
+            }
+        } catch (IOException e) {
+            final String msg = String.format("Cannot compress logs files, ErrorMessage: %s", e.getMessage());
+            log.error(msg);
+            throw new CustomException(msg, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        return new File(String.format("%s/logs.zip", workingDir));
     }
 
     private boolean executeCommand(String command, String logMessage) throws IOException, InterruptedException {

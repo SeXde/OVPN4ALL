@@ -7,7 +7,6 @@ import org.springframework.core.io.ByteArrayResource;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
 import java.util.Collection;
 import java.util.List;
 
@@ -26,5 +25,4 @@ public interface UserService {
     UserResponseDTO addRoleToUser(String sender, String receiver, String roleName);
     ByteArrayResource downloadUserVPN(String user);
     ByteArrayResource downloadUserVPN(Long id);
-    List<File> downloadLogs();
 }

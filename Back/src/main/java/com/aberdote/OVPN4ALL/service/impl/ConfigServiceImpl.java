@@ -4,27 +4,20 @@ package com.aberdote.OVPN4ALL.service.impl;
 import com.aberdote.OVPN4ALL.dto.SetupDTO;
 import com.aberdote.OVPN4ALL.exception.CustomException;
 import com.aberdote.OVPN4ALL.repository.ConfigRepository;
-import com.aberdote.OVPN4ALL.service.CommandService;
 import com.aberdote.OVPN4ALL.service.ConfigService;
 import com.aberdote.OVPN4ALL.utils.validator.config.ConfigValidator;
 import com.aberdote.OVPN4ALL.utils.validator.converter.EntityConverter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
-import java.util.zip.ZipOutputStream;
 
 @Slf4j @Service @Transactional @RequiredArgsConstructor
 public class ConfigServiceImpl implements ConfigService {
 
     private final ConfigRepository configRepository;
-    private final CommandService commandService;
 
     @Override
     public SetupDTO getConfig() {
@@ -60,16 +53,4 @@ public class ConfigServiceImpl implements ConfigService {
         return setupDTO;
     }
 
-    @Override
-    public ByteArrayResource downloadLogs() {
-        try {
-            final List<File> logs = commandService.downloadLogs();
-            final ZipOutputStream logsZip = new ZipOutputStream()
-            logs.forEach(file );
-        } catch (IOException e) {
-            final String msg = String.format("Cannot download logs files, ErrorMessage: %s", e.getMessage());
-            log.error(msg);
-            throw new CustomException(msg, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
 }

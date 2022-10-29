@@ -4,7 +4,6 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
 
 @Service
 public interface CommandService {
@@ -19,5 +18,5 @@ public interface CommandService {
     boolean getVPNInfo();
     boolean getUserInfo();
     File downloadOVPNFile(String user) throws IOException, InterruptedException;
-    List<File> downloadLogs() throws IOException;
+    File downloadLogs() throws IOException;
 }
