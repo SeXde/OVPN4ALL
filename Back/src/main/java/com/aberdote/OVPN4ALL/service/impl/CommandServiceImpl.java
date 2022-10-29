@@ -30,8 +30,8 @@ public class CommandServiceImpl implements CommandService {
     private String createServerConfigScript;
     @Value("${server.name.download.logs}")
     private String downloadServerLogs;
-    @Value("${server.name.download.logs}")
-    private String downloadServerLogs;
+    @Value("${server.name.create.iptables}")
+    private String createIptables;
     @Autowired
     private ConfigService configService;
 
@@ -54,8 +54,9 @@ public class CommandServiceImpl implements CommandService {
 
     @Override
     public boolean addConfig(String port, String gateway, String netmask) throws IOException, InterruptedException {
-        final String cmd = String.format("%s/Scripts/User/%s.sh %s Logs/%s.log %s %s %s", workingDir, createServerConfigScript, workingDir, createServerConfigScript, port, gateway, netmask);
-        return executeCommand(cmd, "delete user");
+        final String cmd1 = String.format("%s/Scripts/User/%s.sh %s Logs/%s.log %s %s %s", workingDir, createServerConfigScript, workingDir, createServerConfigScript, port, gateway, netmask);
+        final String cmd2 = String.format("sudo %s/Scripts/User/%s.sh %s", workingDir, createIptables, port);
+        return executeCommand(cmd1, "server config") && executeCommand(cmd2, "iptables");
     }
 
     @Override
@@ -106,7 +107,7 @@ public class CommandServiceImpl implements CommandService {
 
     @Override
     public boolean clearLogs() throws IOException, InterruptedException {
-        final String cmd = String.format("rm -r %s/Logs/*", workingDir);
+        final String cmd = String.format("sudo rm -r %s/Logs/*", workingDir);
         return executeCommand(cmd, "clear logs");
     }
 
