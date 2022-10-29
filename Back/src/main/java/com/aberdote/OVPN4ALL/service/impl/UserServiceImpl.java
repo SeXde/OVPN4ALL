@@ -16,7 +16,6 @@ import com.aberdote.OVPN4ALL.utils.validator.converter.EntityConverter;
 import com.aberdote.OVPN4ALL.utils.validator.user.UserValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.io.ByteArrayResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -27,7 +26,6 @@ import org.springframework.stereotype.Service;
 import javax.transaction.Transactional;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -158,16 +156,16 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public ByteArrayResource downloadUserVPN(String user) {
+    public File downloadUserVPN(String user) {
         return downloadUserVPN(userRepository.findByNameIgnoreCase(user));
     }
 
     @Override
-    public ByteArrayResource downloadUserVPN(Long id) {
+    public File downloadUserVPN(Long id) {
         return downloadUserVPN(userRepository.findById(id));
     }
 
-    private ByteArrayResource downloadUserVPN(Optional<UserEntity> optionalUserEntity) {
+    private File downloadUserVPN(Optional<UserEntity> optionalUserEntity) {
         if (optionalUserEntity.isEmpty()) {
             final String msg = "Cannot find user to download vpn";
             log.error(msg);
@@ -176,20 +174,12 @@ public class UserServiceImpl implements UserService {
         final UserEntity userEntity = optionalUserEntity.get();
         try {
             final File ovpnFile = commandService.downloadOVPNFile(userEntity.getName());
-            if (ovpnFile == null) {
+            if (ovpnFile == null || !ovpnFile.exists()) {
                 final String msg = "Cannot create user config, for more details check logs";
                 log.error(msg);
                 throw new CustomException(msg, HttpStatus.INTERNAL_SERVER_ERROR);
             }
-            ByteArrayResource resource = null;
-            try {
-                resource = new ByteArrayResource(Files.readAllBytes(ovpnFile.toPath()));
-            } catch (IOException e) {
-                final String msg = String.format("Cannot download config file, ErrorMessage: %s", e.getMessage());
-                log.error(msg);
-                throw new CustomException(msg, HttpStatus.INTERNAL_SERVER_ERROR);
-            }
-            return resource;
+            return ovpnFile;
         } catch (IOException | InterruptedException e) {
             final String msg = String.format("Cannot download config file, ErrorMessage: %s", e.getMessage());
             log.error(msg);

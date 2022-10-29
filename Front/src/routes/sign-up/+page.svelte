@@ -18,7 +18,8 @@
 	let isUser: boolean = false
 	let email: string;
 	let roles: Array<RoleDTO> = []
-	const forbidenPasswords: Set<string> = {"'"}
+	const forbidenPasswords: Set<string> = new Set()
+	forbidenPasswords.add("'")
 	
 	const checkDefault =  () => {
 

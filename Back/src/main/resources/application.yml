@@ -8,6 +8,8 @@ server:
         cert: CreateUserCert
       delete: DeleteUser
     server:
+      download:
+        logs: DownloadLogs
       create:
         config: CreateServerConfig
         cert: CreateServerCert

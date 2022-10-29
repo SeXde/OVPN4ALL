@@ -38,8 +38,14 @@ public class DatabaseInitializer {
         roleRepository.saveAll(RoleConstants.ROLES.stream().map(RoleEntity::new).toList());
         final List<CreateUserRequestDTO> users = List.of(new CreateUserRequestDTO("Admin","dummy@mail.com",
                 "Admin",
-                List.of(new RoleDTO(RoleConstants.ROLE_ADMIN))), new CreateUserRequestDTO("AdminUser", "iberia@unboxing.com", "AdminUser",
-                List.of(new RoleDTO(RoleConstants.ROLE_USER), new RoleDTO(RoleConstants.ROLE_ADMIN))));
+                List.of(new RoleDTO(RoleConstants.ROLE_ADMIN))),
+                new CreateUserRequestDTO("AdminUser", "iberia@unboxing.com", "AdminUser",
+                List.of(new RoleDTO(RoleConstants.ROLE_USER), new RoleDTO(RoleConstants.ROLE_ADMIN))),
+                new CreateUserRequestDTO("Pollo", "pollo@unboxing.com", "Pollo",
+                        List.of(new RoleDTO(RoleConstants.ROLE_USER), new RoleDTO(RoleConstants.ROLE_ADMIN))),
+                new CreateUserRequestDTO("Zoe", "pollo@unboxing.com", "Zoe",
+                        List.of(new RoleDTO(RoleConstants.ROLE_USER)))
+        );
         users.forEach(user -> {
             try {
                 commandService.deleteUser(user.getName());

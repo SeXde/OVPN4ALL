@@ -3,7 +3,7 @@
 # Trap SigINT
 trap ctrl_c INT
 
-ARG_NUMBER=3
+ARG_NUMBER=2
 
 function ctrl_c() {
     printf "Exiting ...\n"
@@ -13,14 +13,13 @@ function ctrl_c() {
 
 # Check if arguments are wrong
 if test "$#" -ne $ARG_NUMBER; then
-    printf "Usage: %s [Working directory] [Log file] [Username].\n" "$0" >&2
+    printf "Usage: %s [Working directory] [Log file].\n" "$0" >&2
     printf "Expected %s argument/s but %s were passed" "$ARG_NUMBER" "$#"
     exit 1
 fi
 
 LOG_FILE="$2"
 WD_DIR="$1"
-USERNAME="$3"
 
 function log() {
     printf "%s ...\n" "$1" &>> "$WD_DIR/$LOG_FILE"
@@ -28,7 +27,6 @@ function log() {
     
 }
 
-log "Deleting user certificate" "rm $WD_DIR/Install/EasyRSA/pki/issued/$USERNAME.crt" "Cannot delete user certificate"
-log "Deleting user private key" "rm $WD_DIR/Install/EasyRSA/pki/private/$USERNAME.key" "Cannot delete user private key"
-rm "$WD_DIR"/Users/"$USERNAME".ovpn &>> /dev/null
+rm  -r "$WD_DIR"/Logs/OVPN4ALL_Logs.zip 6>>/dev/null
+log "Compressing zip" "cd $WD_DIR/Logs; zip -r OVPN4ALL_Logs.zip ." "Cannot create zip file"
 exit 0

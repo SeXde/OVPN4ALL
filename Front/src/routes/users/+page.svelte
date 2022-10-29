@@ -4,6 +4,8 @@
 	import { deleteWithJWT, getWithJWT } from "$lib/utils/requestUtils";
     import { fly } from 'svelte/transition';
 	import { goto } from "$app/navigation";
+    import { saveAs } from 'file-saver';
+    import Cookies from 'js-cookie';
 
     const transFormUsers = (users: Array<any>):Array<any> => {
         return users.map(user => {
@@ -27,16 +29,11 @@
     let filteredUsers = []
     let [users, error] = data.users;
     let isOrderByName: boolean, isOrderByDate: boolean, isOrderByMail: boolean, noUsers: boolean, noPrev
-    let isDeleteError: boolean = false
-    let isGetError: boolean = false
-    let deleteError: string = null
-    let getError: string = null
     let pageNumber: number = 0
     isOrderByName = isOrderByDate = isOrderByMail = false;
     noPrev = true
     noUsers = users === null || users.length < 10
     users = [... transFormUsers(users)]
-    console.log("Users up:", users)
 
     $: {
         if (searchedUser) {
@@ -45,7 +42,6 @@
         } else {
             filteredUsers = [... users]
         }
-        console.log("Filtered: ", filteredUsers)
     }
 
     
@@ -78,17 +74,18 @@
     }
 
     const deleteUser = async (userId: number): Promise<void> => {
-        const [, error] = await deleteWithJWT('http://localhost:8082/api/users/' + userId, 200)
-        if (error) {
-            deleteError = error.message
-            if (error.message === 'invalid token') goto('/signIn')
+        const [, errorDelete] = await deleteWithJWT('http://localhost:8082/api/users/' + userId, 200)
+        if (errorDelete) {
+            error = errorDelete.message
+            if (errorDelete.message === 'invalid token') goto('/signIn')
         }
-        console.log("Errorsito: ", error)
-        isDeleteError = deleteError !== null
-        if (!isDeleteError) {
+        if (!error) {
             users = users.filter(user => user.id != userId)
             filteredUsers = filteredUsers.filter(user => user.id != userId)
         }
+        setTimeout(() => {
+            error = null
+        }, 3000)
     }
 
     const getNextPage = async(): Promise<void> => {
@@ -106,18 +103,50 @@
     }
 
     const fetchPage = async(pageNum: number): Promise<void> => {
-        const [data, error] = await getWithJWT('http://localhost:8082/api/users?page='+pageNum, 200)
-        if (error !== null) {
-            getError = error.message
-            if (error.message === 'invalid token') goto('/signIn')
+        const [data, errorPage] = await getWithJWT('http://localhost:8082/api/users?page='+pageNum, 200)
+        if (errorPage !== null) {
+            error = errorPage.message
+            if (errorPage.message === 'invalid token') goto('/signIn')
         }
-        isGetError = getError !== null
-        if (!isGetError) {
+        if (!error) {
             users = [... transFormUsers(data)]
             console.log("users down: ", users)
             noUsers = users === null || users.length < 10
         }
+        setTimeout(() => {
+            error = null
+        }, 3000)
     }
+
+    const downloadUserConfig = async (userId: number, userName: string): Promise<void> => {
+        await fetch('http://localhost:8082/api/users/' + userId + '/ovpn', {
+                method: 'GET',
+                mode: 'cors',
+                headers: {
+                    Authorization: 'Bearer '+Cookies.get('jwt')
+                }
+        }).then(async res => {
+            if (res.ok) {
+                console.log(`${userName}.ovpn`)
+                saveAs(new File([await res.blob()], `${userName}.ovpn`, {type: `${res.headers.get('content-type')};charset=utf-8`}))
+                return null
+            } else {
+                return res.json()
+            }
+        })
+        .then(res => {
+            if (res) {
+                error = res.message
+            }
+        })
+        .catch(() => {
+            error = "Cannot connect to the server"
+        })
+        setTimeout(() => {
+            error = null
+        }, 3000)
+    }
+
 
 </script>
 
@@ -127,7 +156,7 @@
 </svelte:head>
 
 <Header navbar={true}/>
-<div on:click={() => {isGetError = false; isDeleteError = false; getError = null; deleteError = null}} class="overflow-x-auto relative shadow-md sm:rounded-lg my-5">
+<div class="overflow-x-auto relative shadow-md sm:rounded-lg my-5">
     <div class="flex justify-between items-center pb-4 bg-transparent">
         <label for="table-search" class="sr-only">Search</label>
         <div class="relative ml-5">
@@ -136,11 +165,8 @@
             </div>
             <input bind:value={searchedUser} type="text" id="table-search-users" class="block p-2 pl-10 w-80 text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-secondary dark:focus:border-secondary" placeholder="Search for users">
         </div>
-        {#if isGetError}
-            <ErrorMessage  title="Error getting users" body={getError}/>
-        {/if}
-        {#if isDeleteError}
-            <ErrorMessage  title="Delete error" body={deleteError}/>
+        {#if error}
+        <ErrorMessage title="Delete error" body={error}/>
         {/if}
         <a href="/sign-up" class="mr-5 my-3 mt-5 w-36 py-2 flex flex-col items-center justify-center text-light rounded-lg border-2 border-light hover:text-primary hover:border-primary disabled:border-stone-500 disabled:text-stone-500 font-semibold transition-colors">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
@@ -216,7 +242,7 @@
                 <td class="py-4 px-6">
                     <div class="flex justify-center">
                         {#if user.isUser}
-                            <div class="flex flex-col items-center mr-4 hover:underline hover:text-secondary hover:cursor-pointer">
+                            <div on:click={() => downloadUserConfig(user.id, user.name)} class="flex flex-col items-center mr-4 hover:underline hover:text-secondary hover:cursor-pointer">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
                                 </svg>

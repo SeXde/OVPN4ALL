@@ -18,5 +18,7 @@ public interface CommandService {
     boolean getVPNInfo();
     boolean getUserInfo();
     File downloadOVPNFile(String user) throws IOException, InterruptedException;
-    File downloadLogs() throws IOException;
+    File downloadLogs() throws IOException, InterruptedException;
+
+    boolean clearLogs() throws IOException, InterruptedException;
 }
