@@ -62,14 +62,16 @@ public class CommandServiceImpl implements CommandService {
 
     @Override
     public boolean shutdown() throws IOException, InterruptedException {
-        final String cmd = "pkill -9 openvpn";
+        final String cmd = "sudo pkill -9 openvpn";
         return executeCommand(cmd, "shutdown vpn");
     }
 
     @Override
-    public boolean startUp() throws IOException, InterruptedException {
-        final String cmd = String.format("openvpn %s/Server/OVPN4ALL.conf", workingDir);
-        return executeCommand(cmd, "start vpn");
+    public void startUp() throws IOException, InterruptedException {
+        final String cmd = String.format("sudo openvpn %s/Server/OVPN4ALL.conf", workingDir);
+        shutdown();
+        log.debug("Executing script: {}", cmd);
+        ScriptExec.execNoWait(cmd);
     }
 
     @Override
@@ -104,6 +106,11 @@ public class CommandServiceImpl implements CommandService {
     public boolean clearLogs() throws IOException, InterruptedException {
         final String cmd = String.format("sudo rm -r %s/Logs/*", workingDir);
         return executeCommand(cmd, "clear logs");
+    }
+
+    @Override
+    public boolean isActive() throws IOException, InterruptedException {
+        return ScriptExec.exec("pgrep openvpn") == 0;
     }
 
     private boolean executeCommand(String command, String logMessage) throws IOException, InterruptedException {

@@ -10,4 +10,8 @@ public class ScriptExec {
         return process.exitValue();
     }
 
+    public static void execNoWait(String scriptAndArguments) throws IOException, InterruptedException {
+        Runtime.getRuntime().exec(scriptAndArguments);
+    }
+
 }
