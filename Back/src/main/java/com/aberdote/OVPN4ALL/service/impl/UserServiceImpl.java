@@ -11,6 +11,7 @@ import com.aberdote.OVPN4ALL.exception.CustomException;
 import com.aberdote.OVPN4ALL.repository.RoleRepository;
 import com.aberdote.OVPN4ALL.repository.UserRepository;
 import com.aberdote.OVPN4ALL.service.CommandService;
+import com.aberdote.OVPN4ALL.service.ConfigService;
 import com.aberdote.OVPN4ALL.service.UserService;
 import com.aberdote.OVPN4ALL.utils.validator.converter.EntityConverter;
 import com.aberdote.OVPN4ALL.utils.validator.user.UserValidator;
@@ -38,6 +39,7 @@ public class UserServiceImpl implements UserService {
     private final RoleRepository roleRepository;
     private final PasswordEncoder bCryptPasswordEncoder;
     private final CommandService commandService;
+    private final ConfigService configService;
 
     @Override
     public UserResponseDTO addUser(CreateUserRequestDTO createUserRequestDTO) {
@@ -173,7 +175,7 @@ public class UserServiceImpl implements UserService {
         }
         final UserEntity userEntity = optionalUserEntity.get();
         try {
-            final File ovpnFile = commandService.downloadOVPNFile(userEntity.getName());
+            final File ovpnFile = commandService.downloadOVPNFile(userEntity.getName(), configService.getConfig());
             if (ovpnFile == null || !ovpnFile.exists()) {
                 final String msg = "Cannot create user config, for more details check logs";
                 log.error(msg);

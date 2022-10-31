@@ -1,5 +1,6 @@
 package com.aberdote.OVPN4ALL.service;
 
+import com.aberdote.OVPN4ALL.dto.SetupDTO;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -17,7 +18,7 @@ public interface CommandService {
     boolean startUp() throws IOException, InterruptedException;
     boolean getVPNInfo();
     boolean getUserInfo();
-    File downloadOVPNFile(String user) throws IOException, InterruptedException;
+    File downloadOVPNFile(String user, SetupDTO config) throws IOException, InterruptedException;
     File downloadLogs() throws IOException, InterruptedException;
 
     boolean clearLogs() throws IOException, InterruptedException;

@@ -2,11 +2,9 @@ package com.aberdote.OVPN4ALL.service.impl;
 
 import com.aberdote.OVPN4ALL.dto.SetupDTO;
 import com.aberdote.OVPN4ALL.service.CommandService;
-import com.aberdote.OVPN4ALL.service.ConfigService;
 import com.aberdote.OVPN4ALL.utils.script.ScriptExec;
 import com.aberdote.OVPN4ALL.utils.validator.converter.StringConverter;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -32,8 +30,6 @@ public class CommandServiceImpl implements CommandService {
     private String downloadServerLogs;
     @Value("${server.name.create.iptables}")
     private String createIptables;
-    @Autowired
-    private ConfigService configService;
 
     @Override
     public boolean addUser(String name, String password) throws IOException, InterruptedException {
@@ -54,8 +50,8 @@ public class CommandServiceImpl implements CommandService {
 
     @Override
     public boolean addConfig(String port, String gateway, String netmask) throws IOException, InterruptedException {
-        final String cmd1 = String.format("%s/Scripts/User/%s.sh %s Logs/%s.log %s %s %s", workingDir, createServerConfigScript, workingDir, createServerConfigScript, port, gateway, netmask);
-        final String cmd2 = String.format("sudo %s/Scripts/User/%s.sh %s", workingDir, createIptables, port);
+        final String cmd1 = String.format("%s/Scripts/Server/%s.sh %s Logs/%s.log %s %s %s", workingDir, createServerConfigScript, workingDir, createServerConfigScript, port, gateway, netmask);
+        final String cmd2 = String.format("sudo %s/Scripts/Server/%s.sh %s", workingDir, createIptables, port);
         return executeCommand(cmd1, "server config") && executeCommand(cmd2, "iptables");
     }
 
@@ -87,8 +83,7 @@ public class CommandServiceImpl implements CommandService {
     }
 
     @Override
-    public File downloadOVPNFile(String user) throws IOException, InterruptedException {
-        SetupDTO config = configService.getConfig();
+    public File downloadOVPNFile(String user, SetupDTO config) throws IOException, InterruptedException {
         final String cmd = String.format("%s/Scripts/User/%s.sh %s Logs/%s.log %s %s %s", workingDir, createUserConfigScript, workingDir, createUserConfigScript, StringConverter.fromStringToHex(user), config.getServer(), config.getPort());
         if (executeCommand(cmd, "create user config")) {
             return new File(String.format("%s/Users/%s.ovpn", workingDir, StringConverter.fromStringToHex(user)));
