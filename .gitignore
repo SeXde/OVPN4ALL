@@ -40,3 +40,6 @@ build/
 /Install
 /Server
 /Users
+*.log
+*.zip
+Back/src/main/*/application.yml

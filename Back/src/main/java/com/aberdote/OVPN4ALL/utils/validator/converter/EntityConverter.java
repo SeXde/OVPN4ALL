@@ -1,4 +1,4 @@
-package com.aberdote.OVPN4ALL.utils;
+package com.aberdote.OVPN4ALL.utils.validator.converter;
 
 import com.aberdote.OVPN4ALL.dto.RoleDTO;
 import com.aberdote.OVPN4ALL.dto.SetupDTO;
@@ -8,9 +8,9 @@ import com.aberdote.OVPN4ALL.entity.ConfigEntity;
 import com.aberdote.OVPN4ALL.entity.RoleEntity;
 import com.aberdote.OVPN4ALL.entity.UserEntity;
 
-public class Converter {
+public class EntityConverter {
 
-    public static UserResponseDTO convertDTOUser(UserEntity userEntity) {
+    public static UserResponseDTO fromUserEntityToUserResponseDTO(UserEntity userEntity) {
         return new UserResponseDTO(userEntity.getId(),
                 userEntity.getName(),
                 userEntity.getEmail(),
@@ -21,27 +21,28 @@ public class Converter {
                 userEntity.getCreatedAt());
     }
 
-    public static UserEntity convertFromDTOUser(CreateUserRequestDTO createUserDTO) {
+    public static UserEntity fromCreateUserDTOToUserEntity(CreateUserRequestDTO createUserDTO) {
         return new UserEntity(createUserDTO.getName(),
                 createUserDTO.getEmail(),
                 createUserDTO.getPassword()
         );
     }
 
-    public static SetupDTO convertDTOSetup(ConfigEntity configEntity) {
-        return new SetupDTO(configEntity.getPort(), configEntity.getGateway(), configEntity.getNetmask());
+    public static SetupDTO fromConfigEntityToSetupDTO(ConfigEntity configEntity) {
+        return new SetupDTO(configEntity.getPort(), configEntity.getGateway(), configEntity.getNetmask(), configEntity.getServer());
     }
 
-    public static RoleDTO convertDTOSetup(RoleEntity roleEntity) {
+    public static RoleDTO fromRoleEntityToRoleDTO(RoleEntity roleEntity) {
         return new RoleDTO(roleEntity.getRoleName());
     }
 
-    public static RoleEntity convertFromDTORole(RoleDTO roleDTO) {
+    public static RoleEntity fromRoleDTOtoRoleEntity(RoleDTO roleDTO) {
         return new RoleEntity(roleDTO.getRoleName());
     }
 
-    public static ConfigEntity convertFromDTOSetup(SetupDTO setupDTO) {
-        return new ConfigEntity(setupDTO.getPort(), setupDTO.getGateway(), setupDTO.getSubnet());
+    public static ConfigEntity fromSetupDTOToConfigEntity(SetupDTO setupDTO) {
+        return new ConfigEntity(setupDTO.getPort(), setupDTO.getGateway(), setupDTO.getSubnet(), setupDTO.getServer());
     }
+
 
 }

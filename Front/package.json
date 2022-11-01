@@ -35,7 +35,9 @@
 	"dependencies": {
 		"@fontsource/fira-mono": "^4.5.0",
 		"chart.js": "^3.9.1",
+		"file-saver": "^2.0.5",
 		"js-cookie": "^3.0.1",
-		"svelte-chartjs": "^3.0.1"
+		"svelte-chartjs": "^3.0.1",
+		"svelte-simple-modal": "^1.4.1"
 	}
 }

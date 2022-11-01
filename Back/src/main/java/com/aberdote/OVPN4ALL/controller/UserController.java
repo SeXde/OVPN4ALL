@@ -5,9 +5,11 @@ import com.aberdote.OVPN4ALL.dto.user.CreateUserRequestDTO;
 import com.aberdote.OVPN4ALL.dto.user.JwtResponseDTO;
 import com.aberdote.OVPN4ALL.dto.user.LoginUserRequestDTO;
 import com.aberdote.OVPN4ALL.dto.user.UserResponseDTO;
+import com.aberdote.OVPN4ALL.exception.CustomException;
 import com.aberdote.OVPN4ALL.security.service.JwtUserDetailsService;
 import com.aberdote.OVPN4ALL.security.utils.JwtTokenUtil;
 import com.aberdote.OVPN4ALL.service.UserService;
+import com.aberdote.OVPN4ALL.utils.validator.converter.StringConverter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -16,12 +18,20 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.DecoderException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletResponse;
+import java.io.File;
+import java.net.MalformedURLException;
 import java.util.Collection;
 
 @Slf4j
@@ -122,6 +132,32 @@ public class UserController {
     public ResponseEntity<Void> testToken() {
         log.info("Testing token ...");
         return ResponseEntity.ok().build();
+    }
+
+    @Operation(summary = "Download OVPN file")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Config file found", content = {@Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = UserResponseDTO.class)))}),
+            @ApiResponse(responseCode = "400", description = "Wrong Parameter", content = {@Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = ErrorDTO.class)))}),
+            @ApiResponse(responseCode = "403", description = "Unauthorized access", content = {@Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = ErrorDTO.class)))}),
+            @ApiResponse(responseCode = "404", description = "Config not found", content = {@Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = ErrorDTO.class)))}),
+            @ApiResponse(responseCode = "500", description = "Error trying to download OVPN file", content = {@Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = ErrorDTO.class)))})
+    })
+    @GetMapping("/{id}/ovpn")
+    public ResponseEntity<Resource> downloadOVPNFile(@Parameter(description = "The id of the user") @PathVariable(required = true) Long id, HttpServletResponse response) {
+        log.info("Request to download OPVNFile for user {}", id);
+        final File ovpnFile = userService.downloadUserVPN(id);
+        try {
+            final Resource resource = new UrlResource(ovpnFile.toURI());
+            final HttpHeaders httpHeaders = new HttpHeaders();
+            final String fileName = StringConverter.fromHexToString(ovpnFile.getName().replace(".ovpn", "")) + ".ovpn";
+            httpHeaders.add("File-Name", fileName);
+            httpHeaders.add(HttpHeaders.CONTENT_DISPOSITION, "attachment;File-Name=" + fileName);
+            return ResponseEntity.ok().contentType(MediaType.TEXT_PLAIN).headers(httpHeaders).body(resource);
+        } catch (MalformedURLException | DecoderException e) {
+            final String message = String.format("Cannot send file, ErrorMessage:%s", e.getMessage());
+            log.error(message);
+            throw new CustomException(message, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
 }
