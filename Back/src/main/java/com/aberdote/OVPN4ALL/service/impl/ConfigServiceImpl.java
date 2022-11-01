@@ -58,6 +58,13 @@ public class ConfigServiceImpl implements ConfigService {
             if (!configRepository.findAll().isEmpty()) configRepository.deleteAll();
             log.info("Saving new setup");
             configRepository.save(EntityConverter.fromSetupDTOToConfigEntity(setupDTO));
+            if (commandService.isActive()) {
+                do {
+                    commandService.shutdown();
+                    commandService.startUp();
+                    Thread.sleep(500);
+                } while (!commandService.isActive());
+            }
             return setupDTO;
         } catch (IOException | InterruptedException e) {
             final String message = String.format("Cannot execute set config script, ErrorMessage: '%s'", e.getMessage());

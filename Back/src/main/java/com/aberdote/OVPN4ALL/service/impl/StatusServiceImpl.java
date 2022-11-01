@@ -38,6 +38,7 @@ public class StatusServiceImpl implements StatusService {
             do {
                 commandService.shutdown();
                 commandService.startUp();
+                Thread.sleep(500);
             } while(!commandService.isActive());
             return true;
         } catch (IOException | InterruptedException e) {

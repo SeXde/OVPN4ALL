@@ -68,7 +68,6 @@ public class CommandServiceImpl implements CommandService {
     @Override
     public void startUp() throws IOException, InterruptedException {
         final String cmd = String.format("sudo openvpn %s/Server/OVPN4ALL.conf", workingDir);
-        shutdown();
         log.debug("Executing script: {}", cmd);
         ScriptExec.execNoWait(cmd);
     }

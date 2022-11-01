@@ -44,5 +44,6 @@ log "Writing cert" "echo -en '<cert>\n$CERT\n</cert>\n' >> /tmp/OVPN4ALL.conf " 
 log "Writing key" "echo -en '<key>\n$KEY\n</key>\n' >> /tmp/OVPN4ALL.conf" "Cannot write key"
 rm "$WD_DIR"/Server/OVPN4ALL.conf &> /dev/null
 log "Setting server conf" "cp /tmp/OVPN4ALL.conf $WD_DIR/Server/OVPN4ALL.conf" "Cannot set server page"
+log "Adding crl" "echo 'crl-verify $WD_DIR/Install/EasyRSA/pki/crl.pem' >> $WD_DIR/Server/OVPN4ALL.conf" "Cannot add crl"
 rm /tmp/OVPN4ALL.conf &> /dev/null
 exit 0

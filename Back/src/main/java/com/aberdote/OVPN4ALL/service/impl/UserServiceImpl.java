@@ -228,6 +228,13 @@ public class UserServiceImpl implements UserService {
             if (!commandService.deleteUser(userEntity.getName())) {
                 throw new CustomException(String.format("Cannot delete user '%s', execution failed, see logs for more details", userEntity.getName()), HttpStatus.INTERNAL_SERVER_ERROR);
             }
+            if (commandService.isActive()) {
+                do {
+                    commandService.shutdown();
+                    commandService.startUp();
+                    Thread.sleep(500);
+                } while (!commandService.isActive());
+            }
             log.info("Deleting user {}", userEntity.getName());
             userRepository.delete(optionalUserEntity.get());
         } catch (IOException | InterruptedException e) {
