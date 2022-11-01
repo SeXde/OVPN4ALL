@@ -46,3 +46,4 @@ iptables -A FORWARD -i tun+ -o enp0s3 -m state --state RELATED,ESTABLISHED -j AC
 iptables -A FORWARD -i enp0s3 -o tun+ -m state --state RELATED,ESTABLISHED -j ACCEPT
 iptables -t nat -A POSTROUTING -s 10.8.0.0/24 -o enp0s3 -j MASQUERADE
 iptables -A OUTPUT -o tun+ -j ACCEPT
+exit 0

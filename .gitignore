@@ -34,3 +34,12 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Scripts ###
+Install/
+db/
+Logs/
+*.log
+*.zip
+Users/*.ovpn
+Back/src/main/*/application.yml

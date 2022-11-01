@@ -18,6 +18,8 @@
 	let isUser: boolean = false
 	let email: string;
 	let roles: Array<RoleDTO> = []
+	const forbidenPasswords: Set<string> = new Set()
+	forbidenPasswords.add("'")
 	
 	const checkDefault =  () => {
 
@@ -33,9 +35,15 @@
 			return;
 		}
 
-		validData = password != null && password.length != 0 && repeatPassword != null && repeatPassword.length != 0;
+		validData = password != null && password.length != 0 ;
 		if (!validData) {
 			formError = "Password cannot be empty.";
+			return;
+		}
+
+		validData = !forbidenPasswords.has(password);
+		if (!validData) {
+			formError = "Password cannot contain character: \"'\"";
 			return;
 		}
 

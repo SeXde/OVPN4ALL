@@ -7,5 +7,5 @@ import lombok.Data;
 @Data @AllArgsConstructor
 public class SetupDTO {
     @NotNull
-    private String port, gateway, subnet;
+    private String port, gateway, subnet, server;
 }

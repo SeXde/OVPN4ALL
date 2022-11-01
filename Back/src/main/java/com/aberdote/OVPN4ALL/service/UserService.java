@@ -6,6 +6,7 @@ import com.aberdote.OVPN4ALL.dto.user.UserResponseDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
 import java.util.Collection;
 import java.util.List;
 
@@ -22,4 +23,6 @@ public interface UserService {
     Page<UserResponseDTO> getUsersPaginated(int pageNumber, int usersPerPage);
     void validateUser(LoginUserRequestDTO loginUserRequestDTO);
     UserResponseDTO addRoleToUser(String sender, String receiver, String roleName);
+    File downloadUserVPN(String user);
+    File downloadUserVPN(Long id);
 }
