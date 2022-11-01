@@ -9,18 +9,18 @@
 	export let data
 	console.log("data: ", data)
 	let [setup, dataError] = data.setup
-	let connected: boolean = true;
+	dataError = dataError == null ? null : dataError.message
+	let [connected, connectError] = data.state
+	console.log(connectError == null)
+	connectError = connectError == null ? null : connectError.message
 	let users: number = 5;
 	
 	let port: string = "---";
 	let gateway: string = "---";
 	let subnet: string = "---";
 	let wanIp: string = "---";
-	let error: string = null
+	let error = dataError
 	
-
-	connected = dataError === null
-	if (!connected) error = dataError.message
 
 	if (setup != null) {
 		port = setup.port;
@@ -58,6 +58,24 @@
         }, 3000)
 	}
 
+	const changeVpnStatus = async () => {
+		const endpoint = connected ? 'http://localhost:8082/api/status/off' : 'http://localhost:8082/api/status/on'
+		await fetch(endpoint, {
+                method: 'GET',
+                mode: 'cors',
+                headers: {
+                    Authorization: 'Bearer '+Cookies.get('jwt')
+                }
+        }).then(res => {
+			if (res.ok)
+				connected = !connected
+		})
+		.catch(() =>  dataError = `Cannot ${connected ? 'shutdown' : 'turn on'} vpn`)
+		setTimeout(() => {
+            error = null
+        }, 3000)
+	}
+
 
 </script>
 
@@ -68,8 +86,11 @@
 
 <Header navbar={true}/>
 	<div class="flex flex-col items-center my-auto mr-5">
-		{#if error}
-				<ErrorMessage  title="Server error" body={error}/>
+		{#if dataError}
+				<ErrorMessage  title="Server error" body={dataError}/>
+		{/if}
+		{#if connectError}
+				<ErrorMessage  title="Server error" body={connectError}/>
 		{/if}
 		<div class="mt-5 bg-light_dark px-5 py-5 border rounded-lg">
 			<div class="flex flex-col items-center mb-2 pb-2 border-b">
@@ -120,20 +141,22 @@
 			<Chart />
 		</div>
 		<div class="flex items-center align-middle mt-2">
-			<button on:click={() => connected = !connected} class="mr-3 my-3 mt-5 w-36 py-2 flex flex-col items-center justify-center text-light rounded-lg border-2 border-light hover:text-primary hover:border-primary disabled:border-stone-500 disabled:text-stone-500 font-semibold transition-colors">
-				{#if !connected}
-					<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-						<path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-						<path stroke-linecap="round" stroke-linejoin="round" d="M15.91 11.672a.375.375 0 010 .656l-5.603 3.113a.375.375 0 01-.557-.328V8.887c0-.286.307-.466.557-.327l5.603 3.112z" />
-					  </svg>
-					Turn on
-				{:else}
-					<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-						<path stroke-linecap="round" stroke-linejoin="round" d="M14.25 9v6m-4.5 0V9M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-					</svg>
-					Shutdown
-				{/if}
-			</button>
+			{#if !dataError}
+				<button on:click={() => changeVpnStatus()} class="mr-3 my-3 mt-5 w-36 py-2 flex flex-col items-center justify-center text-light rounded-lg border-2 border-light hover:text-primary hover:border-primary disabled:border-stone-500 disabled:text-stone-500 font-semibold transition-colors">
+					{#if !connected}
+						<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+							<path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+							<path stroke-linecap="round" stroke-linejoin="round" d="M15.91 11.672a.375.375 0 010 .656l-5.603 3.113a.375.375 0 01-.557-.328V8.887c0-.286.307-.466.557-.327l5.603 3.112z" />
+						</svg>
+						Turn on
+					{:else}
+						<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+							<path stroke-linecap="round" stroke-linejoin="round" d="M14.25 9v6m-4.5 0V9M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+						</svg>
+						Shutdown
+					{/if}
+				</button>
+			{/if}
 			<button on:click={() => downloadLogs()} class="my-3 mt-5 w-36 py-2 flex flex-col items-center justify-center text-light rounded-lg border-2 border-light hover:text-primary hover:border-primary disabled:border-stone-500 disabled:text-stone-500 font-semibold transition-colors">
 				<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
 					<path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />

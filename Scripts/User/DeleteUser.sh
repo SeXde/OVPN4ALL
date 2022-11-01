@@ -28,7 +28,7 @@ function log() {
     
 }
 
-log "Deleting user certificate" "rm $WD_DIR/Install/EasyRSA/pki/issued/$USERNAME.crt" "Cannot delete user certificate"
-log "Deleting user private key" "rm $WD_DIR/Install/EasyRSA/pki/private/$USERNAME.key" "Cannot delete user private key"
+log "Revoking user certificate" "cd $WD_DIR/Install/EasyRSA ; echo -en 'yes\n' | ./easyrsa revoke $USERNAME" "Cannot revoke user certificate"
+log "Uploading crl" "cd $WD_DIR/Install/EasyRSA ; ./easyrsa gen-crl" "Cannot upload crl"
 rm "$WD_DIR"/Users/"$USERNAME".ovpn &>> /dev/null
 exit 0

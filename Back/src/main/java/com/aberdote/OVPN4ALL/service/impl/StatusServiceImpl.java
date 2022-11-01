@@ -2,6 +2,7 @@ package com.aberdote.OVPN4ALL.service.impl;
 
 import com.aberdote.OVPN4ALL.exception.CustomException;
 import com.aberdote.OVPN4ALL.service.CommandService;
+import com.aberdote.OVPN4ALL.service.ConfigService;
 import com.aberdote.OVPN4ALL.service.StatusService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +15,7 @@ import java.io.IOException;
 public class StatusServiceImpl implements StatusService {
 
     private final CommandService commandService;
+    private final ConfigService configService;
 
     @Override
     public boolean isActive() {
@@ -32,10 +34,11 @@ public class StatusServiceImpl implements StatusService {
     @Override
     public boolean turnOn() {
         try {
-            commandService.startUp();
-            if (!commandService.isActive()) {
-                throw new CustomException("Cannot start openvpn", HttpStatus.INTERNAL_SERVER_ERROR);
-            }
+            configService.getConfig();
+            do {
+                commandService.shutdown();
+                commandService.startUp();
+            } while(!commandService.isActive());
             return true;
         } catch (IOException | InterruptedException e) {
             final String message = String.format("Cannot execute start openvpn script, ErrorMessage: '%s'", e.getMessage());
@@ -47,9 +50,10 @@ public class StatusServiceImpl implements StatusService {
     @Override
     public boolean turnOff() {
         try {
-            if (!commandService.shutdown()) {
-                throw new CustomException("Cannot stop openvpn", HttpStatus.INTERNAL_SERVER_ERROR);
-            }
+            configService.getConfig();
+            do {
+                commandService.shutdown();
+            } while(commandService.isActive());
             return true;
         } catch (IOException | InterruptedException e) {
             final String message = String.format("Cannot execute stop openvpn script, ErrorMessage: '%s'", e.getMessage());

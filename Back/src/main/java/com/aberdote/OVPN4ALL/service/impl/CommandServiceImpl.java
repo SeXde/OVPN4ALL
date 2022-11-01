@@ -61,9 +61,8 @@ public class CommandServiceImpl implements CommandService {
     }
 
     @Override
-    public boolean shutdown() throws IOException, InterruptedException {
-        final String cmd = "sudo pkill -9 openvpn";
-        return executeCommand(cmd, "shutdown vpn");
+    public void shutdown() throws IOException, InterruptedException {
+        ScriptExec.execNoWait("sudo pkill -9 openvpn");
     }
 
     @Override

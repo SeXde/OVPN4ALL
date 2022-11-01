@@ -14,7 +14,7 @@ public interface CommandService {
     boolean deleteUser(String name) throws IOException, InterruptedException;
     boolean addConfig(String port, String gateway, String netmask) throws IOException, InterruptedException;
     boolean editConfig(String port, String gateway, String netmask) throws IOException, InterruptedException;
-    boolean shutdown() throws IOException, InterruptedException;
+    void shutdown() throws IOException, InterruptedException;
     void startUp() throws IOException, InterruptedException;
     boolean getVPNInfo();
     boolean getUserInfo();
