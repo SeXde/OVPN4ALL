@@ -7,6 +7,7 @@ import java.util.List;
 
 @Data
 public class UserInfoDTO {
+    String userName;
     List<ConnectionDTO> connectionDTOList = new ArrayList<>();
     List<ConnectionDTO> disconnectionDTOList = new ArrayList<>();
 

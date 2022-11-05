@@ -33,6 +33,9 @@ public class CommandServiceImpl implements CommandService {
     @Value("${server.name.read.ovpn.logs}")
     private String readServerLogs;
 
+    @Value("${server.name.clear.ovpn.logs}")
+    private String clearServerLogs;
+
     @Override
     public boolean addUser(String name, String password) throws IOException, InterruptedException {
         final String cmd = String.format("%s/Scripts/User/%s.sh %s Logs/%s.log %s %s", workingDir, createUserCertScript , workingDir, createUserCertScript, StringConverter.fromStringToHex(name), StringConverter.fromStringToHex(password));
@@ -65,10 +68,12 @@ public class CommandServiceImpl implements CommandService {
     @Override
     public void shutdown() throws IOException, InterruptedException {
         ScriptExec.execNoWait("sudo pkill -9 openvpn");
+        ScriptExec.execNoWait(String.format("sudo %s/Scripts/Server/%s.sh", workingDir, clearServerLogs));
     }
 
     @Override
     public void startUp() throws IOException, InterruptedException {
+        ScriptExec.execNoWait(String.format("sudo %s/Scripts/Server/%s.sh", workingDir, clearServerLogs));
         final String cmd = String.format("sudo openvpn %s/Server/OVPN4ALL.conf", workingDir);
         log.debug("Executing script: {}", cmd);
         ScriptExec.execNoWait(cmd);

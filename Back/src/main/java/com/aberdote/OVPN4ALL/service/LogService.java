@@ -12,4 +12,5 @@ public interface LogService {
     File downloadLogs();
     UserInfoDTO getUserInfo(String user);
     List<UserInfoDTO> getAllUsersInfo();
+    int getUsersConnected();
 }

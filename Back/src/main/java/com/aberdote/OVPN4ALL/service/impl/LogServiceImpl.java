@@ -50,12 +50,9 @@ public class LogServiceImpl implements LogService {
         });
         try {
             final String logLines = commandService.readOvpnLogs();
-            if (Strings.isEmpty(logLines)){
-                final String msg = "Log is empty";
-                log.error(msg);
-                throw new CustomException(msg, HttpStatus.INTERNAL_SERVER_ERROR);
-            }
+            if (Strings.isEmpty(logLines)) return null;
             final UserInfoDTO userInfoDTO =  LogParser.getUserInfo(StringConverter.fromStringToHex(user), logLines);
+            userInfoDTO.setUserName(user);
             if (isUserInfoEmpty(userInfoDTO)) return null;
             if (isUserInfoInvalid(userInfoDTO)) {
                 final String msg = "Log got poisoned";
@@ -73,6 +70,11 @@ public class LogServiceImpl implements LogService {
     @Override
     public List<UserInfoDTO> getAllUsersInfo() {
         return userRepository.findAll().stream().map(user -> getUserInfo(user.getName())).filter(Objects::nonNull).toList();
+    }
+
+    @Override
+    public int getUsersConnected() {
+        return getAllUsersInfo().stream().filter(UserInfoDTO::isConnected).toList().size();
     }
 
     private boolean isUserInfoInvalid(UserInfoDTO userInfoDTO) {

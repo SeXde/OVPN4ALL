@@ -27,6 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.transaction.Transactional;
 import java.io.File;
 import java.net.MalformedURLException;
+import java.util.List;
 
 @RequiredArgsConstructor @Transactional @Slf4j
 @RestController
@@ -65,7 +66,20 @@ public class LogController {
     public ResponseEntity<UserInfoDTO> getUserInfo(@PathVariable String user){
         log.info("Request to get {} info", user);
         final UserInfoDTO userInfoDTO = logService.getUserInfo(user);
+        if (userInfoDTO == null) throw new CustomException("User has no info", HttpStatus.NOT_FOUND);
         return ResponseEntity.ok(userInfoDTO);
     }
 
+    @GetMapping("/users/info")
+    public ResponseEntity<List<UserInfoDTO>> getUsersInfo(){
+        log.info("Request to get all users info");
+        return ResponseEntity.ok(logService.getAllUsersInfo());
+    }
+
+
+    @GetMapping("/users/connections")
+    public ResponseEntity<Integer> getUsersConnected(){
+        log.info("Request to get number of users connected");
+        return ResponseEntity.ok(logService.getUsersConnected());
+    }
 }
