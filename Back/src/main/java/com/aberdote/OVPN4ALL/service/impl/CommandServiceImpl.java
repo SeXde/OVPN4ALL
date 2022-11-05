@@ -30,6 +30,11 @@ public class CommandServiceImpl implements CommandService {
     private String downloadServerLogs;
     @Value("${server.name.create.iptables}")
     private String createIptables;
+    @Value("${server.name.read.ovpn.logs}")
+    private String readServerLogs;
+
+    @Value("${server.name.clear.ovpn.logs}")
+    private String clearServerLogs;
 
     @Override
     public boolean addUser(String name, String password) throws IOException, InterruptedException {
@@ -63,10 +68,12 @@ public class CommandServiceImpl implements CommandService {
     @Override
     public void shutdown() throws IOException, InterruptedException {
         ScriptExec.execNoWait("sudo pkill -9 openvpn");
+        ScriptExec.execNoWait(String.format("sudo %s/Scripts/Server/%s.sh", workingDir, clearServerLogs));
     }
 
     @Override
     public void startUp() throws IOException, InterruptedException {
+        ScriptExec.execNoWait(String.format("sudo %s/Scripts/Server/%s.sh", workingDir, clearServerLogs));
         final String cmd = String.format("sudo openvpn %s/Server/OVPN4ALL.conf", workingDir);
         log.debug("Executing script: {}", cmd);
         ScriptExec.execNoWait(cmd);
@@ -111,6 +118,11 @@ public class CommandServiceImpl implements CommandService {
         return ScriptExec.exec("pgrep openvpn") == 0;
     }
 
+    @Override
+    public String readOvpnLogs() throws IOException, InterruptedException {
+        return ScriptExec.execWithOutput(String.format("sudo %s/Scripts/Server/%s.sh", workingDir, readServerLogs));
+    }
+
     private boolean executeCommand(String command, String logMessage) throws IOException, InterruptedException {
         log.info("Executing script: {}", command);
         final int resultCode = ScriptExec.exec(command);
@@ -121,5 +133,6 @@ public class CommandServiceImpl implements CommandService {
         }
         return true;
     }
+
 
 }

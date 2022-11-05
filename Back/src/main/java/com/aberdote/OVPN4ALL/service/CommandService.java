@@ -22,4 +22,6 @@ public interface CommandService {
     File downloadLogs() throws IOException, InterruptedException;
     boolean clearLogs() throws IOException, InterruptedException;
     boolean isActive() throws IOException, InterruptedException;
+
+    String readOvpnLogs() throws IOException, InterruptedException;
 }
