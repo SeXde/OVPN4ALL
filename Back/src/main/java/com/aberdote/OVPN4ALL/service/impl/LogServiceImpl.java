@@ -6,7 +6,7 @@ import com.aberdote.OVPN4ALL.repository.UserRepository;
 import com.aberdote.OVPN4ALL.service.CommandService;
 import com.aberdote.OVPN4ALL.service.LogService;
 import com.aberdote.OVPN4ALL.utils.parser.LogParser;
-import com.aberdote.OVPN4ALL.utils.validator.converter.StringConverter;
+import com.aberdote.OVPN4ALL.utils.converter.StringConverter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
