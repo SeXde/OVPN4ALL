@@ -1,6 +1,7 @@
 package com.aberdote.OVPN4ALL.controller;
 
 import com.aberdote.OVPN4ALL.dto.ErrorDTO;
+import com.aberdote.OVPN4ALL.dto.parser.UserInfoDTO;
 import com.aberdote.OVPN4ALL.dto.user.UserResponseDTO;
 import com.aberdote.OVPN4ALL.exception.CustomException;
 import com.aberdote.OVPN4ALL.service.LogService;
@@ -19,6 +20,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -59,5 +61,11 @@ public class LogController {
         }
     }
 
+    @GetMapping("/{user}/info")
+    public ResponseEntity<UserInfoDTO> getUserInfo(@PathVariable String user){
+        log.info("Request to get {} info", user);
+        final UserInfoDTO userInfoDTO = logService.getUserInfo(user);
+        return ResponseEntity.ok(userInfoDTO);
+    }
 
 }
