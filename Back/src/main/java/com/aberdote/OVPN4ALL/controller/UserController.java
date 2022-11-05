@@ -9,7 +9,7 @@ import com.aberdote.OVPN4ALL.exception.CustomException;
 import com.aberdote.OVPN4ALL.security.service.JwtUserDetailsService;
 import com.aberdote.OVPN4ALL.security.utils.JwtTokenUtil;
 import com.aberdote.OVPN4ALL.service.UserService;
-import com.aberdote.OVPN4ALL.utils.validator.converter.StringConverter;
+import com.aberdote.OVPN4ALL.utils.converter.StringConverter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;

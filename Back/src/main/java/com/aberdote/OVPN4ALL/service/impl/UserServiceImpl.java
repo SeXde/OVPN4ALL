@@ -13,7 +13,7 @@ import com.aberdote.OVPN4ALL.repository.UserRepository;
 import com.aberdote.OVPN4ALL.service.CommandService;
 import com.aberdote.OVPN4ALL.service.ConfigService;
 import com.aberdote.OVPN4ALL.service.UserService;
-import com.aberdote.OVPN4ALL.utils.validator.converter.EntityConverter;
+import com.aberdote.OVPN4ALL.utils.converter.EntityConverter;
 import com.aberdote.OVPN4ALL.utils.validator.user.UserValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

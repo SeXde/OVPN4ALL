@@ -3,7 +3,7 @@ package com.aberdote.OVPN4ALL.service.impl;
 import com.aberdote.OVPN4ALL.dto.SetupDTO;
 import com.aberdote.OVPN4ALL.service.CommandService;
 import com.aberdote.OVPN4ALL.utils.script.ScriptExec;
-import com.aberdote.OVPN4ALL.utils.validator.converter.StringConverter;
+import com.aberdote.OVPN4ALL.utils.converter.StringConverter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;

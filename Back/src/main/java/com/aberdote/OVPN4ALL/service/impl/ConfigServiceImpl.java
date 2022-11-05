@@ -7,7 +7,7 @@ import com.aberdote.OVPN4ALL.repository.ConfigRepository;
 import com.aberdote.OVPN4ALL.service.CommandService;
 import com.aberdote.OVPN4ALL.service.ConfigService;
 import com.aberdote.OVPN4ALL.utils.validator.config.ConfigValidator;
-import com.aberdote.OVPN4ALL.utils.validator.converter.EntityConverter;
+import com.aberdote.OVPN4ALL.utils.converter.EntityConverter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;

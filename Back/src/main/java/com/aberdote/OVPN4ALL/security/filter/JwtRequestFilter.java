@@ -1,6 +1,6 @@
 package com.aberdote.OVPN4ALL.security.filter;
 
-import com.aberdote.OVPN4ALL.dto.ErrorDTO;
+import com.aberdote.OVPN4ALL.exception.CustomException;
 import com.aberdote.OVPN4ALL.security.service.JwtUserDetailsService;
 import com.aberdote.OVPN4ALL.security.utils.JwtTokenUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -21,7 +21,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.time.LocalDateTime;
 
 @Component @Slf4j
 public class JwtRequestFilter extends OncePerRequestFilter {
@@ -70,10 +69,9 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         try {
             chain.doFilter(request, response);
         } catch (Exception e) {
-            logger.error("Excepción: {}");
-            ErrorDTO errorDTO = new ErrorDTO(HttpStatus.INTERNAL_SERVER_ERROR, LocalDateTime.now(), e.getMessage());
-            response.setStatus(errorDTO.getStatus().value());
-            response.getWriter().write(convertObjectToJson(errorDTO));
+            final String msg = String.format("Exception found when trying to validate token, ErrorMessage:'%s'", e.getMessage());
+            logger.error(msg);
+            throw new CustomException(msg, HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
     }

@@ -1,4 +1,4 @@
-package com.aberdote.OVPN4ALL.utils.validator.converter;
+package com.aberdote.OVPN4ALL.utils.converter;
 
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
