@@ -1,10 +1,8 @@
 package com.aberdote.OVPN4ALL.controller;
 
+import com.aberdote.OVPN4ALL.common.constanst.UserReservedConstants;
 import com.aberdote.OVPN4ALL.dto.ErrorDTO;
-import com.aberdote.OVPN4ALL.dto.user.CreateUserRequestDTO;
-import com.aberdote.OVPN4ALL.dto.user.JwtResponseDTO;
-import com.aberdote.OVPN4ALL.dto.user.LoginUserRequestDTO;
-import com.aberdote.OVPN4ALL.dto.user.UserResponseDTO;
+import com.aberdote.OVPN4ALL.dto.user.*;
 import com.aberdote.OVPN4ALL.exception.CustomException;
 import com.aberdote.OVPN4ALL.security.service.JwtUserDetailsService;
 import com.aberdote.OVPN4ALL.security.utils.JwtTokenUtil;
@@ -32,7 +30,6 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.net.MalformedURLException;
-import java.util.Collection;
 
 @Slf4j
 @RestController
@@ -68,11 +65,11 @@ public class UserController {
             @ApiResponse(responseCode = "500", description = "Error trying to get all users", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorDTO.class))})
     })
     @GetMapping("")
-    public ResponseEntity<Collection<UserResponseDTO>> getUsers(@Parameter(description = "Page number index")@RequestParam(required = true)Integer page,
-                                                                @Parameter(description = "NUmber of users retrieved per page")@RequestParam(required = false, defaultValue = "10")Integer limit) {
+    public ResponseEntity<UserResponsePageDTO> getUsers(@Parameter(description = "Page number index")@RequestParam(required = true)Integer page,
+                                                        @Parameter(description = "NUmber of users retrieved per page")@RequestParam(required = false, defaultValue = UserReservedConstants.MAX_USERS_PER_PAGE)Integer limit) {
 
         log.info("Request to get page {} with {} users", page, limit);
-        final Collection<UserResponseDTO> users = userService.getUsersPaginated(page, limit).toList();
+        final UserResponsePageDTO users = userService.getUsersPaginated(page, limit);
         return new ResponseEntity<>(users, HttpStatus.OK);
     }
 
@@ -115,10 +112,10 @@ public class UserController {
             @ApiResponse(responseCode = "500", description = "Error trying to delete user", content = {@Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = ErrorDTO.class)))})
     })
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@Parameter(description = "The id of the user") @PathVariable(required = true) Long id) {
+    public ResponseEntity<UserResponsePageDTO> deleteUser(@Parameter(description = "The id of the user") @PathVariable(required = true) Long id) {
         log.info("Request to delete user {}", id);
         userService.deleteUser(id);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(userService.getUsersPaginated(0, Integer.parseInt(UserReservedConstants.MAX_USERS_PER_PAGE)));
     }
 
     @Operation(summary = "Test if token is working")

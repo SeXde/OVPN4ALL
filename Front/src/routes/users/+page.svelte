@@ -7,6 +7,26 @@
     import { saveAs } from 'file-saver';
     import Cookies from 'js-cookie';
 
+    interface Role {
+        roleName: string;
+    }
+
+    interface User {
+        id: number;
+        name: string;
+        email: string;
+        roles: Array<Role>;
+        createdAt: string;
+    }
+
+    interface UsersPage {
+        users: Array<User>;
+        currentUsers: number;
+        currentPage: number;
+        totalUsers: number;
+        totalPages: number;
+    }
+
     const transFormUsers = (users: Array<any>):Array<any> => {
         return users.map(user => {
             let roles = user.roles.map(role => {
@@ -24,16 +44,50 @@
         })
     }
 
+    const generatePages =  (): void => {
+        const offset: number = 3;
+        let currPage: number = usersPage.currentPage + 1;
+        let rightNum: number =  currPage + offset;
+        leftPages = [];
+        rightPages = [];
+        if (currPage > offset) {
+            for (let i = currPage - offset; i < currPage; i++) leftPages.push(i);
+        } else if (currPage - 1 === 1){
+            leftPages = [1];
+        } else {
+            for (let i = 1; i < currPage; i++) leftPages.push(i);
+        }
+        if (rightNum > usersPage.totalPages && currPage + 1 !== usersPage.totalPages) {
+            for (let i = currPage + 1; i <= usersPage.totalPages; i++) rightPages.push(i);
+        } else if(rightNum > usersPage.totalPages){
+            rightPages = [currPage + 1];
+        } else {
+            for (let i = currPage + 1; i <= rightNum; i++) rightPages.push(i);
+        }
+        console.log(usersPage);
+        console.log(`Left pages: ${[... leftPages]} Right pages: ${[... rightPages]}`);
+    }
+
     export let data
     let searchedUser: string = ""
     let filteredUsers = []
-    let [users, error] = data.users;
+    let usersPage: UsersPage;
+    let errorBody: any;
+    let limit: number = 10;
+    [usersPage, errorBody] = data.users;
+    let error: string;
+    if (errorBody != null) {
+        error = errorBody.message;
+    }
+    let users = usersPage.users
     let isOrderByName: boolean, isOrderByDate: boolean, isOrderByMail: boolean, noUsers: boolean, noPrev
-    let pageNumber: number = 0
     isOrderByName = isOrderByDate = isOrderByMail = false;
     noPrev = true
     noUsers = users === null || users.length < 10
     users = [... transFormUsers(users)]
+    let leftPages: Array<number>
+    let rightPages: Array<number>
+    generatePages();
 
     $: {
         if (searchedUser) {
@@ -43,8 +97,6 @@
             filteredUsers = [... users]
         }
     }
-
-    
 
     const orderByName = () => {
         isOrderByName = !isOrderByName;
@@ -74,48 +126,39 @@
     }
 
     const deleteUser = async (userId: number): Promise<void> => {
-        const [, errorDelete] = await deleteWithJWT('http://localhost:8082/api/users/' + userId, 200)
+        let errorDelete;
+        [usersPage, errorDelete] = await deleteWithJWT('http://localhost:8082/api/users/' + userId, 200)
         if (errorDelete) {
             error = errorDelete.message
             if (errorDelete.message === 'invalid token') goto('/signIn')
         }
         if (!error) {
-            users = users.filter(user => user.id != userId)
-            filteredUsers = filteredUsers.filter(user => user.id != userId)
+            users = [... transFormUsers(usersPage.users)];
+            filteredUsers = [... transFormUsers(usersPage.users)];
+            generatePages();
         }
         setTimeout(() => {
             error = null
         }, 3000)
     }
 
-    const getNextPage = async(): Promise<void> => {
-        pageNumber = pageNumber + 1
-        noPrev = false
-        fetchPage(pageNumber)
-    }
-
-    const getPrevPage = async(): Promise<void> => {
-        if (pageNumber > 0) {
-            pageNumber = pageNumber - 1
-            if (pageNumber == 0) noPrev = true
-            fetchPage(pageNumber)
+    const fetchPage = async(page: number): Promise<void> => {
+        if (page < usersPage.totalPages && page >= 0 && page !== usersPage.currentPage) {
+            [usersPage, errorBody] = await getWithJWT(`http://localhost:8082/api/users?page=${page}`, 200)
+            if (errorBody !== null ) {
+                error = errorBody.message;
+                if (error === 'invalid token') goto('/signIn')
+            }
+            if (!errorBody) {
+                users = [... transFormUsers(usersPage.users)]
+                console.log("users down: ", users)
+                noUsers = usersPage.users === null || usersPage.users.length < 10
+                generatePages();
+            }
+            setTimeout(() => {
+                error = null
+            }, 3000)
         }
-    }
-
-    const fetchPage = async(pageNum: number): Promise<void> => {
-        const [data, errorPage] = await getWithJWT('http://localhost:8082/api/users?page='+pageNum, 200)
-        if (errorPage !== null) {
-            error = errorPage.message
-            if (errorPage.message === 'invalid token') goto('/signIn')
-        }
-        if (!error) {
-            users = [... transFormUsers(data)]
-            console.log("users down: ", users)
-            noUsers = users === null || users.length < 10
-        }
-        setTimeout(() => {
-            error = null
-        }, 3000)
     }
 
     const downloadUserConfig = async (userId: number, userName: string): Promise<void> => {
@@ -289,28 +332,32 @@
             {/each}
         </tbody>
     </table>
-    <div class="flex items-center justify-center mt-5">
-        {#if !noPrev}
-            <div on:click={() => getPrevPage()} class="w-10 py-2 flex justify-center text-light rounded-lg border-2 border-light hover:text-primary hover:border-primary disabled:border-stone-500 disabled:text-stone-500 font-semibold transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-                </svg>              
-            </div>
-        {/if} 
-        <div class="w-10 py-2 flex justify-center text-light font-semibold transition-colors">
-            <div class="flex flex-col  justify-center items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
-                </svg>              
-                {pageNumber + 1}
-            </div>
-        </div>
-        {#if !noUsers}
-        <div on:click={() => getNextPage()} class="w-10 py-2 flex justify-center text-light rounded-lg border-2 border-light hover:text-primary hover:border-primary disabled:border-stone-500 disabled:text-stone-500 font-semibold transition-colors">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-            </svg>              
-        </div>
-        {/if}
+    <div class="flex items-center justify-center mt-5 p-5">
+        <svg on:click={() => fetchPage(0)} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 hover:underline hover:text-secondary hover:cursor-pointer">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M18.75 19.5l-7.5-7.5 7.5-7.5m-6 15L5.25 12l7.5-7.5" />
+        </svg>
+        <svg on:click={() => fetchPage(usersPage.currentPage - 1)}  xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 hover:underline hover:text-secondary hover:cursor-pointer">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+        </svg>
+        {#each leftPages as pageNumber}
+            <span on:click={() => fetchPage(pageNumber - 1)} class="mx-2 hover:underline hover:text-secondary hover:cursor-pointer">
+                {pageNumber}
+            </span>
+        {/each}
+        <span class="bg-white text-dark rounded-full px-2 mx-2 hover:underline hover:bg-secondary hover:text-primary hover:cursor-pointer">
+            {usersPage.currentPage + 1}
+        </span>
+        {#each rightPages as pageNumber}
+            <span on:click={() => fetchPage(pageNumber - 1)} class="mx-2 hover:underline hover:text-secondary hover:cursor-pointer">
+                {pageNumber}
+            </span>
+        {/each}
+        <svg on:click={() => fetchPage(usersPage.currentPage + 1)} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 hover:underline hover:text-secondary hover:cursor-pointer">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+        </svg>
+        <svg on:click={() => fetchPage(usersPage.totalPages - 1)} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 hover:underline hover:text-secondary hover:cursor-pointer">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 4.5l7.5 7.5-7.5 7.5m-6-15l7.5 7.5-7.5 7.5" />
+        </svg>
     </div>
+    <p class="text-center">{usersPage.totalUsers} users registered</p>
 </div>
