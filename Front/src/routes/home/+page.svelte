@@ -5,21 +5,26 @@
 	import { getWithJWT } from "$lib/utils/requestUtils";
 	import { saveAs } from 'file-saver';
     import Cookies from 'js-cookie';
+	import Spinner from "$lib/components/Spinner.svelte";
 
 	export let data
 	console.log("data: ", data)
 	let [setup, dataError] = data.setup
 	dataError = dataError == null ? null : dataError.message
 	let [connected, connectError] = data.state
+	let users: number;
+	let usersError: any;
+	[users, usersError] = data.users;
+	usersError = usersError ? usersError.message : null;
 	console.log(connectError == null)
 	connectError = connectError == null ? null : connectError.message
-	let users: number = 5;
 	
 	let port: string = "---";
 	let gateway: string = "---";
 	let subnet: string = "---";
 	let wanIp: string = "---";
 	let error = dataError
+	let loading: boolean = false;
 	
 
 	if (setup != null) {
@@ -30,6 +35,7 @@
 	}
 	
 	const downloadLogs = async (): Promise<void> => {
+		loading = true;
 		await fetch('http://localhost:8082/api/logs/', {
                 method: 'GET',
                 mode: 'cors',
@@ -53,12 +59,14 @@
         .catch(() => {
             error = "Cannot connect to the server"
         })
+		loading = false,
         setTimeout(() => {
             error = null
         }, 3000)
 	}
 
 	const changeVpnStatus = async () => {
+		loading = true;
 		const endpoint = connected ? 'http://localhost:8082/api/status/off' : 'http://localhost:8082/api/status/on'
 		await fetch(endpoint, {
                 method: 'GET',
@@ -71,6 +79,7 @@
 				connected = !connected
 		})
 		.catch(() =>  dataError = `Cannot ${connected ? 'shutdown' : 'turn on'} vpn`)
+		loading = false;
 		setTimeout(() => {
             error = null
         }, 3000)
@@ -153,7 +162,7 @@
 						<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
 							<path stroke-linecap="round" stroke-linejoin="round" d="M14.25 9v6m-4.5 0V9M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
 						</svg>
-						Shutdown
+						Turn off		
 					{/if}
 				</button>
 			{/if}
@@ -161,7 +170,8 @@
 				<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
 					<path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
 				</svg>
-				Download logs  
+				Download logs
 			</button>
 		</div>
+		<Spinner loading={loading}></Spinner>
 	</div>
