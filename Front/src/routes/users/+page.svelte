@@ -7,6 +7,8 @@
     import { saveAs } from 'file-saver';
     import Cookies from 'js-cookie';
 	import Spinner from "$lib/components/Spinner.svelte";
+    import { isOverlayOpen } from '../stores/OverlayStore';
+	import Overlay from "$lib/components/Overlay.svelte";
 
     interface Role {
         roleName: string;
@@ -26,6 +28,13 @@
         currentPage: number;
         totalUsers: number;
         totalPages: number;
+    }
+
+    interface UserSessionInfo {
+        connectDate: string;
+        countryFlag: string;
+        ip: string;
+        disconnectDate: string;
     }
 
     const transFormUsers = (users: Array<any>):Array<any> => {
@@ -65,8 +74,6 @@
         } else {
             for (let i = currPage + 1; i <= rightNum; i++) rightPages.push(i);
         }
-        console.log(usersPage);
-        console.log(`Left pages: ${[... leftPages]} Right pages: ${[... rightPages]}`);
     }
 
     export let data
@@ -87,9 +94,11 @@
     noPrev = true
     noUsers = users === null || users.length < 10
     users = [... transFormUsers(users)]
-    let leftPages: Array<number>
-    let rightPages: Array<number>
+    let leftPages: Array<number>;
+    let rightPages: Array<number>;
     let loading: boolean = false;
+    let userLog: Array<UserSessionInfo> = [];
+    let isUserLog: boolean = false;
     generatePages();
 
     $: {
@@ -148,12 +157,9 @@
     }
 
     const fetchPage = async(page: number, changeUsersPerPage: boolean): Promise<void> => {
-        console.log("Limit: ", limit)
         if (changeUsersPerPage || (page < usersPage.totalPages && page >= 0 && page !== usersPage.currentPage)) {
             loading = true;
             [usersPage, errorBody] = await getWithJWT(`http://localhost:8082/api/users?page=${page}&limit=${limit}`, 200)
-            console.log("usersPage :", usersPage)
-            console.log("errorBody :", errorBody)
             if (errorBody !== null ) {
                 error = errorBody.message;
                 if (error === 'invalid token') goto('/signIn')
@@ -225,6 +231,53 @@
         loading = false;
     }
 
+    const generateUserLog = async(user: string): Promise<void> => {
+        loading = true;
+        userLog = [];
+        let userInfo: any;
+        userInfo = await fetch(`http://localhost:8082/api/logs/${user}/info`, {
+            method: 'GET',
+            mode: 'cors',
+            headers: {
+                Authorization: 'Bearer '+Cookies.get('jwt')
+            }
+        })
+        .then(res =>{
+            console.log("res: ", res);
+            if (!res.ok) {
+                return null;
+            }
+            return res.json();
+        })
+        .catch(() => error = "Cannot connect with server");
+        console.log("UserInfo: ", userInfo);
+        if (userInfo) {
+            let ip, countryFlag, connectDate, disconnectDate; 
+            for (let i = 0; i < userInfo.connectionDTOList.length; i++){
+                ip = userInfo.connectionDTOList.at(i).ip; 
+                        countryFlag = 'https://countryflagsapi.com/png/' + await fetch(`https://api.country.is/${ip}`)
+                .then(res => res.json())
+                .then(res => res.country)
+                .catch(() => error = "Cannot connect with server")
+                connectDate = userInfo.connectionDTOList.at(i).time;
+                if (i == userInfo.connectionDTOList.length - 1 && userInfo.connectionDTOList.length > userInfo.disconnectionDTOList.length) {
+                    disconnectDate = "Connected";
+                } else {
+                    disconnectDate = userInfo.disconnectionDTOList.at(i).time;
+                }
+                userLog.push({
+                    ip,
+                    countryFlag,
+                    connectDate,
+                    disconnectDate
+                })
+            }
+        }
+        console.log("UserLog: ", userLog);
+        isUserLog = userLog.length > 0;
+        loading = false;
+    }
+
 
 </script>
 
@@ -234,6 +287,61 @@
 </svelte:head>
 
 <Header navbar={true}/>
+{#if $isOverlayOpen}
+    <Overlay>
+        {#if isUserLog}
+        <table class="w-full text-sm text-left px-5">
+            <thead class="text-xs">
+                <tr>
+                    <th scope="col" class="py-3 px-6">
+                        <div class="flex flex-col items-center hover:underline hover:text-secondary hover:cursor-pointer">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5zm6-10.125a1.875 1.875 0 11-3.75 0 1.875 1.875 0 013.75 0zm1.294 6.336a6.721 6.721 0 01-3.17.789 6.721 6.721 0 01-3.168-.789 3.376 3.376 0 016.338 0z" />
+                            </svg>                          
+                            Ip
+                        </div>
+                    </th>
+                    <th scope="col" class="py-3 px-6">
+                        <div class="flex flex-col items-center hover:underline hover:text-secondary hover:cursor-pointer">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                                <path stroke-linecap="round" d="M16.5 12a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zm0 0c0 1.657 1.007 3 2.25 3S21 13.657 21 12a9 9 0 10-2.636 6.364M16.5 12V8.25" />
+                              </svg>                                                 
+                            Connect at
+                        </div>
+                    </th>
+                    <th scope="col" class="py-3 px-6 flex justify-center">
+                        <div class="flex flex-col items-center hover:underline hover:text-secondary hover:cursor-pointer">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5m-9-6h.008v.008H12v-.008zM12 15h.008v.008H12V15zm0 2.25h.008v.008H12v-.008zM9.75 15h.008v.008H9.75V15zm0 2.25h.008v.008H9.75v-.008zM7.5 15h.008v.008H7.5V15zm0 2.25h.008v.008H7.5v-.008zm6.75-4.5h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V15zm0 2.25h.008v.008h-.008v-.008zm2.25-4.5h.008v.008H16.5v-.008zm0 2.25h.008v.008H16.5V15z" />
+                            </svg>                   
+                            Disconnected at
+                        </div>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                {#each userLog as entry}
+                <tr class="hover:bg-gray-700">
+                    <td class="flex flex-col items-center py-4 px-6 text-gray-900 whitespace-nowrap dark:text-white">
+                        <img alt="Country flag" src="{entry.countryFlag}" class="object-scale-down">
+                        {entry.ip}
+                    </td>
+                    <td class="py-4 px-6 text-center">
+                        {entry.connectDate}
+                    </td>
+                    <td class="py-4 px-6 text-center">
+                        {entry.disconnectDate}
+                    </td>
+                </tr>
+                {/each}
+            </tbody>
+        </table>
+        {:else}
+            <h1>There is no info available</h1>
+        {/if}
+        
+    </Overlay>
+{/if}
 <div class="overflow-x-auto relative shadow-md sm:rounded-lg my-5 hover:cursor-{loading ? 'wait' : 'default'}">
     <div class="flex justify-between items-center pb-4 bg-transparent">
         <label for="table-search" class="sr-only">Search</label>
@@ -331,7 +439,13 @@
                                     Send ovpn
                                 </div>
                             {/if}
-                            <div on:click={() => deleteUser(user.id)} class="flex flex-col items-center ml-4 text-red-500 hover:underline hover:text-secondary hover:cursor-pointer">
+                            <div on:click={() => {generateUserLog(user.name); isOverlayOpen.set(true)}} class="flex flex-col items-center mr-4 hover:underline hover:text-secondary hover:cursor-pointer">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+                                </svg>                                
+                                Show logs
+                            </div>
+                            <div on:click={() => deleteUser(user.id)} class="flex flex-col items-center text-red-500 hover:underline hover:text-secondary hover:cursor-pointer">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M22 10.5h-6m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM4 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 0110.374 21c-2.331 0-4.512-.645-6.374-1.766z" />
                                 </svg>

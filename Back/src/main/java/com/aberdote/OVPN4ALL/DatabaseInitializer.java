@@ -9,6 +9,7 @@ import com.aberdote.OVPN4ALL.service.CommandService;
 import com.aberdote.OVPN4ALL.service.UserService;
 import com.github.javafaker.Faker;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -32,6 +33,9 @@ public class DatabaseInitializer {
     @Autowired
     private CommandService commandService;
 
+    @Value("${email}")
+    private String email;
+
 
     @PostConstruct
     public void populateDatabase () {
@@ -44,6 +48,8 @@ public class DatabaseInitializer {
                 new CreateUserRequestDTO("Pollo", "pollo@unboxing.com", "Pollo",
                         List.of(new RoleDTO(RoleConstants.ROLE_USER), new RoleDTO(RoleConstants.ROLE_ADMIN))),
                 new CreateUserRequestDTO("Zoe", "pollo@unboxing.com", "Zoe",
+                        List.of(new RoleDTO(RoleConstants.ROLE_USER))),
+                new CreateUserRequestDTO("Alvaro", email, "Alvaro",
                         List.of(new RoleDTO(RoleConstants.ROLE_USER))),
                 new CreateUserRequestDTO("Malecom", "Malecom@unboxing.com", "Malecom",
                         List.of(new RoleDTO(RoleConstants.ROLE_USER))),

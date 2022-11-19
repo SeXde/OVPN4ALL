@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
 
 public class LogParser {
 
-    private final static String TIME_REGEX = "[A-Z][a-z][a-z] [A-Z][a-z][a-z]  [1-3]?[0-9] [0-2][0-9]:[0-5][0-9]:[0-5][0-9] 2[0-9][0-9][0-9]";
+    private final static String TIME_REGEX = "[A-Z][a-z][a-z] [A-Z][a-z][a-z] [1-3]?[0-9] [0-2][0-9]:[0-5][0-9]:[0-5][0-9] 2[0-9][0-9][0-9]";
     private final static String IP_REGEX = "(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)";
     private final static String BETWEEN_TIME_AND_IP_REGEX = "[ a-z=0-9]+";
     private final static String CN_REGEX = "CN=";
