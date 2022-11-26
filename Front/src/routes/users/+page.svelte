@@ -82,7 +82,8 @@
     let filteredUsers = []
     let usersPage: UsersPage;
     let errorBody: any;
-    let limit: number = 10;
+    let defaultLimit = 10;
+    let limit: number = defaultLimit;
     [usersPage, errorBody] = data.users;
     let error: string;
     if (errorBody != null) {
@@ -148,6 +149,7 @@
         if (!error) {
             users = [... transFormUsers(usersPage.users)];
             filteredUsers = [... transFormUsers(usersPage.users)];
+            limit = defaultLimit;
             generatePages();
         }
         loading = false;
@@ -234,6 +236,7 @@
     const generateUserLog = async(user: string): Promise<void> => {
         loading = true;
         userLog = [];
+        isUserLog = false;
         let userInfo: any;
         userInfo = await fetch(`http://localhost:8082/api/logs/${user}/info`, {
             method: 'GET',
@@ -250,15 +253,13 @@
             return res.json();
         })
         .catch(() => error = "Cannot connect with server");
-        console.log("UserInfo: ", userInfo);
         if (userInfo) {
             let ip, countryFlag, connectDate, disconnectDate; 
             for (let i = 0; i < userInfo.connectionDTOList.length; i++){
                 ip = userInfo.connectionDTOList.at(i).ip; 
-                        countryFlag = 'https://countryflagsapi.com/png/' + await fetch(`https://api.country.is/${ip}`)
-                .then(res => res.json())
-                .then(res => res.country)
-                .catch(() => error = "Cannot connect with server")
+                let countryCode = await fetch(`https://ipapi.co/${ip}/country/`).then(res => res.text());
+                countryFlag = `https://countryflagsapi.com/png/${countryCode}`;
+                console.log("Userinfo: ", userInfo, " index: ", i);
                 connectDate = userInfo.connectionDTOList.at(i).time;
                 if (i == userInfo.connectionDTOList.length - 1 && userInfo.connectionDTOList.length > userInfo.disconnectionDTOList.length) {
                     disconnectDate = "Connected";
@@ -294,27 +295,27 @@
             <thead class="text-xs">
                 <tr>
                     <th scope="col" class="py-3 px-6">
-                        <div class="flex flex-col items-center hover:underline hover:text-secondary hover:cursor-pointer">
+                        <div class="flex flex-col items-center">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5zm6-10.125a1.875 1.875 0 11-3.75 0 1.875 1.875 0 013.75 0zm1.294 6.336a6.721 6.721 0 01-3.17.789 6.721 6.721 0 01-3.168-.789 3.376 3.376 0 016.338 0z" />
-                            </svg>                          
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418" />
+                              </svg>                                                      
                             Ip
                         </div>
                     </th>
                     <th scope="col" class="py-3 px-6">
-                        <div class="flex flex-col items-center hover:underline hover:text-secondary hover:cursor-pointer">
+                        <div class="flex flex-col items-center">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-                                <path stroke-linecap="round" d="M16.5 12a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zm0 0c0 1.657 1.007 3 2.25 3S21 13.657 21 12a9 9 0 10-2.636 6.364M16.5 12V8.25" />
-                              </svg>                                                 
-                            Connect at
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+                              </svg>                                                                             
+                            Connected
                         </div>
                     </th>
                     <th scope="col" class="py-3 px-6 flex justify-center">
-                        <div class="flex flex-col items-center hover:underline hover:text-secondary hover:cursor-pointer">
+                        <div class="flex flex-col items-center">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5m-9-6h.008v.008H12v-.008zM12 15h.008v.008H12V15zm0 2.25h.008v.008H12v-.008zM9.75 15h.008v.008H9.75V15zm0 2.25h.008v.008H9.75v-.008zM7.5 15h.008v.008H7.5V15zm0 2.25h.008v.008H7.5v-.008zm6.75-4.5h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V15zm0 2.25h.008v.008h-.008v-.008zm2.25-4.5h.008v.008H16.5v-.008zm0 2.25h.008v.008H16.5V15z" />
-                            </svg>                   
-                            Disconnected at
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
+                              </svg>                                            
+                            Disconnected
                         </div>
                     </th>
                 </tr>
@@ -323,7 +324,7 @@
                 {#each userLog as entry}
                 <tr class="hover:bg-gray-700">
                     <td class="flex flex-col items-center py-4 px-6 text-gray-900 whitespace-nowrap dark:text-white">
-                        <img alt="Country flag" src="{entry.countryFlag}" class="object-scale-down">
+                        <img alt="Country flag" src="{entry.countryFlag}" class="w-6 h-6">
                         {entry.ip}
                     </td>
                     <td class="py-4 px-6 text-center">

@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.concurrent.ExecutionException;
 
 @Service
 public interface CommandService {
@@ -22,6 +23,6 @@ public interface CommandService {
     File downloadLogs() throws IOException, InterruptedException;
     boolean clearLogs() throws IOException, InterruptedException;
     boolean isActive() throws IOException, InterruptedException;
-
-    String readOvpnLogs() throws IOException, InterruptedException;
+    String readOvpnLogs() throws IOException, InterruptedException, ExecutionException;
+    String[] readThroughput() throws IOException, InterruptedException, ExecutionException;
 }

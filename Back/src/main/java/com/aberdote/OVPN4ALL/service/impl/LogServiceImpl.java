@@ -18,6 +18,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ExecutionException;
 
 @Service @Transactional @Slf4j @RequiredArgsConstructor
 public class LogServiceImpl implements LogService {
@@ -60,7 +61,7 @@ public class LogServiceImpl implements LogService {
                 throw new CustomException(msg, HttpStatus.INTERNAL_SERVER_ERROR);
             }
             return userInfoDTO;
-        } catch (IOException | InterruptedException e) {
+        } catch (IOException | InterruptedException | ExecutionException e) {
             final String msg = String.format("Cannot read ovpn log file, got ErroMessage:%s", e.getMessage());
             log.error(msg);
             throw new CustomException(msg, HttpStatus.INTERNAL_SERVER_ERROR);

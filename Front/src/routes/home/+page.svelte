@@ -1,11 +1,11 @@
 <script lang="ts">
 	import Header from "$lib/components/header.svelte";
-	import Chart from '$lib/components/Chart.svelte';
 	import ErrorMessage from "$lib/components/errorMessage.svelte";
 	import { getWithJWT } from "$lib/utils/requestUtils";
 	import { saveAs } from 'file-saver';
     import Cookies from 'js-cookie';
 	import Spinner from "$lib/components/Spinner.svelte";
+	import PerformanceChart from "$lib/components/PerformanceChart.svelte";
 
 	export let data
 	console.log("data: ", data)
@@ -25,6 +25,10 @@
 	let wanIp: string = "---";
 	let error = dataError
 	let loading: boolean = false;
+	let bandwidthData: any = {
+		'in': 0,
+		'out': 0
+	};
 	
 
 	if (setup != null) {
@@ -85,6 +89,52 @@
         }, 3000)
 	}
 
+	const getBandwidth = async (): Promise<void> => {
+		if (connected) {
+			await fetch('http://localhost:8082/api/status/bandwidth', {
+				method: 'GET',
+				mode: 'cors',
+				headers: {
+					Authorization: 'Bearer '+Cookies.get('jwt')
+				}
+			}).then(res => {
+				if (!res.ok) {
+					throw "Eror";
+				} else {
+					return res;
+				}
+			}).then(res => res.json())
+			.then(res => {
+				console.log("Res: ", res);
+				bandwidthData = res;
+				console.log("BandwidthData: ", bandwidthData);
+			})
+			.catch(e => console.log(e));
+		}
+    }
+
+	const fetchBandwidth = ():void => {
+		getBandwidth();
+        setInterval(() => {
+            getBandwidth();
+        }, 5000);
+	}
+
+	const correctUnits = (bytes: number): string => {
+		if (bytes < 1000) {
+			return `: ${bytes} B`;
+		}
+		if (bytes < 1000000) {
+			return `: ${Math.round((bytes / 1000)*100) / 100} KB`;
+		}
+		if (bytes < 1000000000) {
+			return `: ${Math.round((bytes / 1000000)*100) / 100} MB`;
+		}
+		return `: ${Math.round((bytes / 1000000000)*100) / 100} GB`;
+	}
+
+	fetchBandwidth();
+
 
 </script>
 
@@ -140,15 +190,18 @@
 				WAN ip: <strong><i>{wanIp}</i></strong>
 			</p>
 		</div>
-		<div class="bg-light_dark px-5 py-5 border rounded-lg mt-5">
-			<div class="flex flex-col items-center mb-2 pb-2 border-b">
-				<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-					<path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5m.75-9l3-3 2.148 2.148A12.061 12.061 0 0116.5 7.605" />
-				  </svg>
-				<p>Usage</p>	
+		{#if connected}
+			<div class="bg-light_dark px-5 py-5 border rounded-lg mt-5">
+				<div class="flex flex-col items-center mb-2 pb-2 border-b">
+					<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+						<path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5m.75-9l3-3 2.148 2.148A12.061 12.061 0 0116.5 7.605" />
+					</svg>
+					<p>Usage</p>	
+				</div>
+				<p>In {correctUnits(bandwidthData.in)}</p>
+				<p>Out {correctUnits(bandwidthData.out)}</p>
 			</div>
-			<Chart />
-		</div>
+		{/if}
 		<div class="flex items-center align-middle mt-2">
 			{#if !dataError}
 				<button on:click={() => changeVpnStatus()} class="mr-3 my-3 mt-5 w-36 py-2 flex flex-col items-center justify-center text-light rounded-lg border-2 border-light hover:text-primary hover:border-primary disabled:border-stone-500 disabled:text-stone-500 font-semibold transition-colors">
