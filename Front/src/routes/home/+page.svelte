@@ -1,29 +1,35 @@
 <script lang="ts">
 	import Header from "$lib/components/header.svelte";
-	import ErrorMessage from "$lib/components/errorMessage.svelte";
-	import { getWithJWT } from "$lib/utils/requestUtils";
 	import { saveAs } from 'file-saver';
     import Cookies from 'js-cookie';
 	import Spinner from "$lib/components/Spinner.svelte";
-	import PerformanceChart from "$lib/components/PerformanceChart.svelte";
+	import { isErrorOverlayOpen, isInfoOverlayOpen } from "../stores/OverlayStore";
+	import ErrorOverlay from "$lib/components/ErrorOverlay.svelte";
+	import InfoOverlay from "$lib/components/InfoOverlay.svelte";
+	import { goto } from "$app/navigation";
 
 	export let data
-	console.log("data: ", data)
 	let [setup, dataError] = data.setup
-	dataError = dataError == null ? null : dataError.message
+	let errorTitle: string = "Server error"
+	let errorMessage: string = "";
+	if (dataError) {
+		isInfoOverlayOpen .set(true);
+	}
 	let [connected, connectError] = data.state
+	if (connectError) {
+		errorMessage = errorMessage + "\n" + connectError.message;
+	}
 	let users: number;
 	let usersError: any;
 	[users, usersError] = data.users;
-	usersError = usersError ? usersError.message : null;
-	console.log(connectError == null)
-	connectError = connectError == null ? null : connectError.message
+	if (usersError) {
+		errorMessage = errorMessage + "\n" + usersError.message;
+	}
 	
 	let port: string = "---";
 	let gateway: string = "---";
 	let subnet: string = "---";
 	let wanIp: string = "---";
-	let error = dataError
 	let loading: boolean = false;
 	let bandwidthData: any = {
 		'in': 0,
@@ -37,6 +43,10 @@
 		subnet = setup.subnet;
 		wanIp = setup.server;
 	}
+
+	if (errorMessage !== "") {
+		isErrorOverlayOpen.set(true);
+	}
 	
 	const downloadLogs = async (): Promise<void> => {
 		loading = true;
@@ -47,30 +57,32 @@
                     Authorization: 'Bearer '+Cookies.get('jwt')
                 }
         }).then(async res => {
-			console.log(res)
+
             if (res.ok) {
                 saveAs(new File([await res.blob()], `OVPN4ALL_Logs.zip`, {type: "application/gzip"}))
                 return null
-            } else {
+            } else if(res.status == 403) {
+				goto("/sign-in")
+			} else {
                 return res.json()
             }
         })
         .then(res => {
             if (res) {
-                error = res.message
+				errorMessage = res.message;
+				isErrorOverlayOpen.set(true);
             }
         })
         .catch(() => {
-            error = "Cannot connect to the server"
+            errorMessage = "Cannot connect to the server";
+			isErrorOverlayOpen.set(true);
         })
-		loading = false,
-        setTimeout(() => {
-            error = null
-        }, 3000)
+		loading = false;
 	}
 
 	const changeVpnStatus = async () => {
 		loading = true;
+		let error: true;
 		const endpoint = connected ? 'http://localhost:8082/api/status/off' : 'http://localhost:8082/api/status/on'
 		await fetch(endpoint, {
                 method: 'GET',
@@ -79,18 +91,33 @@
                     Authorization: 'Bearer '+Cookies.get('jwt')
                 }
         }).then(res => {
-			if (res.ok)
+			if (res.ok) {
 				connected = !connected
+			} else if(res.status == 403) {
+				goto("/sign-in")
+			} else {
+				error = true;
+				return res.json();
+			}
 		})
-		.catch(() =>  dataError = `Cannot ${connected ? 'shutdown' : 'turn on'} vpn`)
+		.then(res => {
+			if (error) {
+				errorMessage = res.message;
+				isErrorOverlayOpen.set(true);
+			}
+		})
+		.catch(() =>  {
+			if (!error) {
+				errorMessage = `Cannot ${connected ? 'shutdown' : 'turn on'} vpn`;
+				isErrorOverlayOpen.set(true);
+			}
+		})
 		loading = false;
-		setTimeout(() => {
-            error = null
-        }, 3000)
 	}
 
 	const getBandwidth = async (): Promise<void> => {
 		if (connected) {
+			let error: boolean;
 			await fetch('http://localhost:8082/api/status/bandwidth', {
 				method: 'GET',
 				mode: 'cors',
@@ -99,17 +126,26 @@
 				}
 			}).then(res => {
 				if (!res.ok) {
-					throw "Eror";
-				} else {
+					error = true;
+				} else if(res.status == 403) {
+					goto("/sign-in")
+				} 
+				else {
 					return res;
 				}
 			}).then(res => res.json())
 			.then(res => {
-				console.log("Res: ", res);
-				bandwidthData = res;
-				console.log("BandwidthData: ", bandwidthData);
+				if (error) {
+					errorMessage = res.message;
+				} else {
+					bandwidthData = res;
+				}
 			})
-			.catch(e => console.log(e));
+			.catch(() => {
+				if (!error) {
+					errorMessage = "Cannot contact with server";
+				}
+			});
 		}
     }
 
@@ -144,13 +180,13 @@
 </svelte:head>
 
 <Header navbar={true}/>
+	{#if $isErrorOverlayOpen}
+		<ErrorOverlay errorTitle={errorTitle} errorMessage={errorMessage}/>
+	{/if}
+	{#if $isInfoOverlayOpen}
+		<InfoOverlay infoTitle="Config not detected" infoMessage="Please, fill vpn configuration" link="/setup" linkMessage="Go to config setup" />
+	{/if}
 	<div class="flex flex-col items-center my-auto mr-5">
-		{#if dataError}
-				<ErrorMessage  title="Server error" body={dataError}/>
-		{/if}
-		{#if connectError}
-				<ErrorMessage  title="Server error" body={connectError}/>
-		{/if}
 		<div class="mt-5 bg-light_dark px-5 py-5 border rounded-lg">
 			<div class="flex flex-col items-center mb-2 pb-2 border-b">
 				<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">

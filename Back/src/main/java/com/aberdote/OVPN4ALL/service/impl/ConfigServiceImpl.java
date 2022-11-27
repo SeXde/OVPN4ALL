@@ -50,6 +50,10 @@ public class ConfigServiceImpl implements ConfigService {
             log.error("Cannot save setup, netmask is not valid");
             throw new CustomException("Netmask is not valid", HttpStatus.BAD_REQUEST);
         }
+        if (!ConfigValidator.validateIp(setupDTO.getServer())) {
+            log.error("Cannot save setup, server public ip is not valid");
+            throw new CustomException("Server public ip is not valid", HttpStatus.BAD_REQUEST);
+        }
         try {
             if (!commandService.addConfig(setupDTO.getPort(), setupDTO.getGateway(), setupDTO.getSubnet())) {
                 throw new CustomException("Cannot setup config", HttpStatus.INTERNAL_SERVER_ERROR);
