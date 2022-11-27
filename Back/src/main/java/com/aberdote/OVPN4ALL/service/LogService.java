@@ -1,6 +1,7 @@
 package com.aberdote.OVPN4ALL.service;
 
 import com.aberdote.OVPN4ALL.dto.parser.UserInfoDTO;
+import com.aberdote.OVPN4ALL.dto.user.UserResponseDTO;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
@@ -12,5 +13,6 @@ public interface LogService {
     File downloadLogs();
     UserInfoDTO getUserInfo(String user);
     List<UserInfoDTO> getAllUsersInfo();
-    int getUsersConnected();
+    List<UserResponseDTO> getUsersConnected();
+    int getNumberOfUsersConnected();
 }

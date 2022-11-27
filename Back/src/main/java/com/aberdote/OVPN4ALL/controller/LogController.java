@@ -76,10 +76,16 @@ public class LogController {
         return ResponseEntity.ok(logService.getAllUsersInfo());
     }
 
-
     @GetMapping("/users/connections")
-    public ResponseEntity<Integer> getUsersConnected(){
+    public ResponseEntity<Integer> getNumberOfUsersConnected(){
         log.info("Request to get number of users connected");
+        return ResponseEntity.ok(logService.getNumberOfUsersConnected());
+    }
+
+    @GetMapping("/users/connected")
+    public ResponseEntity<List<UserResponseDTO>> getUsersConnected() {
+        log.info("Request to get users connected");
         return ResponseEntity.ok(logService.getUsersConnected());
     }
+
 }

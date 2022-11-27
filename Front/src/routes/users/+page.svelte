@@ -324,7 +324,7 @@
                 {#each userLog as entry}
                 <tr class="hover:bg-gray-700">
                     <td class="flex flex-col items-center py-4 px-6 text-gray-900 whitespace-nowrap dark:text-white">
-                        <img alt="Country flag" src="{entry.countryFlag}" class="w-6 h-6">
+                        <img alt="Country flag" src="{entry.countryFlag}" class="w-11 h-11">
                         {entry.ip}
                     </td>
                     <td class="py-4 px-6 text-center">

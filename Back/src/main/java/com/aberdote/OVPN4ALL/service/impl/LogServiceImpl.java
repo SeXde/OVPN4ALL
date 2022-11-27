@@ -1,10 +1,12 @@
 package com.aberdote.OVPN4ALL.service.impl;
 
 import com.aberdote.OVPN4ALL.dto.parser.UserInfoDTO;
+import com.aberdote.OVPN4ALL.dto.user.UserResponseDTO;
 import com.aberdote.OVPN4ALL.exception.CustomException;
 import com.aberdote.OVPN4ALL.repository.UserRepository;
 import com.aberdote.OVPN4ALL.service.CommandService;
 import com.aberdote.OVPN4ALL.service.LogService;
+import com.aberdote.OVPN4ALL.utils.converter.EntityConverter;
 import com.aberdote.OVPN4ALL.utils.parser.LogParser;
 import com.aberdote.OVPN4ALL.utils.converter.StringConverter;
 import lombok.RequiredArgsConstructor;
@@ -74,8 +76,17 @@ public class LogServiceImpl implements LogService {
     }
 
     @Override
-    public int getUsersConnected() {
+    public int getNumberOfUsersConnected() {
         return getAllUsersInfo().stream().filter(UserInfoDTO::isConnected).toList().size();
+    }
+
+    public List<UserResponseDTO> getUsersConnected() {
+        return userRepository.findAll().stream()
+                .filter(user -> {
+                    final UserInfoDTO userInfo = getUserInfo(user.getName());
+                    return userInfo != null && userInfo.isConnected();
+                })
+                .map(EntityConverter::fromUserEntityToUserResponseDTO).toList();
     }
 
     private boolean isUserInfoInvalid(UserInfoDTO userInfoDTO) {
