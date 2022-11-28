@@ -1,9 +1,11 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import ErrorMessage from '$lib/components/errorMessage.svelte';
+	import ErrorOverlay from '$lib/components/ErrorOverlay.svelte';
 	import Header from "$lib/components/header.svelte";
 	import {emailValidator} from '$lib/helpers/validators';
 	import { postWithJWT } from '$lib/utils/requestUtils';
+	import { isErrorOverlayOpen } from '../stores/OverlayStore';
 	
 	type RoleDTO = {
 		roleName: string
@@ -73,14 +75,17 @@
 			password,
 			roles
 		});
-
-		postError = null;
 		const[, error] = await postWithJWT('http://localhost:8082/api/users', 201, data)
-		postError = error
 		isLoading = false;
-		if (postError) return;
-        goto("/users");
-		
+		if (!error) {
+			goto("/users");
+			return;
+		}
+        postError = error.message;
+		isErrorOverlayOpen.set(true);
+		if (postError.includes("token")) {
+			goto("/sign-in");
+		}
 	}
 
 </script>
@@ -91,6 +96,9 @@
 </svelte:head>
 
 <Header navbar={true}/>
+{#if $isErrorOverlayOpen}
+	<ErrorOverlay errorTitle="Cannot create user" errorMessage={postError} />
+{/if}
 <div class="flex flex-col items-center justify-center my-auto">
     <form on:change={checkDefault} on:submit|preventDefault={sendData} class= "px-8 pt-6 pb-8 mb-4">
 		<div class="flex flex-col items-center">
@@ -152,8 +160,5 @@
 					Cancel
 				</a>
 		</div>
-        {#if postError}
-            <ErrorMessage title={"Server error."} body={postError} />
-        {/if}
     </form>
   </div>

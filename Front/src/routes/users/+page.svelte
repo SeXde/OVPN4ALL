@@ -7,8 +7,10 @@
     import { saveAs } from 'file-saver';
     import Cookies from 'js-cookie';
 	import Spinner from "$lib/components/Spinner.svelte";
-    import { isOverlayOpen } from '../stores/OverlayStore';
+    import { isErrorOverlayOpen, isInfoOverlayOpen, isOverlayOpen } from '../stores/OverlayStore';
 	import Overlay from "$lib/components/Overlay.svelte";
+	import ErrorOverlay from "$lib/components/ErrorOverlay.svelte";
+	import InfoOverlay from "$lib/components/InfoOverlay.svelte";
 
     interface Role {
         roleName: string;
@@ -86,8 +88,14 @@
     let limit: number = defaultLimit;
     [usersPage, errorBody] = data.users;
     let error: string;
+    let errorTitle, infoTitle, infoMessage: string;
     if (errorBody != null) {
         error = errorBody.message;
+        if (error.includes("token")) {
+            goto("/sign-in");
+        }
+        errorTitle = "Cannot get users";
+        isErrorOverlayOpen.set(true);
     }
     let users = usersPage.users
     let isOrderByName: boolean, isOrderByDate: boolean, isOrderByMail: boolean, noUsers: boolean, noPrev
@@ -144,18 +152,18 @@
         [usersPage, errorDelete] = await deleteWithJWT('http://localhost:8082/api/users/' + userId, 200)
         if (errorDelete) {
             error = errorDelete.message
-            if (errorDelete.message === 'invalid token') goto('/signIn')
+            if (errorDelete.message === 'invalid token') goto('/sign-in')
         }
         if (!error) {
             users = [... transFormUsers(usersPage.users)];
             filteredUsers = [... transFormUsers(usersPage.users)];
             limit = defaultLimit;
             generatePages();
+        } else {
+            errorTitle = `Cannot delete user ${userId}`;
+            isErrorOverlayOpen.set(true);
         }
         loading = false;
-        setTimeout(() => {
-            error = null
-        }, 3000)
     }
 
     const fetchPage = async(page: number, changeUsersPerPage: boolean): Promise<void> => {
@@ -164,22 +172,23 @@
             [usersPage, errorBody] = await getWithJWT(`http://localhost:8082/api/users?page=${page}&limit=${limit}`, 200)
             if (errorBody !== null ) {
                 error = errorBody.message;
-                if (error === 'invalid token') goto('/signIn')
+                if (error === 'invalid token') goto('/sign-in')
             }
             if (!errorBody) {
                 users = [... transFormUsers(usersPage.users)]
                 noUsers = usersPage.users === null || usersPage.users.length < 10
                 generatePages();
+            } else {
+                errorTitle = `Cannot fetch page ${page}`;
+                isErrorOverlayOpen.set(true);
             }
             loading = false;
-            setTimeout(() => {
-                error = null
-            }, 3000)
         }
     }
 
     const downloadUserConfig = async (userId: number, userName: string): Promise<void> => {
         loading = true;
+        errorTitle = "Cannot download vpn file";
         await fetch('http://localhost:8082/api/users/' + userId + '/ovpn', {
                 method: 'GET',
                 mode: 'cors',
@@ -188,29 +197,36 @@
                 }
         }).then(async res => {
             if (res.ok) {
-                console.log(`${userName}.ovpn`)
                 saveAs(new File([await res.blob()], `${userName}.ovpn`, {type: `${res.headers.get('content-type')};charset=utf-8`}))
                 return null
-            } else {
+            } else if (res.status === 404) {
+                infoTitle = "VPN config not detected";
+                infoMessage = "Please, fill vpn configuration";
+                isInfoOverlayOpen.set(true);
+                return null;
+            } else if (res.status === 403) {
+                goto("/sign-in");
+            }
+            else {
                 return res.json()
             }
         })
         .then(res => {
             if (res) {
                 error = res.message
+                isErrorOverlayOpen.set(true);
             }
         })
         .catch(() => {
             error = "Cannot connect to the server"
+            isErrorOverlayOpen.set(true);
         })
         loading = false;
-        setTimeout(() => {
-            error = null
-        }, 3000)
     }
 
     const sendVPN = async (name: string, email: string): Promise<void> => {
         loading = true;
+        errorTitle = "Cannot send vpn file";
         await fetch(`http://localhost:8082/api/mail/${email}/file/${name}`, {
             method: 'GET',
             mode: 'cors',
@@ -220,25 +236,39 @@
         }).then(async res => {
             if (res.ok) {
                 return null
-            } else {
+            } else if (res.status === 404) {
+                infoTitle = "Email config not detected";
+                infoMessage = "Please, fill email configuration";
+                isInfoOverlayOpen.set(true);
+            } else if (res.status === 403) {
+                goto("/sign-in");
+            } 
+            else {
                 return res.json()
             }
         })
         .then(res => {
             if (res) {
                 error = res.message
+                isErrorOverlayOpen.set(true);
             }
         })
-        .catch(() => error = "Cannot connect to the server")
+        .catch(() => {
+            error = "Cannot connect to the server";
+            isErrorOverlayOpen.set(true);
+        });
         loading = false;
     }
 
     const generateUserLog = async(user: string): Promise<void> => {
         loading = true;
+        errorTitle = "Cannot get user info";
         userLog = [];
         isUserLog = false;
         let userInfo: any;
-        userInfo = await fetch(`http://localhost:8082/api/logs/${user}/info`, {
+        let isError: boolean = false;
+        let is404: boolean = false;
+        await fetch(`http://localhost:8082/api/logs/${user}/info`, {
             method: 'GET',
             mode: 'cors',
             headers: {
@@ -246,20 +276,36 @@
             }
         })
         .then(res =>{
-            console.log("res: ", res);
-            if (!res.ok) {
-                return null;
+            if (res.ok) return res.json();
+            isError = true;
+            if (res.status === 404) {
+                is404 = true;
+            } else if (res.status === 403) {
+                goto("/sign-in");
             }
-            return res.json();
         })
-        .catch(() => error = "Cannot connect with server");
+        .then(res => {
+            if (isError) {
+                error = res.message;
+                if (!is404) {
+                    isErrorOverlayOpen.set(true);
+                }
+            } else {
+                userInfo = res;
+            }
+        })
+        .catch(() => {
+            if (!is404) {
+                error = "Cannot connect with server";
+                isErrorOverlayOpen.set(true);
+            }
+        });
         if (userInfo) {
             let ip, countryFlag, connectDate, disconnectDate; 
             for (let i = 0; i < userInfo.connectionDTOList.length; i++){
                 ip = userInfo.connectionDTOList.at(i).ip; 
                 let countryCode = await fetch(`https://ipapi.co/${ip}/country/`).then(res => res.text());
                 countryFlag = `https://countryflagsapi.com/png/${countryCode}`;
-                console.log("Userinfo: ", userInfo, " index: ", i);
                 connectDate = userInfo.connectionDTOList.at(i).time;
                 if (i == userInfo.connectionDTOList.length - 1 && userInfo.connectionDTOList.length > userInfo.disconnectionDTOList.length) {
                     disconnectDate = "Connected";
@@ -274,7 +320,6 @@
                 })
             }
         }
-        console.log("UserLog: ", userLog);
         isUserLog = userLog.length > 0;
         loading = false;
     }
@@ -288,6 +333,12 @@
 </svelte:head>
 
 <Header navbar={true}/>
+{#if $isErrorOverlayOpen}
+	<ErrorOverlay errorTitle={errorTitle} errorMessage={error} />
+{/if}
+{#if $isInfoOverlayOpen}
+	<InfoOverlay infoTitle={infoTitle} infoMessage={infoMessage} link="/setup" linkMessage="Go to config setup" />
+{/if}
 {#if $isOverlayOpen}
     <Overlay>
         {#if isUserLog}

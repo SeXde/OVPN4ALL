@@ -4,8 +4,9 @@
     import {portValidator, gatewayValidator, netmaskValidator, fqdnValidator, emailValidator} from '$lib/helpers/validators';
     import Header from "$lib/components/header.svelte";
     import { postWithJWT } from '$lib/utils/requestUtils';
-	import { isErrorOverlayOpen } from '../stores/OverlayStore';
+	import { isErrorOverlayOpen, isInfoOverlayOpen } from '../stores/OverlayStore';
 	import ErrorOverlay from '$lib/components/ErrorOverlay.svelte';
+	import InfoOverlay from '$lib/components/InfoOverlay.svelte';
 
 
     let portTitleErrorMessage: string, gatewayTitleErrorMessage: string, netmaskTitleErrorMessage: string, portBodyErrorMessage: string, gatewayBodyErrorMessage: string, netmaskBodyErrorMessage: string, postError: string;
@@ -28,12 +29,13 @@
     let validEmailData: boolean = false;
     let validUsername: boolean = false;
     let validNetwork: boolean = false;
+    let infoMessage: string;
     let isTls: boolean = false;
     const timeOutMs: number = 500;
     let portTimeOut, gatewayTimeOut, netmaskTimeOut, networkTimeOut, smtpHostTimeOut, usernameTimeOut, emailInputTimeOut;
     portTitleErrorMessage = gatewayTitleErrorMessage = netmaskTitleErrorMessage = portBodyErrorMessage = gatewayBodyErrorMessage = netmaskBodyErrorMessage = postError = networkTitleErrorMessage = networkErrorMessage = null;
 
-    const validatePort = (port: number) => {
+    const validatePort = (port: string) => {
         portTitleErrorMessage = portBodyErrorMessage = null;
         clearTimeout(portTimeOut);
         validPort = portValidator(port);
@@ -97,8 +99,6 @@
         validEmailData = validSmtpHost && validPort && validUsername
     }
 
-    const validateInput = () => {validData = validPort && validGateway && validNetmask;}
-
     async function sendData(){
         
         isLoading = true;
@@ -111,11 +111,17 @@
         });
         const [, error] = await postWithJWT('http://localhost:8082/api/setup', 201, data)
         isLoading = false;
+        if (!error) {
+            infoMessage = "VPN config was saved";
+            isInfoOverlayOpen.set(true);
+            return;
+        } 
         if (error.message.includes("token")) {
             goto("/sign-in")
         }
         postError = error.message;
         isErrorOverlayOpen.set(true);
+        
     };
 
     const sendEmailData = async ():Promise<void> => {
@@ -130,6 +136,11 @@
         });
         const [, error] = await postWithJWT('http://localhost:8082/api/mail', 200, data)
         isLoading = false;
+        if (!error) {
+            infoMessage = "Email config was saved";
+            isInfoOverlayOpen.set(true);
+            return;
+        } 
         if (error.message.includes("token")) {
             goto("/sign-in")
         }
@@ -147,6 +158,9 @@
 <Header navbar={true}/>
 {#if $isErrorOverlayOpen}
     <ErrorOverlay errorTitle="Server error" errorMessage={postError} />
+{/if}
+{#if $isInfoOverlayOpen}
+    <InfoOverlay infoTitle="Config saved" infoMessage={infoMessage} linkMessage="" link=""/>
 {/if}
 <div class="h-full">
     <div class="w-1/12 my-5 px-5">

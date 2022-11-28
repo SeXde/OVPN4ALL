@@ -6,6 +6,7 @@
     export let infoMessage;
     export let link;
     export let linkMessage;
+    let isLink = link !== "" && linkMessage !== "";
     if (isInfoOverlayOpen) {
         
         setTimeout(() => {
@@ -22,7 +23,9 @@
                 </button>
                 <h1 class="text-2xl mb-2">{infoTitle}</h1>
                 <p class="mb-5">{infoMessage}</p>
-                <a class="bg-blue-900 hover:text-secondary hover:cursor-pointer border rounded-xl p-4" href="{link}">{linkMessage}</a>
+                {#if isLink}
+                    <a class="bg-blue-900 hover:font-extrabold hover:cursor-pointer border rounded-xl p-4" href="{link}">{linkMessage}</a>
+                {/if}
             </div>
         </div>
     </div>
