@@ -9,6 +9,8 @@ import com.aberdote.OVPN4ALL.service.CommandService;
 import com.aberdote.OVPN4ALL.service.ConfigService;
 import com.aberdote.OVPN4ALL.service.MailService;
 import com.aberdote.OVPN4ALL.utils.converter.EntityConverter;
+import com.aberdote.OVPN4ALL.utils.validator.config.ConfigValidator;
+import com.aberdote.OVPN4ALL.utils.validator.user.UserValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -33,9 +35,46 @@ public class MailServiceImpl implements MailService {
     @Override
     public MailResponseDTO setMail(MailRequestDTO mailRequestDTO) {
         mailRepository.deleteAll();
+        if (!ConfigValidator.validateFQDN(mailRequestDTO.getSmtpHost())) {
+            final String msg = String.format("%s is not a valid smtp host", mailRequestDTO.getSmtpHost());
+            log.error(msg);
+            throw new CustomException(msg, HttpStatus.BAD_REQUEST);
+        }
+        if (!ConfigValidator.validatePort(mailRequestDTO.getSmtpPort())) {
+            final String msg = String.format("%s is not a valid smtp port", mailRequestDTO.getSmtpPort());
+            log.error(msg);
+            throw new CustomException(msg, HttpStatus.BAD_REQUEST);
+        }
+        if (!UserValidator.validateEmail(mailRequestDTO.getUsername())) {
+            final String msg = String.format("%s is not a valid email", mailRequestDTO.getUsername());
+            log.error(msg);
+            throw new CustomException(msg, HttpStatus.BAD_REQUEST);
+        }
+        sendTestMail(mailRequestDTO);
         return EntityConverter.fromMailEntityToMailResponseDTO(mailRepository.save(EntityConverter.fromMailRequestDTOToMailEntity(mailRequestDTO)));
     }
 
+    private void sendTestMail(MailRequestDTO mailRequestDTO) {
+        final MailEntity mailEntity = EntityConverter.fromMailRequestDTOToMailEntity(mailRequestDTO);
+        final Session session = setSession(setProperties(mailEntity), mailEntity.getUsername(), mailEntity.getPassword());
+        final Message message = new MimeMessage(session);
+        try {
+            message.setFrom(new InternetAddress(mailEntity.getUsername()));
+            message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(mailEntity.getUsername()));
+            message.setSubject("Test Mail");
+            final String msg = "This is just a test mail";
+            MimeBodyPart mimeBodyPart = new MimeBodyPart();
+            mimeBodyPart.setContent(msg, "text/html; charset=utf-8");
+            Multipart multipart = new MimeMultipart();
+            multipart.addBodyPart(mimeBodyPart);
+            message.setContent(multipart);
+            Transport.send(message);
+        } catch (MessagingException e) {
+            final String msg = String.format("Cannot send email, ErrorMessage: %s", e.getMessage());
+            log.error(msg);
+            throw new CustomException(msg, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
     @Override
     public void sendMail(String mailSubject, String ovpnFileName) {
         log.debug("Request to send mail to {}", mailSubject);
@@ -67,7 +106,6 @@ public class MailServiceImpl implements MailService {
             throw new CustomException(msg, HttpStatus.NOT_FOUND);
         });
     }
-
     private Properties setProperties(MailEntity mailEntity) {
         final Properties properties = new Properties();
         properties.put("mail.smtp.auth", true);

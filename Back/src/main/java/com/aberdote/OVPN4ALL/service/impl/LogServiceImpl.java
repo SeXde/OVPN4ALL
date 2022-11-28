@@ -1,10 +1,12 @@
 package com.aberdote.OVPN4ALL.service.impl;
 
 import com.aberdote.OVPN4ALL.dto.parser.UserInfoDTO;
+import com.aberdote.OVPN4ALL.dto.user.UserResponseDTO;
 import com.aberdote.OVPN4ALL.exception.CustomException;
 import com.aberdote.OVPN4ALL.repository.UserRepository;
 import com.aberdote.OVPN4ALL.service.CommandService;
 import com.aberdote.OVPN4ALL.service.LogService;
+import com.aberdote.OVPN4ALL.utils.converter.EntityConverter;
 import com.aberdote.OVPN4ALL.utils.parser.LogParser;
 import com.aberdote.OVPN4ALL.utils.converter.StringConverter;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +20,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ExecutionException;
 
 @Service @Transactional @Slf4j @RequiredArgsConstructor
 public class LogServiceImpl implements LogService {
@@ -60,7 +63,7 @@ public class LogServiceImpl implements LogService {
                 throw new CustomException(msg, HttpStatus.INTERNAL_SERVER_ERROR);
             }
             return userInfoDTO;
-        } catch (IOException | InterruptedException e) {
+        } catch (IOException | InterruptedException | ExecutionException e) {
             final String msg = String.format("Cannot read ovpn log file, got ErroMessage:%s", e.getMessage());
             log.error(msg);
             throw new CustomException(msg, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -73,8 +76,17 @@ public class LogServiceImpl implements LogService {
     }
 
     @Override
-    public int getUsersConnected() {
+    public int getNumberOfUsersConnected() {
         return getAllUsersInfo().stream().filter(UserInfoDTO::isConnected).toList().size();
+    }
+
+    public List<UserResponseDTO> getUsersConnected() {
+        return userRepository.findAll().stream()
+                .filter(user -> {
+                    final UserInfoDTO userInfo = getUserInfo(user.getName());
+                    return userInfo != null && userInfo.isConnected();
+                })
+                .map(EntityConverter::fromUserEntityToUserResponseDTO).toList();
     }
 
     private boolean isUserInfoInvalid(UserInfoDTO userInfoDTO) {

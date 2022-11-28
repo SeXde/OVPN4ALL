@@ -5,6 +5,7 @@ import com.aberdote.OVPN4ALL.common.constanst.UserReservedConstants;
 import com.aberdote.OVPN4ALL.dto.user.CreateUserRequestDTO;
 import com.aberdote.OVPN4ALL.dto.user.LoginUserRequestDTO;
 import com.aberdote.OVPN4ALL.dto.user.UserResponseDTO;
+import com.aberdote.OVPN4ALL.dto.user.UserResponsePageDTO;
 import com.aberdote.OVPN4ALL.entity.RoleEntity;
 import com.aberdote.OVPN4ALL.entity.UserEntity;
 import com.aberdote.OVPN4ALL.exception.CustomException;
@@ -14,11 +15,10 @@ import com.aberdote.OVPN4ALL.service.CommandService;
 import com.aberdote.OVPN4ALL.service.ConfigService;
 import com.aberdote.OVPN4ALL.service.UserService;
 import com.aberdote.OVPN4ALL.utils.converter.EntityConverter;
+import com.aberdote.OVPN4ALL.utils.converter.PageConverter;
 import com.aberdote.OVPN4ALL.utils.validator.user.UserValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -58,6 +58,7 @@ public class UserServiceImpl implements UserService {
                             }))
                     .collect(Collectors.toSet())
             );
+            userEntity.setUser(userEntity.getRoles().stream().map(RoleEntity::getRoleName).anyMatch(role -> role.equals(RoleConstants.ROLE_USER)));
             userEntity.setPassword(bCryptPasswordEncoder.encode(userEntity.getPassword()));
             return EntityConverter.fromUserEntityToUserResponseDTO(userRepository.save(userEntity));
         } catch (IOException | InterruptedException e) {
@@ -97,15 +98,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Page<UserResponseDTO> getUsersPaginated(int pageNumber, int usersPerPage) {
-        final List<UserResponseDTO> userResponseDTOList = userRepository.findAll(PageRequest.of(pageNumber, usersPerPage)).stream().map(EntityConverter::fromUserEntityToUserResponseDTO).sorted((u1, u2) -> {
-            final boolean u1ContainsUserRole = u1.getRoles().stream().anyMatch(roleDTO -> roleDTO.getRoleName().equals(RoleConstants.ROLE_USER));
-            final boolean u2ContainsUserRole = u2.getRoles().stream().anyMatch(roleDTO -> roleDTO.getRoleName().equals(RoleConstants.ROLE_USER));
-            if (u1ContainsUserRole == u2ContainsUserRole) return 0;
-            if (u1ContainsUserRole) return -1;
-            return 1;
-        }).toList();
-        return  new PageImpl<>(userResponseDTOList);
+    public UserResponsePageDTO getUsersPaginated(int pageNumber, int usersPerPage) {
+        return PageConverter.fromPagetoUserResponsePageDTO(userRepository.findAllByOrderByIsUserDesc(PageRequest.of(pageNumber, usersPerPage)).map(EntityConverter::fromUserEntityToUserResponseDTO));
     }
 
     @Override

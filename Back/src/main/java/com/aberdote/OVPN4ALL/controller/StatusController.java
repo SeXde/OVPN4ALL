@@ -1,5 +1,6 @@
 package com.aberdote.OVPN4ALL.controller;
 
+import com.aberdote.OVPN4ALL.dto.BandwidthDTO;
 import com.aberdote.OVPN4ALL.dto.ErrorDTO;
 import com.aberdote.OVPN4ALL.service.StatusService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -60,6 +61,11 @@ public class StatusController {
     public ResponseEntity<Void> shutdownOpenvpn() {
         statusService.turnOff();
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/bandwidth")
+    public ResponseEntity<BandwidthDTO> getBandwidth() {
+        return ResponseEntity.ok(statusService.getThroughput());
     }
 
 

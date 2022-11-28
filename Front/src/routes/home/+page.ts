@@ -13,9 +13,15 @@ export const load = async ({ fetch }) => {
         const [status, error] = await getWithJWT("http://localhost:8082/api/status", 200);
         return [status, error]
     }
-        
+    
+    const fetchUsers = async ():Promise<any> => {
+        const [users, error] = await getWithJWT("http://localhost:8082/api/logs/users/connections", 200);
+        return [users, error]
+    }
+    
     return {
         setup: fetchSetup(),
-        state: fetchState()
+        state: fetchState(),
+        users: fetchUsers()
     }
 }

@@ -19,6 +19,7 @@ public class UserEntity {
     private String email;
     private String password;
     private LocalDate createdAt;
+    private boolean isUser;
     @ManyToMany
     @JoinTable(
             name = "user_entity_roles",

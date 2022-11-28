@@ -1,5 +1,7 @@
 package com.aberdote.OVPN4ALL.utils.validator.config;
 
+import java.util.regex.Pattern;
+
 public class ConfigValidator {
 
     public static boolean validateIp(String ip) {
@@ -21,6 +23,11 @@ public class ConfigValidator {
     public static boolean validateNetmask(String netmask) {
         final String netmaskPattern = "(255)\\.(0|128|192|224|240|248|252|254|255)\\.(0|128|192|224|240|248|252|254|255)\\.(0|128|192|224|240|248|252|254|255)";
         return netmask.matches(netmaskPattern);
+    }
+
+    public static boolean validateFQDN(String fqdn) {
+        final String fqdnPattern = "^(?!://)(?=.{1,255}$)((.{1,63}\\.){1,127}(?![0-9]*$)[a-z0-9-]+\\.?)$";
+        return Pattern.compile(fqdnPattern).matcher(fqdn).matches();
     }
 
 }
