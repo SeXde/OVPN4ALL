@@ -5,7 +5,6 @@
 - VPN Server configuration
 - Create and manage users
 - VPN state info and logging
-- Easy to use
 
 ### How to use it:
 
