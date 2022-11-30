@@ -1,2 +1,2 @@
 # OVPN4ALL
-## _ Create your own VPN server in seconds! _
+## _Create your own VPN server in seconds!_
