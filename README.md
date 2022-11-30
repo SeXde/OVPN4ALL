@@ -18,4 +18,4 @@ This proyect is under development, for the moment you can download the whole pro
 
 In future versions this will be dockerized and it will be easy as run a docker image
 
-** You have to open the vpn server port configured in your router  **
+**You have to open the vpn server port configured in your router**
