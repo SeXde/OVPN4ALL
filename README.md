@@ -10,11 +10,11 @@
 
 This proyect is under development, for the moment you can download the whole project and try it out in Ubuntu.
 - [Download a mysql docker image](https://hub.docker.com/_/mysql)
-- Start image (docker start)
+- Start image ```docker start```
 - Configure backend env variables (*.yml files)
-- Add root scripts and commands to sudoers file (sudo visudo)
-- Run backend (mvnw spring-boot:run)
-- Run frontend (npm run dev)
+- Add root scripts and commands to sudoers file ```sudo visudo```
+- Run backend ```mvnw spring-boot:run```
+- Run frontend ```npm run dev```
 
 In future versions this will be dockerized and it will be easy as run a docker image
 
