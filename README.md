@@ -1,5 +1,5 @@
 # OVPN4ALL
-## _Create your own VPN server in senconds_
+## _Create your own VPN server in seconds_
 
 ### Features:
 - VPN Server configuration
