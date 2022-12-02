@@ -1,5 +1,7 @@
 package com.aberdote.OVPN4ALL.utils.validator.config;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.regex.Pattern;
 
 public class ConfigValidator {
@@ -29,5 +31,26 @@ public class ConfigValidator {
         final String fqdnPattern = "^(?!://)(?=.{1,255}$)((.{1,63}\\.){1,127}(?![0-9]*$)[a-z0-9-]+\\.?)$";
         return Pattern.compile(fqdnPattern).matcher(fqdn).matches();
     }
+
+    public static boolean validatePublicIp(String ip) {
+        if (!validateIp(ip)) return false;
+        try {
+            final InetAddress ipAdd = InetAddress.getByName(ip);
+            return !ipAdd.isSiteLocalAddress();
+        } catch (UnknownHostException e) {
+            return false;
+        }
+    }
+
+    public static boolean validatePrivateIp(String ip) {
+        if (!validateIp(ip)) return false;
+        try {
+            final InetAddress ipAdd = InetAddress.getByName(ip);
+            return ipAdd.isSiteLocalAddress();
+        } catch (UnknownHostException e) {
+            return false;
+        }
+    }
+
 
 }
