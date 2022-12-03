@@ -8,6 +8,7 @@ import com.aberdote.OVPN4ALL.service.CommandService;
 import com.aberdote.OVPN4ALL.service.ConfigService;
 import com.aberdote.OVPN4ALL.service.impl.ConfigServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -30,14 +31,15 @@ public class ConfigServiceTest {
     @Mock
     private  CommandService commandService;
     private ConfigService configService;
-    private final static SetupDTO SETUP =
-            new SetupDTO("444", "10.0.0.1", "255.255.255.0", "203.1.1.2");
+    private static SetupDTO SETUP;
 
     @BeforeEach
     void initConfigService() {
         configService = new ConfigServiceImpl(configRepository, commandService);
+        SETUP = new SetupDTO("444", "10.0.0.1", "255.255.255.0", "203.1.1.2");
     }
 
+    @DisplayName("Test get config with info present")
     @Test
     void getConfigOk() {
         final ConfigEntity chosenConfig = new ConfigEntity("762", "192.168.0.1", "255.255.255.0", "204.65.2.1");
@@ -57,6 +59,7 @@ public class ConfigServiceTest {
         verify(configRepository, times(1)).findAll();
     }
 
+    @DisplayName("Test get config with no info present")
     @Test
     void getConfigKO() {
         when(configRepository.findAll()).thenReturn(Collections.emptyList());
@@ -66,6 +69,7 @@ public class ConfigServiceTest {
         verify(configRepository, times(1)).findAll();
     }
 
+    @DisplayName("Test set config with correct info")
     @Test
     void setConfigOk() throws IOException, InterruptedException {
         when(commandService.addConfig(anyString(), anyString(), anyString())).thenReturn(Boolean.TRUE);
@@ -81,6 +85,7 @@ public class ConfigServiceTest {
         verify(commandService, times(1)).startUp();
     }
 
+    @DisplayName("Test set config with null setup")
     @Test
     void setConfigNull() {
         final CustomException customException = assertThrows(CustomException.class, () -> configService.setConfig(null));
@@ -88,6 +93,7 @@ public class ConfigServiceTest {
         assertEquals(HttpStatus.BAD_REQUEST, customException.getHttpStatus());
     }
 
+    @DisplayName("Test set config with invalid port")
     @Test
     void setConfigInvalidPort() {
         SETUP.setPort("2 ");
@@ -96,6 +102,7 @@ public class ConfigServiceTest {
         assertEquals(HttpStatus.BAD_REQUEST, customException.getHttpStatus());
     }
 
+    @DisplayName("Test set config with invalid gateway")
     @Test
     void setConfigInvalidGateway() {
         SETUP.setGateway("200.201.100.1");
@@ -104,6 +111,7 @@ public class ConfigServiceTest {
         assertEquals(HttpStatus.BAD_REQUEST, customException.getHttpStatus());
     }
 
+    @DisplayName("Test set config with invalid subnet")
     @Test
     void setConfigInvalidSubnet() {
         SETUP.setSubnet("192.168.9.12");
@@ -112,6 +120,7 @@ public class ConfigServiceTest {
         assertEquals(HttpStatus.BAD_REQUEST, customException.getHttpStatus());
     }
 
+    @DisplayName("Test set config with invalid server")
     @Test
     void setConfigInvalidServer() {
         SETUP.setServer("10.254.1.2");
@@ -120,6 +129,7 @@ public class ConfigServiceTest {
         assertEquals(HttpStatus.BAD_REQUEST, customException.getHttpStatus());
     }
 
+    @DisplayName("Test set config with invalid command exec")
     @Test
     void setConfigInvalidCommandExec() throws IOException, InterruptedException {
         when(commandService.addConfig(anyString(), anyString(), anyString())).thenReturn(Boolean.FALSE);
@@ -134,6 +144,7 @@ public class ConfigServiceTest {
         verify(commandService, never()).startUp();
     }
 
+    @DisplayName("Test set config with command exception")
     @Test
     void setConfigExceptionCommandExec() throws IOException, InterruptedException {
         when(commandService.addConfig(anyString(), anyString(), anyString())).thenThrow(new IOException("Test"));
