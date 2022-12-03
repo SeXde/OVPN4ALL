@@ -37,26 +37,34 @@ public class ConfigServiceImpl implements ConfigService {
 
     @Override
     public SetupDTO setConfig(SetupDTO setupDTO) {
-        // config stuff
-        if (!ConfigValidator.validatePort(setupDTO.getPort())) {
-            log.error("Cannot save setup, port is not valid");
-            throw new CustomException("Port is not valid", HttpStatus.BAD_REQUEST);
+        if (setupDTO == null) {
+            final String msg = "Cannot save setup, is null";
+            log.error(msg);
+            throw new CustomException(msg, HttpStatus.BAD_REQUEST);
         }
-        if (!ConfigValidator.validateIp(setupDTO.getGateway())) {
-            log.error("Cannot save setup, gateway is not valid");
-            throw new CustomException("Gateway is not valid", HttpStatus.BAD_REQUEST);
+        if (!ConfigValidator.validatePort(setupDTO.getPort())) {
+            final String msg = String.format("Cannot save setup, %s is not a valid port", setupDTO.getPort());
+            log.error(msg);
+            throw new CustomException(msg, HttpStatus.BAD_REQUEST);
+        }
+        if (!ConfigValidator.validatePrivateIp(setupDTO.getGateway())) {
+            final String msg = String.format("Cannot save setup, %s is not a valid private ip address", setupDTO.getGateway());
+            log.error(msg);
+            throw new CustomException(msg, HttpStatus.BAD_REQUEST);
         }
         if (!ConfigValidator.validateNetmask(setupDTO.getSubnet())) {
-            log.error("Cannot save setup, netmask is not valid");
-            throw new CustomException("Netmask is not valid", HttpStatus.BAD_REQUEST);
+            final String msg = String.format("Cannot save setup, %s is not a valid netmask", setupDTO.getSubnet());
+            log.error(msg);
+            throw new CustomException(msg, HttpStatus.BAD_REQUEST);
         }
-        if (!ConfigValidator.validateIp(setupDTO.getServer())) {
-            log.error("Cannot save setup, server public ip is not valid");
-            throw new CustomException("Server public ip is not valid", HttpStatus.BAD_REQUEST);
+        if (!ConfigValidator.validatePublicIp(setupDTO.getServer())) {
+            final String msg = String.format("Cannot save setup, %s is not a valid public ip address", setupDTO.getServer());
+            log.error(msg);
+            throw new CustomException(msg, HttpStatus.BAD_REQUEST);
         }
         try {
             if (!commandService.addConfig(setupDTO.getPort(), setupDTO.getGateway(), setupDTO.getSubnet())) {
-                throw new CustomException("Cannot setup config", HttpStatus.INTERNAL_SERVER_ERROR);
+                throw new CustomException("Cannot setup config, script failed", HttpStatus.INTERNAL_SERVER_ERROR);
             }
             log.info("Setting config");
             if (!configRepository.findAll().isEmpty()) configRepository.deleteAll();
