@@ -54,7 +54,7 @@ public class UserServiceImpl implements UserService {
                     .map(role -> roleRepository.findByRoleName(role.getRoleName())
                             .orElseThrow(() -> {
                                 log.error("Cannot add user {}, role {} doesn't exist", createUserRequestDTO.getName(), role.getRoleName());
-                                throw new CustomException("Cannot add user "+createUserRequestDTO.getName()+" role "+role.getRoleName()+" doesn't exist", HttpStatus.BAD_REQUEST);
+                                throw new CustomException("Cannot add user "+createUserRequestDTO.getName()+", role "+role.getRoleName()+" doesn't exist", HttpStatus.BAD_REQUEST);
                             }))
                     .collect(Collectors.toSet())
             );
@@ -104,6 +104,11 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void validateUser(LoginUserRequestDTO loginUserRequestDTO) {
+        if (loginUserRequestDTO == null) {
+            final String msg = "User cannot be null";
+            log.error(msg);
+            throw new CustomException(msg, HttpStatus.BAD_REQUEST);
+        }
         Optional<UserEntity> optUser = userRepository.findByNameIgnoreCase(loginUserRequestDTO.getName());
         if (optUser.isEmpty()){
             log.error("User {} does not exist", loginUserRequestDTO.getName());
@@ -128,26 +133,27 @@ public class UserServiceImpl implements UserService {
             log.error("User {} does not exist", sender);
             throw new CustomException("User "+sender+" does not exist", HttpStatus.NOT_FOUND);
         }
+        Optional<RoleEntity> roleEntityOpt = roleRepository.findByRoleName(roleName);
+        if (roleEntityOpt.isEmpty()) {
+            log.error("Role {} not found", roleName);
+            throw new CustomException("Role "+roleName+" not found", HttpStatus.NOT_FOUND);
+        }
         UserEntity senderUser = senderUserOpt.get();
         if (!UserValidator.validateRole(senderUser, roleName)) {
-            log.error("User is not allowed to add role {}", roleName);
-            throw new CustomException("User "+sender+" does not exist", HttpStatus.NOT_FOUND);
+            final String msg = String.format("User %s is not allowed to add role %s", senderUser.getName(), roleName);
+            log.error(msg);
+            throw new CustomException(msg, HttpStatus.NOT_FOUND);
         }
         return userRepository.findByNameIgnoreCase(receiver)
                 .map(user -> {
-                    Optional<RoleEntity> roleEntityOpt = roleRepository.findByRoleName(roleName);
-                    if (roleEntityOpt.isEmpty()) {
-                        log.error("Role {} not found", roleName);
-                        throw new CustomException("Role "+roleName+" not found", HttpStatus.NOT_FOUND);
-                    }
                     user.getRoles().add(roleEntityOpt.get());
                     // userRepository.save(user);
                     log.info("User "+receiver+" has got new role: "+roleName);
                     return EntityConverter.fromUserEntityToUserResponseDTO(user);
                 })
                 .orElseGet(() -> {
-                    log.error("User {} not found", receiver);
-                    throw new CustomException("User "+receiver+" not found", HttpStatus.NOT_FOUND);
+                    log.error("User {} does not exist", receiver);
+                    throw new CustomException("User "+receiver+" does not exist", HttpStatus.NOT_FOUND);
                 });
     }
 
@@ -248,21 +254,25 @@ public class UserServiceImpl implements UserService {
     }
 
     private void validateUser(CreateUserRequestDTO createUserRequestDTO) {
-        if (UserReservedConstants.PASSWORD_FORBIDEN.contains(createUserRequestDTO.getPassword())) {
-            log.error("{} is not a valid password", createUserRequestDTO.getEmail());
-            throw new CustomException(String.format("%s is not a valid name", createUserRequestDTO.getName()), HttpStatus.BAD_REQUEST);
+        String msg = null;
+        if (createUserRequestDTO == null) {
+            msg = "User is null";
         }
-        if (!UserValidator.validateEmail(createUserRequestDTO.getEmail())) {
-            log.error("email {} is not valid", createUserRequestDTO.getEmail());
-            throw new CustomException("email "+createUserRequestDTO.getEmail()+" is not valid", HttpStatus.BAD_REQUEST);
+        else if (UserReservedConstants.PASSWORD_FORBIDDEN.contains(createUserRequestDTO.getPassword())) {
+            msg = String.format("Password %s is not valid", createUserRequestDTO.getPassword());
         }
-        if (userRepository.findByNameIgnoreCase(createUserRequestDTO.getName()).isPresent()) {
-            log.error("Cannot add user {} already exists", createUserRequestDTO.getName());
-            throw new CustomException("User "+createUserRequestDTO.getName()+" already exists", HttpStatus.BAD_REQUEST);
+        else if (!UserValidator.validateEmail(createUserRequestDTO.getEmail())) {
+            msg = String.format("Email %s is not valid", createUserRequestDTO.getEmail());
         }
-        if (!createUserRequestDTO.getRoles().stream().allMatch(role -> roleRepository.findByRoleName(role.getRoleName()).isPresent())) {
-            log.error("Cannot add user {} some roles are not correct", createUserRequestDTO.getName());
-            throw new CustomException("Cannot add user "+createUserRequestDTO.getName()+" some roles are not correct", HttpStatus.BAD_REQUEST);
+        else if (userRepository.findByNameIgnoreCase(createUserRequestDTO.getName()).isPresent()) {
+            msg = String.format("User %s is already registered", createUserRequestDTO.getName());
+        }
+        else if (createUserRequestDTO.getRoles() == null ||createUserRequestDTO.getRoles().isEmpty()) {
+            msg  = "Roles cannot be empty or null";
+        }
+        if (msg != null) {
+            log.error(msg);
+            throw new CustomException(msg, HttpStatus.BAD_REQUEST);
         }
     }
 
