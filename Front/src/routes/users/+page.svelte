@@ -305,6 +305,7 @@
             for (let i = 0; i < userInfo.connectionDTOList.length; i++){
                 ip = userInfo.connectionDTOList.at(i).ip; 
                 let countryCode = await fetch(`https://ipapi.co/${ip}/country/`).then(res => res.text());
+                console.log("Country code: ", countryCode)
                 countryFlag = `https://countryflagsapi.com/png/${countryCode}`;
                 connectDate = userInfo.connectionDTOList.at(i).time;
                 if (i == userInfo.connectionDTOList.length - 1 && userInfo.connectionDTOList.length > userInfo.disconnectionDTOList.length) {
