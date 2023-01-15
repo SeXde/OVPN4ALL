@@ -1,4 +1,4 @@
-package com.aberdote.OVPN4ALL.utils.service.impl;
+package com.aberdote.OVPN4ALL.service.impl.impl;
 
 import com.aberdote.OVPN4ALL.dto.SetupDTO;
 import com.aberdote.OVPN4ALL.entity.ConfigEntity;
