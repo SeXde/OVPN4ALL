@@ -1,6 +1,7 @@
 package com.aberdote.OVPN4ALL.service.impl;
 
 import com.aberdote.OVPN4ALL.dto.BandwidthDTO;
+import com.aberdote.OVPN4ALL.dto.user.UserConnectionInfoDTO;
 import com.aberdote.OVPN4ALL.exception.CustomException;
 import com.aberdote.OVPN4ALL.service.CommandService;
 import com.aberdote.OVPN4ALL.service.ConfigService;
@@ -11,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 @Slf4j @Service @RequiredArgsConstructor
@@ -75,6 +77,11 @@ public class StatusServiceImpl implements StatusService {
             log.error(message);
             throw new CustomException(message, HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    @Override
+    public List<UserConnectionInfoDTO> getUsersConnected() {
+        return commandService.getUsersConnected();
     }
 
 

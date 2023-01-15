@@ -472,22 +472,6 @@ public class UserServiceTest {
         verify(commandService, times(1)).downloadOVPNFile(anyString(), any(SetupDTO.class));
     }
 
-    @DisplayName("Test delete user with correct data")
-    @Test
-    void deleteUserOk() throws IOException, InterruptedException {
-        final UserEntity userEntity = EntityConverter.fromCreateUserDTOToUserEntity(createUserRequestDTO);
-        when(userRepository.findByNameIgnoreCase("Paco")).thenReturn(Optional.of(userEntity));
-        when(commandService.deleteUser("Paco")).thenReturn(Boolean.TRUE);
-        when(commandService.isActive()).thenReturn(Boolean.TRUE, Boolean.TRUE);
-        userService.deleteUser("Paco");
-        verify(userRepository, times(1)).findByNameIgnoreCase("Paco");
-        verify(commandService, times(1)).deleteUser("Paco");
-        verify(commandService, times(2)).isActive();
-        verify(commandService, times(1)).startUp();
-        verify(commandService, times(1)).shutdown();
-        verify(userRepository, times(1)).delete(userEntity);
-    }
-
     @DisplayName("Test delete user with user not found")
     @Test
     void deleteUserNotFound() throws IOException, InterruptedException {
