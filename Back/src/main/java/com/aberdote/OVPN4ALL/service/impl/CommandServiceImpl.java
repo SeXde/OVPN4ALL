@@ -3,17 +3,14 @@ package com.aberdote.OVPN4ALL.service.impl;
 import com.aberdote.OVPN4ALL.client.ManagementInterfaceClient;
 import com.aberdote.OVPN4ALL.dto.SetupDTO;
 import com.aberdote.OVPN4ALL.dto.user.UserConnectionInfoDTO;
-import com.aberdote.OVPN4ALL.exception.CustomException;
 import com.aberdote.OVPN4ALL.service.CommandService;
 import com.aberdote.OVPN4ALL.utils.converter.StringConverter;
 import com.aberdote.OVPN4ALL.utils.parser.UserInfoParser;
 import com.aberdote.OVPN4ALL.utils.script.ScriptExec;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.codec.DecoderException;
 import org.buildobjects.process.ProcBuilder;
 import org.buildobjects.process.ProcResult;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
@@ -55,7 +52,7 @@ public class CommandServiceImpl implements CommandService {
     @Value("${server.management.port}")
     private Integer port;
 
-    private ManagementInterfaceClient managementInterfaceClient = new ManagementInterfaceClient();
+    private final ManagementInterfaceClient managementInterfaceClient = ManagementInterfaceClient.getInstance();
 
     @Override
     public boolean addUser(String name, String password) throws IOException, InterruptedException {
@@ -180,11 +177,7 @@ public class CommandServiceImpl implements CommandService {
     @Override
     public List<UserConnectionInfoDTO> getUsersConnected() {
        managementInterfaceClient.init(ip, port);
-        try {
-            return UserInfoParser.parseUserConnectionInfo(managementInterfaceClient.status());
-        } catch (DecoderException e) {
-            throw new CustomException(String.format("Cannot parse status: %s", e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        return UserInfoParser.parseUserConnectionInfo(managementInterfaceClient.status());
     }
 
     private boolean executeCommand(String command, String logMessage, String ... args) throws IOException, InterruptedException {
