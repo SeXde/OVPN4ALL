@@ -30,5 +30,7 @@ function log() {
 
 log "Revoking user certificate" "cd $WD_DIR/Install/EasyRSA ; echo -en 'yes\n' | ./easyrsa revoke $USERNAME" "Cannot revoke user certificate"
 log "Uploading crl" "cd $WD_DIR/Install/EasyRSA ; ./easyrsa gen-crl" "Cannot upload crl"
+log "Coping new crl" "cp $WD_DIR/Install/EasyRSA/pki/crl.pem /var/lib/openvpn/chroot/crl.pem" "Cannot upload crl"
+/home/sexde/OVPN4ALL
 rm "$WD_DIR"/Users/"$USERNAME".ovpn &>> /dev/null
 exit 0

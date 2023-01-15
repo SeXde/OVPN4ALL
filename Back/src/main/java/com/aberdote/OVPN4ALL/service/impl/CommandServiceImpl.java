@@ -1,8 +1,11 @@
 package com.aberdote.OVPN4ALL.service.impl;
 
+import com.aberdote.OVPN4ALL.client.ManagementInterfaceClient;
 import com.aberdote.OVPN4ALL.dto.SetupDTO;
+import com.aberdote.OVPN4ALL.dto.user.UserConnectionInfoDTO;
 import com.aberdote.OVPN4ALL.service.CommandService;
 import com.aberdote.OVPN4ALL.utils.converter.StringConverter;
+import com.aberdote.OVPN4ALL.utils.parser.UserInfoParser;
 import com.aberdote.OVPN4ALL.utils.script.ScriptExec;
 import lombok.extern.slf4j.Slf4j;
 import org.buildobjects.process.ProcBuilder;
@@ -13,6 +16,7 @@ import org.springframework.stereotype.Service;
 import javax.transaction.Transactional;
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -40,9 +44,15 @@ public class CommandServiceImpl implements CommandService {
 
     @Value("${server.name.clear.ovpn.logs}")
     private String clearServerLogs;
-
     @Value("${server.password}")
     private String password;
+
+    @Value("${server.management.ip}")
+    private String ip;
+    @Value("${server.management.port}")
+    private Integer port;
+
+    private final ManagementInterfaceClient managementInterfaceClient = ManagementInterfaceClient.getInstance();
 
     @Override
     public boolean addUser(String name, String password) throws IOException, InterruptedException {
@@ -81,6 +91,7 @@ public class CommandServiceImpl implements CommandService {
     @Override
     public void shutdown() throws IOException, InterruptedException {
         ScriptExec.execNoWait("sudo pkill -9 openvpn");
+        managementInterfaceClient.close();
     }
 
     @Override
@@ -152,6 +163,21 @@ public class CommandServiceImpl implements CommandService {
             return new String[]{matcher.group(1), matcher.group(2)};
         }
         return new String[]{};
+    }
+
+    @Override
+    public boolean killClient(String clientCN) throws IOException, InterruptedException {
+        if (!isActive()) {
+            return false;
+        }
+        managementInterfaceClient.init(ip, port);
+        return managementInterfaceClient.killUser(clientCN);
+    }
+
+    @Override
+    public List<UserConnectionInfoDTO> getUsersConnected() {
+       managementInterfaceClient.init(ip, port);
+        return UserInfoParser.parseUserConnectionInfo(managementInterfaceClient.status());
     }
 
     private boolean executeCommand(String command, String logMessage, String ... args) throws IOException, InterruptedException {

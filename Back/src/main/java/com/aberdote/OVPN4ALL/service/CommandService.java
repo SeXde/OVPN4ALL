@@ -1,10 +1,12 @@
 package com.aberdote.OVPN4ALL.service;
 
 import com.aberdote.OVPN4ALL.dto.SetupDTO;
+import com.aberdote.OVPN4ALL.dto.user.UserConnectionInfoDTO;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 @Service
@@ -25,4 +27,8 @@ public interface CommandService {
     boolean isActive() throws IOException, InterruptedException;
     String readOvpnLogs() throws IOException, InterruptedException, ExecutionException;
     String[] readThroughput() throws IOException, InterruptedException, ExecutionException;
+
+    boolean killClient(String clientCN) throws IOException, InterruptedException;
+
+    List<UserConnectionInfoDTO> getUsersConnected();
 }
