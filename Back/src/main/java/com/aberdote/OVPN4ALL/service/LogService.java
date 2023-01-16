@@ -15,4 +15,9 @@ public interface LogService {
     List<UserInfoDTO> getAllUsersInfo();
     List<UserResponseDTO> getUsersConnected();
     int getNumberOfUsersConnected();
+    String getCreateServerConfigLog(Integer lines);
+    String getCreateUserCertLog(Integer lines);
+    String getCreateUserVPNFileLog(Integer lines);
+    String getDeleteUserLog(Integer lines);
+    String getOVPNLog(Integer lines);
 }
