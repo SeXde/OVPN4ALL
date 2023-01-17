@@ -40,6 +40,8 @@ public class LogServiceImpl implements LogService {
     private String deleteUserScript;
     @Value("${server.name.create.config}")
     private String createServerConfigScript;
+
+    private final String OVPN4ALL_LOG_FILE = "/var/log/openvpn.log";
   
 
     @Override
@@ -117,7 +119,7 @@ public class LogServiceImpl implements LogService {
 
     @Override
     public String getOVPNLog(Integer lines) {
-        return getLog(workingDir + "/Logs/" + deleteUserScript + ".log", lines);
+        return getLog(OVPN4ALL_LOG_FILE, lines);
     }
 
     private String getLog(String file, Integer lines) {
