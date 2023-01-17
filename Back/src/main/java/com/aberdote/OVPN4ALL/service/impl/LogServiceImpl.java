@@ -7,11 +7,13 @@ import com.aberdote.OVPN4ALL.repository.UserRepository;
 import com.aberdote.OVPN4ALL.service.CommandService;
 import com.aberdote.OVPN4ALL.service.LogService;
 import com.aberdote.OVPN4ALL.utils.converter.EntityConverter;
+import com.aberdote.OVPN4ALL.utils.file.FileUtils;
 import com.aberdote.OVPN4ALL.utils.parser.LogParser;
 import com.aberdote.OVPN4ALL.utils.converter.StringConverter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -27,6 +29,21 @@ public class LogServiceImpl implements LogService {
 
     private final CommandService commandService;
     private final UserRepository userRepository;
+
+    @Value("${server.path.working-directory}")
+    private String workingDir;
+    @Value("${server.name.user.create.config}")
+    private String createUserConfigScript;
+    @Value("${server.name.user.create.cert}")
+    private String createUserCertScript;
+    @Value("${server.name.user.delete}")
+    private String deleteUserScript;
+    @Value("${server.name.create.config}")
+    private String createServerConfigScript;
+
+    private final String OVPN4ALL_LOG_FILE = "/var/log/openvpn.log";
+  
+
     @Override
     public File downloadLogs() {
         try {
@@ -78,6 +95,39 @@ public class LogServiceImpl implements LogService {
     @Override
     public int getNumberOfUsersConnected() {
         return getAllUsersInfo().stream().filter(UserInfoDTO::isConnected).toList().size();
+    }
+
+    @Override
+    public String getCreateServerConfigLog(Integer lines) {
+        return getLog(workingDir + "/Logs/" + createServerConfigScript + ".log", lines);
+    }
+
+    @Override
+    public String getCreateUserCertLog(Integer lines) {
+        return getLog(workingDir + "/Logs/" + createUserCertScript + ".log", lines);
+    }
+
+    @Override
+    public String getCreateUserVPNFileLog(Integer lines) {
+        return getLog(workingDir + "/Logs/" + createUserConfigScript + ".log", lines);
+    }
+
+    @Override
+    public String getDeleteUserLog(Integer lines) {
+        return getLog(workingDir + "/Logs/" + deleteUserScript + ".log", lines);
+    }
+
+    @Override
+    public String getOVPNLog(Integer lines) {
+        return getLog(OVPN4ALL_LOG_FILE, lines);
+    }
+
+    private String getLog(String file, Integer lines) {
+        try {
+            return FileUtils.getContentFromLineNumber(file, lines);
+        } catch (IOException e) {
+            throw new CustomException(String.format("Cannot read file %s: %s", file, e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     public List<UserResponseDTO> getUsersConnected() {
