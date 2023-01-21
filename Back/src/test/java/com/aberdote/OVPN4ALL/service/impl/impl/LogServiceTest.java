@@ -1,5 +1,6 @@
 package com.aberdote.OVPN4ALL.service.impl.impl;
 
+import com.aberdote.OVPN4ALL.dto.LogDTO;
 import com.aberdote.OVPN4ALL.repository.UserRepository;
 import com.aberdote.OVPN4ALL.service.CommandService;
 import com.aberdote.OVPN4ALL.service.LogService;
@@ -35,10 +36,10 @@ public class LogServiceTest {
         testLogFile(logService::getOVPNLog, 1);
     }
 
-    private void testLogFile(Function<Integer, String> method, Integer lines) {
-        final String content = method.apply(lines);
-        assertNotNull(content);
-        assertFalse(content.isEmpty());
+    private void testLogFile(Function<Integer, LogDTO> method, Integer lines) {
+        final LogDTO content = method.apply(lines);
+        assertNotNull(content.getContent());
+        assertFalse(content.getContent().isEmpty());
     }
 
 

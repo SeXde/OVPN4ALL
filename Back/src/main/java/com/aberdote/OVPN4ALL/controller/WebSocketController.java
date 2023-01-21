@@ -1,5 +1,6 @@
 package com.aberdote.OVPN4ALL.controller;
 
+import com.aberdote.OVPN4ALL.dto.LogDTO;
 import com.aberdote.OVPN4ALL.service.LogService;
 import com.aberdote.OVPN4ALL.service.StatusService;
 import lombok.RequiredArgsConstructor;
@@ -20,31 +21,31 @@ public class WebSocketController {
 
     @MessageMapping("/log/createServerConfig/{lines}")
     @SendTo("/topic/log/createServerConfig")
-    public String sendCreateServerConfigLog(@DestinationVariable Integer lines) {
+    public LogDTO sendCreateServerConfigLog(@DestinationVariable Integer lines) {
         return logService.getCreateServerConfigLog(lines);
     }
 
     @MessageMapping("/log/createUserCert/{lines}")
     @SendTo("/topic/log/createUserCert")
-    public   String sendCreateUserCertLog(@DestinationVariable Integer lines) {
+    public LogDTO sendCreateUserCertLog(@DestinationVariable Integer lines) {
         return logService.getCreateUserCertLog(lines);
     }
 
     @MessageMapping("/log/createUserVPNFile/{lines}")
     @SendTo("/topic/log/createUserVPNFile")
-    public  String sendCreateUserVPNFileLog(@DestinationVariable Integer lines) {
+    public LogDTO sendCreateUserVPNFileLog(@DestinationVariable Integer lines) {
         return logService.getCreateUserVPNFileLog(lines);
     }
 
     @MessageMapping("/log/deleteUser/{lines}")
     @SendTo("/topic/log/deleteUser")
-    public  String sendDeleteUserLog(@DestinationVariable Integer lines) {
+    public LogDTO sendDeleteUserLog(@DestinationVariable Integer lines) {
         return logService.getDeleteUserLog(lines);
     }
 
     @MessageMapping("/log/OVPN/{lines}")
     @SendTo("/topic/log/OVPN")
-    public  String sendOVPNLog(@DestinationVariable Integer lines) {
+    public LogDTO sendOVPNLog(@DestinationVariable Integer lines) {
         return logService.getOVPNLog(lines);
     }
 

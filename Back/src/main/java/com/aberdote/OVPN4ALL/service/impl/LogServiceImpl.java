@@ -1,5 +1,6 @@
 package com.aberdote.OVPN4ALL.service.impl;
 
+import com.aberdote.OVPN4ALL.dto.LogDTO;
 import com.aberdote.OVPN4ALL.dto.parser.UserInfoDTO;
 import com.aberdote.OVPN4ALL.dto.user.UserResponseDTO;
 import com.aberdote.OVPN4ALL.exception.CustomException;
@@ -98,31 +99,31 @@ public class LogServiceImpl implements LogService {
     }
 
     @Override
-    public String getCreateServerConfigLog(Integer lines) {
+    public LogDTO getCreateServerConfigLog(Integer lines) {
         return getLog(workingDir + "/Logs/" + createServerConfigScript + ".log", lines);
     }
 
     @Override
-    public String getCreateUserCertLog(Integer lines) {
+    public LogDTO getCreateUserCertLog(Integer lines) {
         return getLog(workingDir + "/Logs/" + createUserCertScript + ".log", lines);
     }
 
     @Override
-    public String getCreateUserVPNFileLog(Integer lines) {
+    public LogDTO getCreateUserVPNFileLog(Integer lines) {
         return getLog(workingDir + "/Logs/" + createUserConfigScript + ".log", lines);
     }
 
     @Override
-    public String getDeleteUserLog(Integer lines) {
+    public LogDTO getDeleteUserLog(Integer lines) {
         return getLog(workingDir + "/Logs/" + deleteUserScript + ".log", lines);
     }
 
     @Override
-    public String getOVPNLog(Integer lines) {
+    public LogDTO getOVPNLog(Integer lines) {
         return getLog(OVPN4ALL_LOG_FILE, lines);
     }
 
-    private String getLog(String file, Integer lines) {
+    private LogDTO getLog(String file, Integer lines) {
         try {
             return FileUtils.getContentFromLineNumber(file, lines);
         } catch (IOException e) {
