@@ -2,7 +2,6 @@ package com.aberdote.OVPN4ALL.controller;
 
 import com.aberdote.OVPN4ALL.dto.BandwidthDTO;
 import com.aberdote.OVPN4ALL.dto.ErrorDTO;
-import com.aberdote.OVPN4ALL.dto.user.UserConnectionInfoDTO;
 import com.aberdote.OVPN4ALL.service.StatusService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -13,14 +12,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
 
 @Slf4j
 @RestController
@@ -71,12 +66,6 @@ public class StatusController {
     @GetMapping("/bandwidth")
     public ResponseEntity<BandwidthDTO> getBandwidth() {
         return ResponseEntity.ok(statusService.getThroughput());
-    }
-
-    @MessageMapping("/connections")
-    @SendTo("/topic/connections")
-    public List<UserConnectionInfoDTO> getUsersConnected() {
-        return statusService.getUsersConnected();
     }
 
 
