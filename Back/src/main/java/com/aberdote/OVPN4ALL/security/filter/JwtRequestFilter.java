@@ -23,7 +23,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 @Component @Slf4j
-public class JwtRequestFilter extends OncePerRequestFilter {
+public class  JwtRequestFilter extends OncePerRequestFilter {
 
     @Autowired
     private JwtUserDetailsService jwtUserDetailsService;
@@ -35,7 +35,9 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
 
-        final String requestTokenHeader = request.getHeader("Authorization");
+        final String requestTokenHeader = request.getRequestURI().contains("token") ?
+                request.getParameter("token") :
+                request.getHeader("Authorization");
 
         String username = null;
         String jwtToken = null;
