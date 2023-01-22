@@ -125,7 +125,8 @@ public class LogServiceImpl implements LogService {
 
     private LogDTO getLog(String file, Integer lines) {
         try {
-            return FileUtils.getContentFromLineNumber(file, lines);
+            final String content =  FileUtils.getContentFromLineNumber(file, lines);
+            return LogDTO.builder().content(content).lineNumber(content.lines().count() + lines + 1).build();
         } catch (IOException e) {
             throw new CustomException(String.format("Cannot read file %s: %s", file, e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }

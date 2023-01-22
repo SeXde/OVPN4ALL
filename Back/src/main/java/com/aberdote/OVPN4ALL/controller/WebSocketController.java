@@ -3,7 +3,10 @@ package com.aberdote.OVPN4ALL.controller;
 import com.aberdote.OVPN4ALL.dto.LogDTO;
 import com.aberdote.OVPN4ALL.service.LogService;
 import com.aberdote.OVPN4ALL.service.StatusService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
@@ -11,12 +14,14 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Controller;
 
-@RequiredArgsConstructor @Controller
+@RequiredArgsConstructor @Controller @Slf4j
 public class WebSocketController {
 
     private final SimpMessagingTemplate template;
     private final LogService logService;
     private final StatusService statusService;
+
+    private final static ObjectMapper objectMapper = new ObjectMapper();
 
 
     @MessageMapping("/log/createServerConfig/{lines}")
@@ -50,13 +55,17 @@ public class WebSocketController {
     }
 
     @Scheduled(fixedDelay = 1000)
-    public void sendUsersInfo() {
-        template.convertAndSend("/topic/users/info", statusService.getUsersConnected());
+    public void sendUsersInfo() throws JsonProcessingException {
+        if (statusService.isActive()) {
+            template.convertAndSend("/topic/users/info", objectMapper.writeValueAsString(statusService.getUsersConnected()));
+        }
     }
 
     @Scheduled(fixedDelay = 1000)
     public void sendUsage() {
-        template.convertAndSend("/topic/server/info", statusService.getThroughput());
+        if (statusService.isActive()) {
+            template.convertAndSend("/topic/server/info", statusService.getThroughput());
+        }
     }
 
 }

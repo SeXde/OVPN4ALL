@@ -8,7 +8,7 @@ import lombok.Data;
 @Data @Builder @AllArgsConstructor
 public class LogDTO {
 
-    private Integer lineNumber;
+    private Long lineNumber;
     private String content;
 
 }

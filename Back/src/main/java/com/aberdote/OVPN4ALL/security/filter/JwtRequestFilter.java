@@ -35,9 +35,12 @@ public class  JwtRequestFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
 
-        final String requestTokenHeader = request.getRequestURI().contains("token") ?
-                request.getParameter("token") :
-                request.getHeader("Authorization");
+        String requestTokenHeader;
+        if (request.getRequestURI().contains("ovpn4all-ws")) {
+            requestTokenHeader = request.getParameter("ws-token");
+        } else {
+            requestTokenHeader = request.getHeader("Authorization");
+        }
 
         String username = null;
         String jwtToken = null;
