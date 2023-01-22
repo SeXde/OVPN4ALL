@@ -7,6 +7,7 @@
 	import ErrorOverlay from "$lib/components/ErrorOverlay.svelte";
 	import InfoOverlay from "$lib/components/InfoOverlay.svelte";
 	import { goto } from "$app/navigation";
+	import { onMount } from "svelte";
 
 	export let data
 	let [setup, dataError] = data.setup
@@ -36,6 +37,29 @@
 		'out': 0
 	};
 	
+	let stompClient = null;
+	let createServerConfigLog = {
+		'lineNumber' : 1,
+		'content' : ''
+	};
+	let createUserCertLog = {
+		'lineNumber' : 1,
+		'content' : ''
+	};
+	let createUserVPNFileLog = {
+		'lineNumber' : 1,
+		'content' : ''
+	};
+	let deleteUserLog = {
+		'lineNumber' : 1,
+		'content' : ''
+	};
+	let OVPNLog = {
+		'lineNumber' : 1,
+		'content' : ''
+	};
+	let usersInfo;
+	let ussage;
 
 	if (setup != null) {
 		port = setup.port;
@@ -168,6 +192,71 @@
 		}
 		return `: ${Math.round((bytes / 1000000000)*100) / 100} GB`;
 	}
+
+	const webSocketConnect = () => {
+		let socket = new SockJS(`http://localhost:8082/ovpn4all-ws?ws-token=Bearer ${Cookies.get('jwt')}`);
+        stompClient = Stomp.over(socket);
+        stompClient.connect({}, (frame) => {
+            console.log('Connected: ' + frame);
+            stompClient.subscribe('/topic/log/createServerConfig', (log) => {
+                const logParsed = JSON.parse(log.body);
+				console.log("El logggg del create: ", logParsed.content);
+				createServerConfigLog.lineNumber = logParsed.lineNumber;
+				createServerConfigLog.content = createServerConfigLog.content + logParsed.content;
+				console.log("El contenidoooo del create: ", createServerConfigLog.content);
+            });
+            stompClient.subscribe('/topic/log/createUserCert', (log) => {
+				const logParsed = JSON.parse(log.body);
+				console.log("El logggg: ", logParsed.content);
+				createUserCertLog.lineNumber = logParsed.lineNumber;
+				createUserCertLog.content = createUserCertLog.content + logParsed.content;
+				console.log("El contenidoooo: ", createUserCertLog.content);
+            });
+            stompClient.subscribe('/topic/log/createUserVPNFile', (log) => {
+				const logParsed = JSON.parse(log.body);
+				console.log("El logggg: ", logParsed.content);
+				createUserVPNFileLog.lineNumber = logParsed.lineNumber;
+				createUserVPNFileLog.content = createUserVPNFileLog.content + logParsed.content;
+				console.log("El contenidoooo: ", createUserVPNFileLog.content);
+            });
+			stompClient.subscribe('/topic/log/deleteUser', (log) => {
+				const logParsed = JSON.parse(log.body);
+				console.log("El logggg: ", logParsed.content);
+				deleteUserLog.lineNumber = logParsed.lineNumber;
+				deleteUserLog.content = deleteUserLog.content + logParsed.content;
+				console.log("El contenidoooo: ", deleteUserLog.content);
+            });
+			stompClient.subscribe('/topic/log/OVPN', (log) => {
+				const logParsed = JSON.parse(log.body);
+				console.log("El logggg: ", logParsed.content);
+				OVPNLog.lineNumber = logParsed.lineNumber;
+				OVPNLog.content = OVPNLog.content + logParsed.content;
+				console.log("El contenidoooo: ", OVPNLog.content);
+            });
+			stompClient.subscribe('/topic/users/info', (info) => {
+				const infoParsed = JSON.parse(info.body);
+                usersInfo = infoParsed;
+            });
+			stompClient.subscribe('/topic/server/info', (info) => {
+                const infoParsed = JSON.parse(info.body);
+                ussage = infoParsed;
+            });
+        });
+	}
+
+	const fetchLogs = () => {
+		setInterval(() => {
+            stompClient.send(`/app/log/createServerConfig/${createServerConfigLog.lineNumber}`, {}, {});
+			stompClient.send(`/app/log/createUserCert/${createUserCertLog.lineNumber}`, {}, {});
+			stompClient.send(`/app/log/createUserVPNFile/${createUserVPNFileLog.lineNumber}`, {}, {});
+			stompClient.send(`/app/log/deleteUser/${deleteUserLog.lineNumber}`, {}, {});
+			stompClient.send(`/app/log/OVPN/${OVPNLog.lineNumber}`, {}, {});
+        }, 2000);
+	}
+
+	onMount(() => {
+		webSocketConnect();
+	});
 
 	fetchBandwidth();
 
