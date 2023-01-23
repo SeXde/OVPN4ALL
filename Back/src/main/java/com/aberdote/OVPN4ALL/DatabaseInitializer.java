@@ -51,6 +51,8 @@ public class DatabaseInitializer {
                         List.of(new RoleDTO(RoleConstants.ROLE_USER))),
                 new CreateUserRequestDTO("Alvaro", email, "Alvaro",
                         List.of(new RoleDTO(RoleConstants.ROLE_USER))),
+                new CreateUserRequestDTO("G", email, "G",
+                        List.of(new RoleDTO(RoleConstants.ROLE_USER))),
                 new CreateUserRequestDTO("Malecom", "Malecom@unboxing.com", "Malecom",
                         List.of(new RoleDTO(RoleConstants.ROLE_USER))),
                 new CreateUserRequestDTO("Salero", "Salero@unboxing.com", "Salero",

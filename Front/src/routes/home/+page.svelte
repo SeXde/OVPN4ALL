@@ -20,12 +20,6 @@
 	if (connectError) {
 		errorMessage = errorMessage + "\n" + connectError.message;
 	}
-	let users: number;
-	let usersError: any;
-	[users, usersError] = data.users;
-	if (usersError) {
-		errorMessage = errorMessage + "\n" + usersError.message;
-	}
 	
 	let port: string = "---";
 	let gateway: string = "---";
@@ -58,7 +52,7 @@
 		'lineNumber' : 1,
 		'content' : ''
 	};
-	let usersInfo;
+	let usersInfo = [];
 	let ussage;
 
 	if (setup != null) {
@@ -139,47 +133,6 @@
 		loading = false;
 	}
 
-	const getBandwidth = async (): Promise<void> => {
-		if (connected) {
-			let error: boolean;
-			await fetch('http://localhost:8082/api/status/bandwidth', {
-				method: 'GET',
-				mode: 'cors',
-				headers: {
-					Authorization: 'Bearer '+Cookies.get('jwt')
-				}
-			}).then(res => {
-				if (!res.ok) {
-					error = true;
-				} else if(res.status == 403) {
-					goto("/sign-in")
-				} 
-				else {
-					return res;
-				}
-			}).then(res => res.json())
-			.then(res => {
-				if (error) {
-					errorMessage = res.message;
-				} else {
-					bandwidthData = res;
-				}
-			})
-			.catch(() => {
-				if (!error) {
-					errorMessage = "Cannot contact with server";
-				}
-			});
-		}
-    }
-
-	const fetchBandwidth = ():void => {
-		getBandwidth();
-        setInterval(() => {
-            getBandwidth();
-        }, 5000);
-	}
-
 	const correctUnits = (bytes: number): string => {
 		if (bytes < 1000) {
 			return `: ${bytes} B`;
@@ -191,6 +144,14 @@
 			return `: ${Math.round((bytes / 1000000)*100) / 100} MB`;
 		}
 		return `: ${Math.round((bytes / 1000000000)*100) / 100} GB`;
+	}
+
+	const updateUsers = (newUsers: Array<any>) => {
+		newUsers.forEach(user => {
+			if (!usersInfo.some(oldUser => oldUser.userName === user.userName)) {
+				usersInfo.push(user);
+			}
+		})
 	}
 
 	const webSocketConnect = () => {
@@ -231,15 +192,13 @@
 				console.log("El logggg: ", logParsed.content);
 				OVPNLog.lineNumber = logParsed.lineNumber;
 				OVPNLog.content = OVPNLog.content + logParsed.content;
-				console.log("El contenidoooo: ", OVPNLog.content);
             });
 			stompClient.subscribe('/topic/users/info', (info) => {
-				const infoParsed = JSON.parse(info.body);
-                usersInfo = infoParsed;
+				usersInfo = JSON.parse(info.body);
             });
 			stompClient.subscribe('/topic/server/info', (info) => {
                 const infoParsed = JSON.parse(info.body);
-                ussage = infoParsed;
+                bandwidthData = infoParsed;
             });
         });
 	}
@@ -257,8 +216,6 @@
 	onMount(() => {
 		webSocketConnect();
 	});
-
-	fetchBandwidth();
 
 
 </script>
@@ -283,25 +240,6 @@
 				  </svg>				  
 				<p>Info</p>	
 			</div>
-			<p>			  
-				VPN current state: 
-				{#if connected}
-					<span class="text-green-500">Connected</span>
-				{:else}
-					<span class="text-red-500">Disconnected</span>
-				{/if}
-			</p>
-			{#if connected}
-				<p>Users connected: <strong><i>{users}</i></strong></p>
-			{/if}
-		</div>
-		<div class="bg-light_dark px-5 py-5 border rounded-lg mt-5">
-			<div class="flex flex-col items-center mb-2 pb-2 border-b">
-				<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-					<path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 11-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 004.486-6.336l-3.276 3.277a3.004 3.004 0 01-2.25-2.25l3.276-3.276a4.5 4.5 0 00-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085m-1.745 1.437L5.909 7.5H4.5L2.25 3.75l1.5-1.5L7.5 4.5v1.409l4.26 4.26m-1.745 1.437l1.745-1.437m6.615 8.206L15.75 15.75M4.867 19.125h.008v.008h-.008v-.008z" />
-				</svg>
-				<p>Settings</p>	
-			</div>
 			<p>					
 				VPN port: <strong><i>{port}</i></strong>
 			</p>
@@ -314,17 +252,88 @@
 			<p>
 				WAN ip: <strong><i>{wanIp}</i></strong>
 			</p>
+			<p>			  
+				VPN current state: 
+				{#if connected}
+				<strong><i><span class="text-green-500">Connected</span></i></strong>
+					<p>Users connected: <strong><i>{usersInfo.length}</i></strong></p>
+					<p>In <strong><i>{correctUnits(bandwidthData.in)}</i></strong></p>
+					<p>Out <strong><i>{correctUnits(bandwidthData.out)}</i></strong></p>
+				{:else}
+				<strong><i><span class="text-red-500">Disconnected</span></i></strong>
+				{/if}
+			</p>
 		</div>
 		{#if connected}
-			<div class="bg-light_dark px-5 py-5 border rounded-lg mt-5">
-				<div class="flex flex-col items-center mb-2 pb-2 border-b">
-					<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-						<path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5m.75-9l3-3 2.148 2.148A12.061 12.061 0 0116.5 7.605" />
-					</svg>
-					<p>Usage</p>	
-				</div>
-				<p>In {correctUnits(bandwidthData.in)}</p>
-				<p>Out {correctUnits(bandwidthData.out)}</p>
+			<div class="bg-blacky my-5 border rounded-lg">
+				<table class="w-full text-sm text-left px-5">
+					<thead class="text-xs">
+						<tr>
+							<th scope="col" class="py-3 px-6">
+								<div class="flex flex-col items-center">
+									<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+										<path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+									  </svg>																						
+									Username
+								</div>
+							</th>
+							<th scope="col" class="py-3 px-6">
+								<div class="flex flex-col items-center">
+									<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+										<path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418" />
+									</svg>                                                      
+									Ip
+								</div>
+							</th>
+							<th scope="col" class="py-3 px-6">
+								<div class="flex flex-col items-center">
+									<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+										<path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+									</svg>                                                                             
+									Bytes in
+								</div>
+							</th>
+							<th scope="col" class="py-3 px-6">
+								<div class="flex flex-col items-center">
+									<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+										<path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
+									</svg>                                            
+									Bytes out
+								</div>
+							</th>
+							<th scope="col" class="py-3 px-6">
+								<div class="flex flex-col items-center">
+									<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+										<path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+									  </svg>																				
+									Connected since
+								</div>
+							</th>
+						</tr>
+					</thead>
+					<tbody class="bg-other_dark">
+						{#each usersInfo as entry}
+							<tr class="hover:bg-gray-700 border-t-2 mt-2">
+								<td class="flex flex-col items-center py-4 px-6 text-gray-900 whitespace-nowrap dark:text-white">
+									{entry.userName}
+								</td>
+								<td class="py-4 px-6 text-center">
+									{entry.socket}
+								</td>
+								<td class="py-4 px-6 text-center">
+									In {correctUnits(entry.bytesIn)}
+								</td>
+								<td class="py-4 px-6 text-center">
+									Out {correctUnits(entry.bytesOut)}
+								</td>
+								<td class="py-4 px-6 text-center">
+									{entry.connectedSince}
+								</td>
+							</tr>
+						
+						{/each}
+					</tbody>
+				</table>
 			</div>
 		{/if}
 		<div class="flex items-center align-middle mt-2">
