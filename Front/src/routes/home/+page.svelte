@@ -32,14 +32,13 @@
 	};
 	
 	let stompClient = null;
-	let createServerConfigLog: Array<string> = []; 
-	let createUserCertLog: Array<string> = []; 
-	let createUserVPNFileLog: Array<string> = []; 
-	let deleteUserLog: Array<string> = []; 
-	let OVPNLog: Array<string> = []; 
+	let logs: Array<Array<string>> = [];
 	let usersInfo = [];
 
 	let selectedPage: Array<boolean> = [true, false, false, false, false, false];
+	let logsName: Array<string> = ["createServerConfigLog", "createUserCertLog", "createUserVPNFileLog", "deleteUserLog", "OVPNLog"];
+	let lines: number = 500;
+	let values: Array<number> = [100, 200, 500, 800, 1200, 2000];
 
 	if (setup != null) {
 		port = setup.port;
@@ -137,19 +136,19 @@
         stompClient = Stomp.over(socket);
         stompClient.connect({}, (frame) => {
             stompClient.subscribe('/topic/log/createServerConfig', (log) => {
-                createServerConfigLog = JSON.parse(log.body);
+                logs[0] = JSON.parse(log.body);
             });
             stompClient.subscribe('/topic/log/createUserCert', (log) => {
-				createUserCertLog = JSON.parse(log.body)
+				logs[1] = JSON.parse(log.body)
             });
             stompClient.subscribe('/topic/log/createUserVPNFile', (log) => {
-				createUserVPNFileLog = JSON.parse(log.body);
+				logs[2] = JSON.parse(log.body);
             });
 			stompClient.subscribe('/topic/log/deleteUser', (log) => {
-				deleteUserLog = JSON.parse(log.body);
+				logs[3] = JSON.parse(log.body);
             });
 			stompClient.subscribe('/topic/log/OVPN', (log) => {
-				OVPNLog= JSON.parse(log.body);
+				logs[4] = JSON.parse(log.body);
             });
 			stompClient.subscribe('/topic/users/info', (info) => {
 				usersInfo = JSON.parse(info.body);
@@ -163,17 +162,25 @@
 
 	const fetchLogs = () => {
 		setInterval(() => {
-            stompClient.send(`/app/log/createServerConfig`, {}, {});
-			stompClient.send(`/app/log/createUserCert`, {}, {});
-			stompClient.send(`/app/log/createUserVPNFile`, {}, {});
-			stompClient.send(`/app/log/deleteUser`, {}, {});
-			stompClient.send(`/app/log/OVPN`, {}, {});
+            stompClient.send(`/app/log/createServerConfig/${lines}`, {}, {});
+			stompClient.send(`/app/log/createUserCert/${lines}`, {}, {});
+			stompClient.send(`/app/log/createUserVPNFile/${lines}`, {}, {});
+			stompClient.send(`/app/log/deleteUser/${lines}`, {}, {});
+			stompClient.send(`/app/log/OVPN/${lines}`, {}, {});
         }, 2000);
 	}
 
 	const selectPage = (index: number): void => {
 		selectedPage.fill(false);
 		selectedPage[index] = true;
+	}
+
+	const copyText = (index: number): void => {
+		navigator.clipboard.writeText(logs[index].join("\n"));
+	}
+
+	const downloadText = (index: number): void => {
+		saveAs(new File([logs[index].join("\n")], `${logsName[index]}.txt`, {type: "text/plain"}))
 	}
 
 	onMount(() => {
@@ -314,12 +321,20 @@
 										Connected since
 									</div>
 								</th>
+								<th scope="col" class="py-3 px-6">
+									<div class="flex flex-col items-center">
+										<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+											<path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+										</svg>																														  
+										Action
+									</div>
+								</th>
 							</tr>
 						</thead>
 						<tbody class="bg-other_dark">
 							{#each usersInfo as entry}
 								<tr class="hover:bg-gray-700 border-t-2 mt-2">
-									<td class="flex flex-col items-center py-4 px-6 text-gray-900 whitespace-nowrap dark:text-white">
+									<td class="text-center py-4 px-6 text-gray-900 whitespace-nowrap dark:text-white">
 										{entry.userName}
 									</td>
 									<td class="py-4 px-6 text-center">
@@ -333,6 +348,12 @@
 									</td>
 									<td class="py-4 px-6 text-center">
 										{entry.connectedSince}
+									</td>
+									<td class="flex flex-col items-center justify-center py-4 px-6 text-center text-red-500 hover:text-secondary hover:cursor-pointer">
+										<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+											<path stroke-linecap="round" stroke-linejoin="round" d="M3 3l8.735 8.735m0 0a.374.374 0 11.53.53m-.53-.53l.53.53m0 0L21 21M14.652 9.348a3.75 3.75 0 010 5.304m2.121-7.425a6.75 6.75 0 010 9.546m2.121-11.667c3.808 3.807 3.808 9.98 0 13.788m-9.546-4.242a3.733 3.733 0 01-1.06-2.122m-1.061 4.243a6.75 6.75 0 01-1.625-6.929m-.496 9.05c-3.068-3.067-3.664-7.67-1.79-11.334M12 12h.008v.008H12V12z" />
+										</svg>										  
+										Disconnect
 									</td>
 								</tr>
 							
@@ -368,40 +389,30 @@
 			<Spinner loading={loading}></Spinner>
 		</div>
 		{/if}
-		{#if selectedPage[1]}
-			<div class="mx-auto text-green-500 bg-light_dark w-3/5 p-14 rounded-lg overflow-auto flex-shrink-0">
-				{#each createServerConfigLog as line, i}
-					<p class=" hover:bg-gray-700 rounded-md hover:text-secondary"><span class="text-white text-opacity-5 mr-5">{i+1}</span>  {line}</p>
+		{#each logs as log, i}
+			{#if selectedPage[i+1]}
+			<div class="mx-auto text-green-500 bg-light_dark w-3/5 p-14 rounded-lg relative">
+				<div class="absolute top-2 right-3 text-slate-700">
+					<div class="flex flex-row">
+						<div on:click={() => copyText(i)} class="flex flex-col items-center justify-center m-5 hover:text-slate-200 hover:cursor-pointer">
+							<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+								<path stroke-linecap="round" stroke-linejoin="round" d="M8.25 7.5V6.108c0-1.135.845-2.098 1.976-2.192.373-.03.748-.057 1.123-.08M15.75 18H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08M15.75 18.75v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5A3.375 3.375 0 006.375 7.5H5.25m11.9-3.664A2.251 2.251 0 0015 2.25h-1.5a2.251 2.251 0 00-2.15 1.586m5.8 0c.065.21.1.433.1.664v.75h-6V4.5c0-.231.035-.454.1-.664M6.75 7.5H4.875c-.621 0-1.125.504-1.125 1.125v12c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V16.5a9 9 0 00-9-9z" />
+							</svg>														 
+							<p>Copy</p>
+						</div>
+						<div on:click={() => downloadText(i)} class="flex flex-col items-center justify-center m-5 hover:text-slate-200 hover:cursor-pointer">
+							<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+								<path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+							</svg>														 
+							<p>Download</p>
+						</div>
+					</div>
+				</div>
+				<br>
+				{#each log as line, j}
+					<p class="p-1 hover:bg-gray-700 rounded-md hover:text-secondary"><span class="text-slate-600 mr-5">{j+1}</span>  {line}</p>
 				{/each}
 			</div>
-		{/if}
-		{#if selectedPage[2]}
-		<div class="mx-auto text-green-500 bg-light_dark w-3/5 p-14 rounded-lg overflow-auto flex-shrink-0">
-			{#each createUserCertLog as line, i}
-				<p class=" hover:bg-gray-700 rounded-md hover:text-secondary"><span class="text-white text-opacity-5 mr-5">{i+1}</span>  {line}</p>
-			{/each}
-		</div>
-		{/if}
-		{#if selectedPage[3]}
-		<div class="mx-auto text-green-500 bg-light_dark w-3/5 p-14 rounded-lg overflow-auto flex-shrink-0">
-			{#each createUserVPNFileLog as line, i}
-				<p class=" hover:bg-gray-700 rounded-md hover:text-secondary"><span class="text-white text-opacity-5 mr-5">{i+1}</span>  {line}</p>
-			{/each}
-		</div>
-		{/if}
-		{#if selectedPage[4]}
-		<div class="mx-auto text-green-500 bg-light_dark w-3/5 p-14 rounded-lg overflow-auto flex-shrink-0">
-			{#each deleteUserLog as line, i}
-				<p class=" hover:bg-gray-700 rounded-md hover:text-secondary"><span class="text-white text-opacity-5 mr-5">{i+1}</span>  {line}</p>
-			{/each}
-		</div>
-		{/if}
-		{#if selectedPage[5]}
-		<div class="mx-auto text-green-500 bg-light_dark w-3/5 p-14 rounded-lg overflow-auto flex-shrink-0">
-			{#each OVPNLog as line, i}
-				<p class=" hover:bg-gray-700 rounded-md hover:text-secondary"><span class="text-white text-opacity-5 mr-5">{i+1}</span>  {line}</p>
-			{/each}
-		</div>
-		{/if}
-		
+			{/if}
+		{/each}
 	</div>

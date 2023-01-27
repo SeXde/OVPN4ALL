@@ -13,7 +13,7 @@ public class FileUtilsTest {
     public void testFileRead_correct() throws IOException {
         final String filePath = "src/test/resources/publicIpList.txt";
         final Integer line = 64;
-        final List<String> result = FileUtils.getContentFromLineNumber(filePath);
+        final List<String> result = FileUtils.getContentFromLineNumber(filePath, line);
         assertNotNull(result);
     }
 
@@ -21,7 +21,7 @@ public class FileUtilsTest {
     public void testFileRead_first_line() throws IOException {
         final String filePath = "src/test/resources/publicIpList.txt";
         final Integer line = 1;
-        final List<String> result = FileUtils.getContentFromLineNumber(filePath);
+        final List<String> result = FileUtils.getContentFromLineNumber(filePath, line);
         assertNotNull(result);
     }
 
@@ -29,7 +29,7 @@ public class FileUtilsTest {
     public void testFileRead_last_line() throws IOException {
         final String filePath = "src/test/resources/publicIpList.txt";
         final Integer line = 556;
-        final List<String> result = FileUtils.getContentFromLineNumber(filePath);
+        final List<String> result = FileUtils.getContentFromLineNumber(filePath, line);
         assertNotNull(result);
     }
 
@@ -37,21 +37,21 @@ public class FileUtilsTest {
     public void testFileRead_negative_number() {
         final String filePath = "src/test/resources/publicIpList.txt";
         final Integer line = -1;
-        assertThrows(RuntimeException.class, () -> FileUtils.getContentFromLineNumber(filePath));
+        assertThrows(RuntimeException.class, () -> FileUtils.getContentFromLineNumber(filePath, line));
     }
 
     @Test
     public void testFileRead_zero() {
         final String filePath = "src/test/resources/publicIpList.txt";
         final Integer line = 0;
-        assertThrows(RuntimeException.class, () -> FileUtils.getContentFromLineNumber(filePath));
+        assertThrows(RuntimeException.class, () -> FileUtils.getContentFromLineNumber(filePath, line));
     }
 
     @Test
     public void testFileRead_too_long_number() throws IOException {
         final String filePath = "src/test/resources/publicIpList.txt";
         final Integer line = 900;
-        final List<String> result = FileUtils.getContentFromLineNumber(filePath);
+        final List<String> result = FileUtils.getContentFromLineNumber(filePath, line);
         assertEquals(0, result.size());
     }
 

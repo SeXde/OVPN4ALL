@@ -98,33 +98,33 @@ public class LogServiceImpl implements LogService {
     }
 
     @Override
-    public List<String> getCreateServerConfigLog() {
-        return getLog(workingDir + "/Logs/" + createServerConfigScript + ".log");
+    public List<String> getCreateServerConfigLog(Integer lines) {
+        return getLog(workingDir + "/Logs/" + createServerConfigScript + ".log", lines);
     }
 
     @Override
-    public List<String> getCreateUserCertLog() {
-        return getLog(workingDir + "/Logs/" + createUserCertScript + ".log");
+    public List<String> getCreateUserCertLog(Integer lines) {
+        return getLog(workingDir + "/Logs/" + createUserCertScript + ".log", lines);
     }
 
     @Override
-    public List<String> getCreateUserVPNFileLog() {
-        return getLog(workingDir + "/Logs/" + createUserConfigScript + ".log");
+    public List<String> getCreateUserVPNFileLog(Integer lines) {
+        return getLog(workingDir + "/Logs/" + createUserConfigScript + ".log", lines);
     }
 
     @Override
-    public List<String> getDeleteUserLog() {
-        return getLog(workingDir + "/Logs/" + deleteUserScript + ".log");
+    public List<String> getDeleteUserLog(Integer lines) {
+        return getLog(workingDir + "/Logs/" + deleteUserScript + ".log", lines);
     }
 
     @Override
-    public List<String> getOVPNLog() {
-        return getLog(OVPN4ALL_LOG_FILE);
+    public List<String> getOVPNLog(Integer lines) {
+        return getLog(OVPN4ALL_LOG_FILE, lines);
     }
 
-    private List<String> getLog(String file) {
+    private List<String> getLog(String file, Integer lines) {
         try {
-            return FileUtils.getContentFromLineNumber(file);
+            return FileUtils.getContentFromLineNumber(file, lines);
         } catch (IOException e) {
             throw new CustomException(String.format("Cannot read file %s: %s", file, e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }

@@ -11,7 +11,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
-import java.util.function.Supplier;
+import java.util.function.Function;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -33,11 +33,11 @@ public class LogServiceTest {
 
     @Test
     public void testOVPNLog() {
-        testLogFile(logService::getOVPNLog);
+        testLogFile(logService::getOVPNLog, 100);
     }
 
-    private void testLogFile(Supplier<List<String>> method) {
-        final List<String> content = method.get();
+    private void testLogFile(Function<Integer, List<String>> method, Integer lines) {
+        final List<String> content = method.apply(lines);
         assertNotNull(content);
         assertFalse(content.isEmpty());
     }

@@ -6,6 +6,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -24,34 +25,34 @@ public class WebSocketController {
     private final static ObjectMapper objectMapper = new ObjectMapper();
 
 
-    @MessageMapping("/log/createServerConfig")
+    @MessageMapping("/log/createServerConfig/{lines}")
     @SendTo("/topic/log/createServerConfig")
-    public List<String> sendCreateServerConfigLog() {
-        return logService.getCreateServerConfigLog();
+    public List<String> sendCreateServerConfigLog(@DestinationVariable Integer lines) {
+        return logService.getCreateServerConfigLog(lines);
     }
 
-    @MessageMapping("/log/createUserCert")
+    @MessageMapping("/log/createUserCert/{lines}")
     @SendTo("/topic/log/createUserCert")
-    public List<String> sendCreateUserCertLog() {
-        return logService.getCreateUserCertLog();
+    public List<String> sendCreateUserCertLog(@DestinationVariable Integer lines) {
+        return logService.getCreateUserCertLog(lines);
     }
 
-    @MessageMapping("/log/createUserVPNFile")
+    @MessageMapping("/log/createUserVPNFile/{lines}")
     @SendTo("/topic/log/createUserVPNFile")
-    public List<String> sendCreateUserVPNFileLog() {
-        return logService.getCreateUserVPNFileLog();
+    public List<String> sendCreateUserVPNFileLog(@DestinationVariable Integer lines) {
+        return logService.getCreateUserVPNFileLog(lines);
     }
 
-    @MessageMapping("/log/deleteUser")
+    @MessageMapping("/log/deleteUser/{lines}")
     @SendTo("/topic/log/deleteUser")
-    public List<String> sendDeleteUserLog() {
-        return logService.getDeleteUserLog();
+    public List<String> sendDeleteUserLog(@DestinationVariable Integer lines) {
+        return logService.getDeleteUserLog(lines);
     }
 
-    @MessageMapping("/log/OVPN")
+    @MessageMapping("/log/OVPN/{lines}")
     @SendTo("/topic/log/OVPN")
-    public List<String> sendOVPNLog() {
-        return logService.getOVPNLog();
+    public List<String> sendOVPNLog(@DestinationVariable Integer lines) {
+        return logService.getOVPNLog(lines);
     }
 
     @Scheduled(fixedDelay = 1000)
