@@ -1,6 +1,5 @@
 package com.aberdote.OVPN4ALL.service.impl.impl;
 
-import com.aberdote.OVPN4ALL.dto.LogDTO;
 import com.aberdote.OVPN4ALL.repository.UserRepository;
 import com.aberdote.OVPN4ALL.service.CommandService;
 import com.aberdote.OVPN4ALL.service.LogService;
@@ -11,7 +10,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.function.Function;
+import java.util.List;
+import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -33,13 +33,13 @@ public class LogServiceTest {
 
     @Test
     public void testOVPNLog() {
-        testLogFile(logService::getOVPNLog, 1);
+        testLogFile(logService::getOVPNLog);
     }
 
-    private void testLogFile(Function<Integer, LogDTO> method, Integer lines) {
-        final LogDTO content = method.apply(lines);
-        assertNotNull(content.getContent());
-        assertFalse(content.getContent().isEmpty());
+    private void testLogFile(Supplier<List<String>> method) {
+        final List<String> content = method.get();
+        assertNotNull(content);
+        assertFalse(content.isEmpty());
     }
 
 

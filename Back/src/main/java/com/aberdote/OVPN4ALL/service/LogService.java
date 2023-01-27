@@ -1,6 +1,5 @@
 package com.aberdote.OVPN4ALL.service;
 
-import com.aberdote.OVPN4ALL.dto.LogDTO;
 import com.aberdote.OVPN4ALL.dto.parser.UserInfoDTO;
 import com.aberdote.OVPN4ALL.dto.user.UserResponseDTO;
 import org.springframework.stereotype.Service;
@@ -16,9 +15,9 @@ public interface LogService {
     List<UserInfoDTO> getAllUsersInfo();
     List<UserResponseDTO> getUsersConnected();
     int getNumberOfUsersConnected();
-    LogDTO getCreateServerConfigLog(Integer lines);
-    LogDTO getCreateUserCertLog(Integer lines);
-    LogDTO getCreateUserVPNFileLog(Integer lines);
-    LogDTO getDeleteUserLog(Integer lines);
-    LogDTO getOVPNLog(Integer lines);
+    List<String> getCreateServerConfigLog();
+    List<String> getCreateUserCertLog();
+    List<String> getCreateUserVPNFileLog();
+    List<String> getDeleteUserLog();
+    List<String> getOVPNLog();
 }

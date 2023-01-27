@@ -5,21 +5,19 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
+import java.util.List;
+import java.util.stream.IntStream;
 
 @Slf4j
 public final class FileUtils {
 
     private FileUtils() {}
+    private final static Integer MAX_LINES = 100;
 
-    public static String getContentFromLineNumber(String filePath, Integer lineNumber) throws IOException {
-        log.info("Getting {} lines from file {}", lineNumber, filePath);
-        if (lineNumber <= 0) throw new RuntimeException("line number cannot be negative or zero");
-        final AtomicReference<Integer> lineCount = new AtomicReference<>(1);
-        return Files.lines(Path.of(filePath))
-                .dropWhile(line -> lineCount.getAndSet(lineCount.get() + 1) < lineNumber)
-                .collect(Collectors.joining("\n"));
+    public static List<String> getContentFromLineNumber(String filePath) throws IOException {
+        final List<String> lines = Files.lines(Path.of(filePath)).map(String::trim).filter(line -> !line.isBlank()).toList();
+        final int lineNumber = Math.max(0, lines.size() - MAX_LINES);
+        return IntStream.range(lineNumber, lines.size()).mapToObj(lines::get).toList();
     }
 
 }

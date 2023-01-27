@@ -1,18 +1,18 @@
 package com.aberdote.OVPN4ALL.controller;
 
-import com.aberdote.OVPN4ALL.dto.LogDTO;
 import com.aberdote.OVPN4ALL.service.LogService;
 import com.aberdote.OVPN4ALL.service.StatusService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Controller;
+
+import java.util.List;
 
 @RequiredArgsConstructor @Controller @Slf4j
 public class WebSocketController {
@@ -24,34 +24,34 @@ public class WebSocketController {
     private final static ObjectMapper objectMapper = new ObjectMapper();
 
 
-    @MessageMapping("/log/createServerConfig/{lines}")
+    @MessageMapping("/log/createServerConfig")
     @SendTo("/topic/log/createServerConfig")
-    public LogDTO sendCreateServerConfigLog(@DestinationVariable Integer lines) {
-        return logService.getCreateServerConfigLog(lines);
+    public List<String> sendCreateServerConfigLog() {
+        return logService.getCreateServerConfigLog();
     }
 
-    @MessageMapping("/log/createUserCert/{lines}")
+    @MessageMapping("/log/createUserCert")
     @SendTo("/topic/log/createUserCert")
-    public LogDTO sendCreateUserCertLog(@DestinationVariable Integer lines) {
-        return logService.getCreateUserCertLog(lines);
+    public List<String> sendCreateUserCertLog() {
+        return logService.getCreateUserCertLog();
     }
 
-    @MessageMapping("/log/createUserVPNFile/{lines}")
+    @MessageMapping("/log/createUserVPNFile")
     @SendTo("/topic/log/createUserVPNFile")
-    public LogDTO sendCreateUserVPNFileLog(@DestinationVariable Integer lines) {
-        return logService.getCreateUserVPNFileLog(lines);
+    public List<String> sendCreateUserVPNFileLog() {
+        return logService.getCreateUserVPNFileLog();
     }
 
-    @MessageMapping("/log/deleteUser/{lines}")
+    @MessageMapping("/log/deleteUser")
     @SendTo("/topic/log/deleteUser")
-    public LogDTO sendDeleteUserLog(@DestinationVariable Integer lines) {
-        return logService.getDeleteUserLog(lines);
+    public List<String> sendDeleteUserLog() {
+        return logService.getDeleteUserLog();
     }
 
-    @MessageMapping("/log/OVPN/{lines}")
+    @MessageMapping("/log/OVPN")
     @SendTo("/topic/log/OVPN")
-    public LogDTO sendOVPNLog(@DestinationVariable Integer lines) {
-        return logService.getOVPNLog(lines);
+    public List<String> sendOVPNLog() {
+        return logService.getOVPNLog();
     }
 
     @Scheduled(fixedDelay = 1000)

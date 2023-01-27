@@ -1,6 +1,5 @@
 package com.aberdote.OVPN4ALL.service.impl;
 
-import com.aberdote.OVPN4ALL.dto.LogDTO;
 import com.aberdote.OVPN4ALL.dto.parser.UserInfoDTO;
 import com.aberdote.OVPN4ALL.dto.user.UserResponseDTO;
 import com.aberdote.OVPN4ALL.exception.CustomException;
@@ -8,9 +7,9 @@ import com.aberdote.OVPN4ALL.repository.UserRepository;
 import com.aberdote.OVPN4ALL.service.CommandService;
 import com.aberdote.OVPN4ALL.service.LogService;
 import com.aberdote.OVPN4ALL.utils.converter.EntityConverter;
+import com.aberdote.OVPN4ALL.utils.converter.StringConverter;
 import com.aberdote.OVPN4ALL.utils.file.FileUtils;
 import com.aberdote.OVPN4ALL.utils.parser.LogParser;
-import com.aberdote.OVPN4ALL.utils.converter.StringConverter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
@@ -99,34 +98,33 @@ public class LogServiceImpl implements LogService {
     }
 
     @Override
-    public LogDTO getCreateServerConfigLog(Integer lines) {
-        return getLog(workingDir + "/Logs/" + createServerConfigScript + ".log", lines);
+    public List<String> getCreateServerConfigLog() {
+        return getLog(workingDir + "/Logs/" + createServerConfigScript + ".log");
     }
 
     @Override
-    public LogDTO getCreateUserCertLog(Integer lines) {
-        return getLog(workingDir + "/Logs/" + createUserCertScript + ".log", lines);
+    public List<String> getCreateUserCertLog() {
+        return getLog(workingDir + "/Logs/" + createUserCertScript + ".log");
     }
 
     @Override
-    public LogDTO getCreateUserVPNFileLog(Integer lines) {
-        return getLog(workingDir + "/Logs/" + createUserConfigScript + ".log", lines);
+    public List<String> getCreateUserVPNFileLog() {
+        return getLog(workingDir + "/Logs/" + createUserConfigScript + ".log");
     }
 
     @Override
-    public LogDTO getDeleteUserLog(Integer lines) {
-        return getLog(workingDir + "/Logs/" + deleteUserScript + ".log", lines);
+    public List<String> getDeleteUserLog() {
+        return getLog(workingDir + "/Logs/" + deleteUserScript + ".log");
     }
 
     @Override
-    public LogDTO getOVPNLog(Integer lines) {
-        return getLog(OVPN4ALL_LOG_FILE, lines);
+    public List<String> getOVPNLog() {
+        return getLog(OVPN4ALL_LOG_FILE);
     }
 
-    private LogDTO getLog(String file, Integer lines) {
+    private List<String> getLog(String file) {
         try {
-            final String content =  FileUtils.getContentFromLineNumber(file, lines);
-            return LogDTO.builder().content(content).lineNumber(content.lines().count() + lines + 1).build();
+            return FileUtils.getContentFromLineNumber(file);
         } catch (IOException e) {
             throw new CustomException(String.format("Cannot read file %s: %s", file, e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }
