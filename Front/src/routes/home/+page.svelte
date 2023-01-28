@@ -39,6 +39,7 @@
 	let logsName: Array<string> = ["createServerConfigLog", "createUserCertLog", "createUserVPNFileLog", "deleteUserLog", "OVPNLog"];
 	let lines: number = 500;
 	let values: Array<number> = [100, 200, 500, 800, 1200, 2000];
+	let searchedValue: string = "";
 
 	if (setup != null) {
 		port = setup.port;
@@ -136,19 +137,19 @@
         stompClient = Stomp.over(socket);
         stompClient.connect({}, (frame) => {
             stompClient.subscribe('/topic/log/createServerConfig', (log) => {
-                logs[0] = JSON.parse(log.body);
+                logs[0] = JSON.parse(log.body).filter(line => line.toLowerCase().includes(searchedValue.toLowerCase()));
             });
             stompClient.subscribe('/topic/log/createUserCert', (log) => {
-				logs[1] = JSON.parse(log.body)
+				logs[1] = JSON.parse(log.body).filter(line => line.toLowerCase().includes(searchedValue.toLowerCase()));
             });
             stompClient.subscribe('/topic/log/createUserVPNFile', (log) => {
-				logs[2] = JSON.parse(log.body);
+				logs[2] = JSON.parse(log.body).filter(line => line.toLowerCase().includes(searchedValue.toLowerCase()));
             });
 			stompClient.subscribe('/topic/log/deleteUser', (log) => {
-				logs[3] = JSON.parse(log.body);
+				logs[3] = JSON.parse(log.body).filter(line => line.toLowerCase().includes(searchedValue.toLowerCase()));
             });
 			stompClient.subscribe('/topic/log/OVPN', (log) => {
-				logs[4] = JSON.parse(log.body);
+				logs[4] = JSON.parse(log.body).filter(line => line.toLowerCase().includes(searchedValue.toLowerCase()));
             });
 			stompClient.subscribe('/topic/users/info', (info) => {
 				usersInfo = JSON.parse(info.body);
@@ -216,7 +217,7 @@
 			}
 		})
 		loading = false;
-	}
+	};
 
 	onMount(() => {
 		webSocketConnect();
@@ -426,27 +427,36 @@
 		{/if}
 		{#each logs as log, i}
 			{#if selectedPage[i+1]}
-			<div class="mx-auto text-green-500 bg-light_dark w-3/5 p-14 rounded-lg relative">
-				<div class="absolute top-2 right-3 text-slate-700">
-					<div class="flex flex-row">
-						<div on:click={() => copyText(i)} class="flex flex-col items-center justify-center m-5 hover:text-slate-200 hover:cursor-pointer">
-							<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-								<path stroke-linecap="round" stroke-linejoin="round" d="M8.25 7.5V6.108c0-1.135.845-2.098 1.976-2.192.373-.03.748-.057 1.123-.08M15.75 18H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08M15.75 18.75v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5A3.375 3.375 0 006.375 7.5H5.25m11.9-3.664A2.251 2.251 0 0015 2.25h-1.5a2.251 2.251 0 00-2.15 1.586m5.8 0c.065.21.1.433.1.664v.75h-6V4.5c0-.231.035-.454.1-.664M6.75 7.5H4.875c-.621 0-1.125.504-1.125 1.125v12c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V16.5a9 9 0 00-9-9z" />
-							</svg>														 
-							<p>Copy</p>
-						</div>
-						<div on:click={() => downloadText(i)} class="flex flex-col items-center justify-center m-5 hover:text-slate-200 hover:cursor-pointer">
-							<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-								<path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-							</svg>														 
-							<p>Download</p>
+			<label for="table-search" class="sr-only">Search</label>
+			<div class="flex flex-col items-center justify-center flex-grow">
+				<div class="relative mb-5">
+					<div class="flex absolute inset-y-0 left-0 items-center pl-3 pointer-events-none">
+						<svg class="w-5 h-5 text-gray-500 dark:text-gray-400" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"></path></svg>
+					</div>
+					<input bind:value={searchedValue} type="text" id="table-search-users" class="block p-2 pl-10 w-80 text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-secondary dark:focus:border-secondary" placeholder="Search words">
+				</div>
+				<div class="mx-auto text-green-500 bg-light_dark w-3/5 p-14 rounded-lg relative">
+					<div class="absolute top-2 right-3 text-slate-700">
+						<div class="flex flex-row">
+							<div on:click={() => copyText(i)} class="flex flex-col items-center justify-center m-5 hover:text-slate-200 hover:cursor-pointer">
+								<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+									<path stroke-linecap="round" stroke-linejoin="round" d="M8.25 7.5V6.108c0-1.135.845-2.098 1.976-2.192.373-.03.748-.057 1.123-.08M15.75 18H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08M15.75 18.75v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5A3.375 3.375 0 006.375 7.5H5.25m11.9-3.664A2.251 2.251 0 0015 2.25h-1.5a2.251 2.251 0 00-2.15 1.586m5.8 0c.065.21.1.433.1.664v.75h-6V4.5c0-.231.035-.454.1-.664M6.75 7.5H4.875c-.621 0-1.125.504-1.125 1.125v12c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V16.5a9 9 0 00-9-9z" />
+								</svg>														 
+								<p>Copy</p>
+							</div>
+							<div on:click={() => downloadText(i)} class="flex flex-col items-center justify-center m-5 hover:text-slate-200 hover:cursor-pointer">
+								<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+									<path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+								</svg>														 
+								<p>Download</p>
+							</div>
 						</div>
 					</div>
+					<br>
+					{#each log as line, j}
+						<p class="p-1 hover:bg-gray-700 rounded-md hover:text-secondary"><span class="text-slate-600 mr-5">{j+1}</span>  {line}</p>
+					{/each}
 				</div>
-				<br>
-				{#each log as line, j}
-					<p class="p-1 hover:bg-gray-700 rounded-md hover:text-secondary"><span class="text-slate-600 mr-5">{j+1}</span>  {line}</p>
-				{/each}
 			</div>
 			{/if}
 		{/each}
