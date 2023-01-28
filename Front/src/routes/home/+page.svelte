@@ -311,10 +311,35 @@
 					{/if}
 				</p>
 			</div>
+			<div class="flex items-center align-middle mt-3">
+				{#if !dataError}
+					<button on:click={() => changeVpnStatus()} class="mr-3 my-3 mt-5 w-36 py-2 flex flex-col items-center justify-center text-light rounded-lg border-2 border-light hover:text-primary hover:border-primary disabled:border-stone-500 disabled:text-stone-500 font-semibold transition-colors">
+						{#if !connected}
+							<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+								<path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+								<path stroke-linecap="round" stroke-linejoin="round" d="M15.91 11.672a.375.375 0 010 .656l-5.603 3.113a.375.375 0 01-.557-.328V8.887c0-.286.307-.466.557-.327l5.603 3.112z" />
+							</svg>
+							Turn on
+						{:else}
+							<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+								<path stroke-linecap="round" stroke-linejoin="round" d="M14.25 9v6m-4.5 0V9M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+							</svg>
+							Turn off		
+						{/if}
+					</button>
+				{/if}
+				<button on:click={() => downloadLogs()} class="my-3 mt-5 w-36 py-2 flex flex-col items-center justify-center text-light rounded-lg border-2 border-light hover:text-primary hover:border-primary disabled:border-stone-500 disabled:text-stone-500 font-semibold transition-colors">
+					<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+						<path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+					</svg>
+					Download logs
+				</button>
+			</div>
+			<Spinner loading={loading}></Spinner>
 			{#if connected}
-				<div class="bg-blacky my-5 border rounded-lg">
-					<table class="w-full text-sm text-left px-5">
-						<thead class="text-xs">
+				<div class="my-5">
+					<table class="w-full text-sm text-left text-gray-500 dark:text-gray-400 rounded-lg">
+						<thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
 							<tr>
 								<th scope="col" class="py-3 px-6">
 									<div class="flex flex-col items-center">
@@ -368,7 +393,7 @@
 						</thead>
 						<tbody class="bg-other_dark">
 							{#each usersInfo as entry}
-								<tr class="hover:bg-gray-700 border-t-2 mt-2">
+								<tr class="bg-white dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 border-t-2 mt-2">
 									<td class="text-center py-4 px-6 text-gray-900 whitespace-nowrap dark:text-white">
 										{entry.userName}
 									</td>
@@ -397,31 +422,6 @@
 					</table>
 				</div>
 			{/if}
-			<div class="flex items-center align-middle mt-2">
-				{#if !dataError}
-					<button on:click={() => changeVpnStatus()} class="mr-3 my-3 mt-5 w-36 py-2 flex flex-col items-center justify-center text-light rounded-lg border-2 border-light hover:text-primary hover:border-primary disabled:border-stone-500 disabled:text-stone-500 font-semibold transition-colors">
-						{#if !connected}
-							<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-								<path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-								<path stroke-linecap="round" stroke-linejoin="round" d="M15.91 11.672a.375.375 0 010 .656l-5.603 3.113a.375.375 0 01-.557-.328V8.887c0-.286.307-.466.557-.327l5.603 3.112z" />
-							</svg>
-							Turn on
-						{:else}
-							<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-								<path stroke-linecap="round" stroke-linejoin="round" d="M14.25 9v6m-4.5 0V9M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-							</svg>
-							Turn off		
-						{/if}
-					</button>
-				{/if}
-				<button on:click={() => downloadLogs()} class="my-3 mt-5 w-36 py-2 flex flex-col items-center justify-center text-light rounded-lg border-2 border-light hover:text-primary hover:border-primary disabled:border-stone-500 disabled:text-stone-500 font-semibold transition-colors">
-					<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-						<path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-					</svg>
-					Download logs
-				</button>
-			</div>
-			<Spinner loading={loading}></Spinner>
 		</div>
 		{/if}
 		{#each logs as log, i}
