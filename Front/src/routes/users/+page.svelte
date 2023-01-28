@@ -32,13 +32,6 @@
         totalPages: number;
     }
 
-    interface UserSessionInfo {
-        connectDate: string;
-        countryFlag: string;
-        ip: string;
-        disconnectDate: string;
-    }
-
     const transFormUsers = (users: Array<any>):Array<any> => {
         return users.map(user => {
             let roles = user.roles.map(role => {
@@ -106,8 +99,6 @@
     let leftPages: Array<number>;
     let rightPages: Array<number>;
     let loading: boolean = false;
-    let userLog: Array<UserSessionInfo> = [];
-    let isUserLog: boolean = false;
     generatePages();
 
     $: {
@@ -260,71 +251,6 @@
         loading = false;
     }
 
-    const generateUserLog = async(user: string): Promise<void> => {
-        loading = true;
-        errorTitle = "Cannot get user info";
-        userLog = [];
-        isUserLog = false;
-        let userInfo: any;
-        let isError: boolean = false;
-        let is404: boolean = false;
-        await fetch(`http://localhost:8082/api/logs/${user}/info`, {
-            method: 'GET',
-            mode: 'cors',
-            headers: {
-                Authorization: 'Bearer '+Cookies.get('jwt')
-            }
-        })
-        .then(res =>{
-            if (res.ok) return res.json();
-            isError = true;
-            if (res.status === 404) {
-                is404 = true;
-            } else if (res.status === 403) {
-                goto("/sign-in");
-            }
-        })
-        .then(res => {
-            if (isError) {
-                error = res.message;
-                if (!is404) {
-                    isErrorOverlayOpen.set(true);
-                }
-            } else {
-                userInfo = res;
-            }
-        })
-        .catch(() => {
-            if (!is404) {
-                error = "Cannot connect with server";
-                isErrorOverlayOpen.set(true);
-            }
-        });
-        if (userInfo) {
-            let ip, countryFlag, connectDate, disconnectDate; 
-            for (let i = 0; i < userInfo.connectionDTOList.length; i++){
-                ip = userInfo.connectionDTOList.at(i).ip; 
-                let countryCode = await fetch(`https://ipapi.co/${ip}/country/`).then(res => res.text());
-                console.log("Country code: ", countryCode)
-                countryFlag = `https://countryflagsapi.com/png/${countryCode}`;
-                connectDate = userInfo.connectionDTOList.at(i).time;
-                if (i == userInfo.connectionDTOList.length - 1 && userInfo.connectionDTOList.length > userInfo.disconnectionDTOList.length) {
-                    disconnectDate = "Connected";
-                } else {
-                    disconnectDate = userInfo.disconnectionDTOList.at(i).time;
-                }
-                userLog.push({
-                    ip,
-                    countryFlag,
-                    connectDate,
-                    disconnectDate
-                })
-            }
-        }
-        isUserLog = userLog.length > 0;
-        loading = false;
-    }
-
 
 </script>
 
@@ -339,61 +265,6 @@
 {/if}
 {#if $isInfoOverlayOpen}
 	<InfoOverlay infoTitle={infoTitle} infoMessage={infoMessage} link="/setup" linkMessage="Go to config setup" />
-{/if}
-{#if $isOverlayOpen}
-    <Overlay>
-        {#if isUserLog}
-        <table class="w-full text-sm text-left px-5">
-            <thead class="text-xs">
-                <tr>
-                    <th scope="col" class="py-3 px-6">
-                        <div class="flex flex-col items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418" />
-                              </svg>                                                      
-                            Ip
-                        </div>
-                    </th>
-                    <th scope="col" class="py-3 px-6">
-                        <div class="flex flex-col items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
-                              </svg>                                                                             
-                            Connected
-                        </div>
-                    </th>
-                    <th scope="col" class="py-3 px-6 flex justify-center">
-                        <div class="flex flex-col items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
-                              </svg>                                            
-                            Disconnected
-                        </div>
-                    </th>
-                </tr>
-            </thead>
-            <tbody>
-                {#each userLog as entry}
-                <tr class="hover:bg-gray-700">
-                    <td class="flex flex-col items-center py-4 px-6 text-gray-900 whitespace-nowrap dark:text-white">
-                        <img alt="Country flag" src="{entry.countryFlag}" class="w-11 h-11">
-                        {entry.ip}
-                    </td>
-                    <td class="py-4 px-6 text-center">
-                        {entry.connectDate}
-                    </td>
-                    <td class="py-4 px-6 text-center">
-                        {entry.disconnectDate}
-                    </td>
-                </tr>
-                {/each}
-            </tbody>
-        </table>
-        {:else}
-            <h1>There is no info available</h1>
-        {/if}
-        
-    </Overlay>
 {/if}
 <div class="overflow-x-auto relative shadow-md sm:rounded-lg my-5 hover:cursor-{loading ? 'wait' : 'default'}">
     <div class="flex justify-between items-center pb-4 bg-transparent">
@@ -492,12 +363,6 @@
                                     Send ovpn
                                 </div>
                             {/if}
-                            <div on:click={() => {generateUserLog(user.name); isOverlayOpen.set(true)}} class="flex flex-col items-center mr-4 hover:underline hover:text-secondary hover:cursor-pointer">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
-                                </svg>                                
-                                Show logs
-                            </div>
                             <div on:click={() => deleteUser(user.id)} class="flex flex-col items-center text-red-500 hover:underline hover:text-secondary hover:cursor-pointer">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M22 10.5h-6m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM4 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 0110.374 21c-2.331 0-4.512-.645-6.374-1.766z" />

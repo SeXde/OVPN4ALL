@@ -25,4 +25,7 @@ public interface UserService {
     UserResponseDTO addRoleToUser(String sender, String receiver, String roleName);
     File downloadUserVPN(String user);
     File downloadUserVPN(Long id);
+
+    void disconnectUser(String userName);
+    void disconnectUser(Long id);
 }

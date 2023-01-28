@@ -10,6 +10,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.function.Function;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -32,11 +33,11 @@ public class LogServiceTest {
 
     @Test
     public void testOVPNLog() {
-        testLogFile(logService::getOVPNLog, 1);
+        testLogFile(logService::getOVPNLog, 100);
     }
 
-    private void testLogFile(Function<Integer, String> method, Integer lines) {
-        final String content = method.apply(lines);
+    private void testLogFile(Function<Integer, List<String>> method, Integer lines) {
+        final List<String> content = method.apply(lines);
         assertNotNull(content);
         assertFalse(content.isEmpty());
     }

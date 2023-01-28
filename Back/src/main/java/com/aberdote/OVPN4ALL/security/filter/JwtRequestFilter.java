@@ -23,7 +23,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 @Component @Slf4j
-public class JwtRequestFilter extends OncePerRequestFilter {
+public class  JwtRequestFilter extends OncePerRequestFilter {
 
     @Autowired
     private JwtUserDetailsService jwtUserDetailsService;
@@ -35,7 +35,12 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
 
-        final String requestTokenHeader = request.getHeader("Authorization");
+        String requestTokenHeader;
+        if (request.getRequestURI().contains("ovpn4all-ws")) {
+            requestTokenHeader = request.getParameter("ws-token");
+        } else {
+            requestTokenHeader = request.getHeader("Authorization");
+        }
 
         String username = null;
         String jwtToken = null;

@@ -7,9 +7,9 @@ import com.aberdote.OVPN4ALL.repository.UserRepository;
 import com.aberdote.OVPN4ALL.service.CommandService;
 import com.aberdote.OVPN4ALL.service.LogService;
 import com.aberdote.OVPN4ALL.utils.converter.EntityConverter;
+import com.aberdote.OVPN4ALL.utils.converter.StringConverter;
 import com.aberdote.OVPN4ALL.utils.file.FileUtils;
 import com.aberdote.OVPN4ALL.utils.parser.LogParser;
-import com.aberdote.OVPN4ALL.utils.converter.StringConverter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
@@ -98,31 +98,31 @@ public class LogServiceImpl implements LogService {
     }
 
     @Override
-    public String getCreateServerConfigLog(Integer lines) {
+    public List<String> getCreateServerConfigLog(Integer lines) {
         return getLog(workingDir + "/Logs/" + createServerConfigScript + ".log", lines);
     }
 
     @Override
-    public String getCreateUserCertLog(Integer lines) {
+    public List<String> getCreateUserCertLog(Integer lines) {
         return getLog(workingDir + "/Logs/" + createUserCertScript + ".log", lines);
     }
 
     @Override
-    public String getCreateUserVPNFileLog(Integer lines) {
+    public List<String> getCreateUserVPNFileLog(Integer lines) {
         return getLog(workingDir + "/Logs/" + createUserConfigScript + ".log", lines);
     }
 
     @Override
-    public String getDeleteUserLog(Integer lines) {
+    public List<String> getDeleteUserLog(Integer lines) {
         return getLog(workingDir + "/Logs/" + deleteUserScript + ".log", lines);
     }
 
     @Override
-    public String getOVPNLog(Integer lines) {
+    public List<String> getOVPNLog(Integer lines) {
         return getLog(OVPN4ALL_LOG_FILE, lines);
     }
 
-    private String getLog(String file, Integer lines) {
+    private List<String> getLog(String file, Integer lines) {
         try {
             return FileUtils.getContentFromLineNumber(file, lines);
         } catch (IOException e) {

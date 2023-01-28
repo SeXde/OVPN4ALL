@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import javax.transaction.Transactional;
 import java.io.File;
 import java.io.IOException;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.regex.Matcher;
@@ -176,8 +177,10 @@ public class CommandServiceImpl implements CommandService {
 
     @Override
     public List<UserConnectionInfoDTO> getUsersConnected() {
-       managementInterfaceClient.init(ip, port);
-        return UserInfoParser.parseUserConnectionInfo(managementInterfaceClient.status());
+        managementInterfaceClient.init(ip, port);
+        final List<UserConnectionInfoDTO> userConnectionInfoDTOList= UserInfoParser.parseUserConnectionInfo(managementInterfaceClient.status());
+        userConnectionInfoDTOList.sort(Comparator.comparing(UserConnectionInfoDTO::getUserName));
+        return userConnectionInfoDTOList;
     }
 
     private boolean executeCommand(String command, String logMessage, String ... args) throws IOException, InterruptedException {
