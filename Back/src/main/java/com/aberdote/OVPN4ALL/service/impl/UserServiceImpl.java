@@ -167,6 +167,16 @@ public class UserServiceImpl implements UserService {
         return downloadUserVPN(userRepository.findById(id));
     }
 
+    @Override
+    public void disconnectUser(String userName) {
+        disconnectUser(userRepository.findByNameIgnoreCase(userName));
+    }
+
+    @Override
+    public void disconnectUser(Long id) {
+        disconnectUser(userRepository.findById(id));
+    }
+
     private File downloadUserVPN(Optional<UserEntity> optionalUserEntity) {
         if (optionalUserEntity.isEmpty()) {
             final String msg = "Cannot find user to download vpn";
@@ -235,6 +245,21 @@ public class UserServiceImpl implements UserService {
             log.error(message);
             throw new CustomException(message, HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    private void disconnectUser(Optional<UserEntity> optionalUserEntity) {
+        optionalUserEntity.ifPresentOrElse((user -> {
+            try {
+                commandService.killClient(user.getName());
+            } catch (IOException | InterruptedException e) {
+                final String message = String.format("Cannot disconnect user, ErrorMessage: '%s'", e.getMessage());
+                log.error(message);
+                throw new CustomException(message, HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        }), () -> {
+            log.error("Cannot find user to delete");
+            throw new CustomException("Cannot find user to delete", HttpStatus.NOT_FOUND);
+        });
     }
 
     private UserResponseDTO getUser(Optional<UserEntity> optionalUserEntity) {

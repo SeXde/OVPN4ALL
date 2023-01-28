@@ -157,4 +157,10 @@ public class UserController {
         }
     }
 
+    @GetMapping("/disconnect/{userName}")
+    public ResponseEntity<Void> disconnectUser(@PathVariable String userName){
+        userService.disconnectUser(userName);
+        return ResponseEntity.ok().build();
+    }
+
 }
