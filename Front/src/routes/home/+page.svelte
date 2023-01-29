@@ -230,7 +230,7 @@
 	{#if $isInfoOverlayOpen}
 		<InfoOverlay infoTitle="Config not detected" infoMessage="Please, fill vpn configuration" link="/setup" linkMessage="Go to config setup" />
 	{/if}
-	<div class="flex flex-row m-5">
+	<div class="flex flex-row m-5 relative">
 		<div class="flex flex-col">
 			<div on:click={() => selectPage(0)} class="{selectedPage[0] ? 'text-secondary border-secondary' : ''} bg-light_dark flex flex-col items-center justify-center mb-4 pb-2 border rounded-md p-2 hover:text-secondary hover:border-secondary hover:cursor-pointer">
 				<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
@@ -425,8 +425,8 @@
 					</div>
 					<input bind:value={searchedValue} type="text" id="table-search-users" class="block p-2 pl-10 w-80 text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-secondary dark:focus:border-secondary" placeholder="Search words">
 				</div>
-				<div class="mx-auto text-green-500 bg-light_dark w-3/5 p-14 rounded-lg relative">
-					<div class="absolute top-2 right-3 text-slate-700">
+				<div class="mx-auto text-green-500 bg-light_dark w-3/5 p-14 rounded-lg relative overflow-scroll h-[38rem]">
+					<div class="z-10 top-[12rem] right-[22rem] fixed text-slate-700">
 						<div class="flex flex-row">
 							<div on:click={() => copyText(i)} class="flex flex-col items-center justify-center m-5 hover:text-slate-200 hover:cursor-pointer">
 								<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
