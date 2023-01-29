@@ -37,6 +37,7 @@
 
 	let selectedPage: Array<boolean> = [true, false, false, false, false, false];
 	let logsName: Array<string> = ["createServerConfigLog", "createUserCertLog", "createUserVPNFileLog", "deleteUserLog", "OVPNLog"];
+	let logTopics: Array<string> = ["/topic/log/createServerConfig", "/topic/log/createUserCert", "/topic/log/createUserVPNFile", "/topic/log/deleteUser", "/topic/log/OVPN"];
 	let lines: number = 500;
 	let values: Array<number> = [100, 200, 500, 800, 1200, 2000];
 	let searchedValue: string = "";
@@ -136,27 +137,16 @@
 		let socket = new SockJS(`http://localhost:8082/ovpn4all-ws?ws-token=Bearer ${Cookies.get('jwt')}`);
         stompClient = Stomp.over(socket);
         stompClient.connect({}, (frame) => {
-            stompClient.subscribe('/topic/log/createServerConfig', (log) => {
-                logs[0] = JSON.parse(log.body).filter(line => line.toLowerCase().includes(searchedValue.toLowerCase()));
-            });
-            stompClient.subscribe('/topic/log/createUserCert', (log) => {
-				logs[1] = JSON.parse(log.body).filter(line => line.toLowerCase().includes(searchedValue.toLowerCase()));
-            });
-            stompClient.subscribe('/topic/log/createUserVPNFile', (log) => {
-				logs[2] = JSON.parse(log.body).filter(line => line.toLowerCase().includes(searchedValue.toLowerCase()));
-            });
-			stompClient.subscribe('/topic/log/deleteUser', (log) => {
-				logs[3] = JSON.parse(log.body).filter(line => line.toLowerCase().includes(searchedValue.toLowerCase()));
-            });
-			stompClient.subscribe('/topic/log/OVPN', (log) => {
-				logs[4] = JSON.parse(log.body).filter(line => line.toLowerCase().includes(searchedValue.toLowerCase()));
-            });
+			for (let i = 0; i < logTopics.length; i++) {
+					stompClient.subscribe(logTopics[i], (log) => {
+					logs[i] = JSON.parse(log.body).filter(line => line.toLowerCase().includes(searchedValue.toLowerCase()));
+				});
+			}
 			stompClient.subscribe('/topic/users/info', (info) => {
 				usersInfo = JSON.parse(info.body);
             });
 			stompClient.subscribe('/topic/server/info', (info) => {
-                const infoParsed = JSON.parse(info.body);
-                bandwidthData = infoParsed;
+                bandwidthData = JSON.parse(info.body);
             });
         });
 	}
