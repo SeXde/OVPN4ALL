@@ -230,7 +230,7 @@
 	{#if $isInfoOverlayOpen}
 		<InfoOverlay infoTitle="Config not detected" infoMessage="Please, fill vpn configuration" link="/setup" linkMessage="Go to config setup" />
 	{/if}
-	<div class="flex flex-row m-5 relative">
+	<div class="flex flex-row m-5">
 		<div class="flex flex-col">
 			<div on:click={() => selectPage(0)} class="{selectedPage[0] ? 'text-secondary border-secondary' : ''} bg-light_dark flex flex-col items-center justify-center mb-4 pb-2 border rounded-md p-2 hover:text-secondary hover:border-secondary hover:cursor-pointer">
 				<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
@@ -327,7 +327,7 @@
 				</button>
 			</div>
 			<Spinner loading={loading}></Spinner>
-			{#if connected}
+			{#if usersInfo.length > 0}
 				<div class="my-5">
 					<table class="w-full text-sm text-left text-gray-500 dark:text-gray-400 rounded-lg">
 						<thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
@@ -418,7 +418,7 @@
 		{#each logs as log, i}
 			{#if selectedPage[i+1]}
 			<label for="table-search" class="sr-only">Search</label>
-			<div class="flex flex-col items-center justify-center flex-grow">
+			<div class="flex flex-col items-center justify-center w-4/5">
 				<div class="relative mb-5">
 					<div class="flex absolute inset-y-0 left-0 items-center pl-3 pointer-events-none">
 						<svg class="w-5 h-5 text-gray-500 dark:text-gray-400" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"></path></svg>
@@ -426,7 +426,7 @@
 					<input bind:value={searchedValue} type="text" id="table-search-users" class="block p-2 pl-10 w-80 text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-secondary dark:focus:border-secondary" placeholder="Search words">
 				</div>
 				<div class="mx-auto text-green-500 bg-light_dark w-3/5 p-14 rounded-lg relative overflow-scroll h-[38rem]">
-					<div class="z-10 top-[12rem] right-[22rem] fixed text-slate-700">
+					<div class="z-10 top-[11rem] right-[33rem] fixed text-slate-700">
 						<div class="flex flex-row">
 							<div on:click={() => copyText(i)} class="flex flex-col items-center justify-center m-5 hover:text-slate-200 hover:cursor-pointer">
 								<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
