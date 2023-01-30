@@ -7,10 +7,11 @@
     import { saveAs } from 'file-saver';
     import Cookies from 'js-cookie';
 	import Spinner from "$lib/components/Spinner.svelte";
-    import { isErrorOverlayOpen, isInfoOverlayOpen, isOverlayOpen } from '../stores/OverlayStore';
-	import Overlay from "$lib/components/Overlay.svelte";
+    import { isErrorOverlayOpen, isInfoOverlayOpen } from '../stores/OverlayStore';
+    import { isModalOverlayOpen } from "$lib/stores/OverlayStore";
 	import ErrorOverlay from "$lib/components/ErrorOverlay.svelte";
 	import InfoOverlay from "$lib/components/InfoOverlay.svelte";
+	import ModalOverlay from "$lib/components/ModalOverlay.svelte";
 
     interface Role {
         roleName: string;
@@ -82,6 +83,9 @@
     [usersPage, errorBody] = data.users;
     let error: string;
     let errorTitle, infoTitle, infoMessage: string;
+    let modalAction;
+    let modalContent;
+    let modalParams;
     if (errorBody != null) {
         error = errorBody.message;
         if (error.includes("token")) {
@@ -215,7 +219,9 @@
         loading = false;
     }
 
-    const sendVPN = async (name: string, email: string): Promise<void> => {
+    const sendVPN = async (data): Promise<void> => {
+        const name = data.name;
+        const email = data.email;
         loading = true;
         errorTitle = "Cannot send vpn file";
         await fetch(`http://localhost:8082/api/mail/${email}/file/${name}`, {
@@ -266,6 +272,9 @@
 {#if $isInfoOverlayOpen}
 	<InfoOverlay infoTitle={infoTitle} infoMessage={infoMessage} link="/setup" linkMessage="Go to config setup" />
 {/if}
+{#if $isModalOverlayOpen}
+    <ModalOverlay content={modalContent} action={modalAction} params={modalParams}/>
+{/if}
 <div class="overflow-x-auto relative shadow-md sm:rounded-lg my-5 hover:cursor-{loading ? 'wait' : 'default'}">
     <div class="flex justify-between items-center pb-4 bg-transparent">
         <label for="table-search" class="sr-only">Search</label>
@@ -276,9 +285,6 @@
             <input bind:value={searchedUser} type="text" id="table-search-users" class="block p-2 pl-10 w-80 text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-secondary dark:focus:border-secondary" placeholder="Search for users">
         </div>
         <Spinner loading={loading}></Spinner>
-        {#if error}
-        <ErrorMessage title="Delete error" body={error}/>
-        {/if}
         <a href="/sign-up" class="mr-5 my-3 mt-5 w-36 py-2 flex flex-col items-center justify-center text-light rounded-lg border-2 border-light hover:text-primary hover:border-primary disabled:border-stone-500 disabled:text-stone-500 font-semibold transition-colors">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM4 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 0110.374 21c-2.331 0-4.512-.645-6.374-1.766z" />
@@ -356,14 +362,14 @@
                                     </svg>
                                     Download ovpn
                                 </div>
-                                <div on:click={() => sendVPN(user.name, user.email)} class="flex flex-col items-center mr-4 hover:underline hover:text-secondary hover:cursor-pointer">
+                                <div on:click={() => {modalContent = `You're going to send an email to '${user.email}', is it correct?`;modalAction = sendVPN; modalParams = {'name': user.name, 'email': user.email}; isModalOverlayOpen.set(true);}} class="flex flex-col items-center mr-4 hover:underline hover:text-secondary hover:cursor-pointer">
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
                                     </svg>                              
                                     Send ovpn
                                 </div>
                             {/if}
-                            <div on:click={() => deleteUser(user.id)} class="flex flex-col items-center text-red-500 hover:underline hover:text-secondary hover:cursor-pointer">
+                            <div on:click={() => {modalContent = `You're going to delete user '${user.name}', is it correct?`;modalAction = deleteUser; modalParams = user.id; isModalOverlayOpen.set(true);}} class="flex flex-col items-center text-red-500 hover:underline hover:text-secondary hover:cursor-pointer">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M22 10.5h-6m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM4 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 0110.374 21c-2.331 0-4.512-.645-6.374-1.766z" />
                                 </svg>
