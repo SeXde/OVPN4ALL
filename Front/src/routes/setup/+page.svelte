@@ -32,6 +32,7 @@
     let infoMessage: string;
     let isTls: boolean = false;
     const timeOutMs: number = 500;
+    let isLoading2: boolean = false;
     let portTimeOut, gatewayTimeOut, netmaskTimeOut, networkTimeOut, smtpHostTimeOut, usernameTimeOut, emailInputTimeOut;
     portTitleErrorMessage = gatewayTitleErrorMessage = netmaskTitleErrorMessage = portBodyErrorMessage = gatewayBodyErrorMessage = netmaskBodyErrorMessage = postError = networkTitleErrorMessage = networkErrorMessage = null;
 
@@ -147,6 +148,38 @@
         postError = error.message;
         isErrorOverlayOpen.set(true);
     }
+
+    const getPublicIp = async ():Promise<void> => {
+        isLoading2 = true;
+		let error: true;
+		const endpoint = 'https://api.ipify.org?format=json'
+		await fetch(endpoint, {
+                method: 'GET'
+        }).then(res => {
+			if (res.ok) {
+				return res;
+			} else {
+				error = true;
+				return res.json();
+			}
+		})
+		.then(async res => {
+			if (error) {
+				postError = res.message;
+				isErrorOverlayOpen.set(true);
+			} else {
+                const resJson = await res.json();
+                server = resJson.ip;
+            }
+		})
+		.catch(() =>  {
+			if (!error) {
+				postError = `Cannot guess public ip`;
+				isErrorOverlayOpen.set(true);
+			}
+		})
+        isLoading2 = false;
+    }
     
 </script>
 
@@ -202,15 +235,32 @@
                     <input on:change={validateNetwork} required bind:value={server} type="text" id="server" class="block px-2.5 pb-2.5 pt-5 w-full text-sm text-gray-900 bg-gray-50 dark:bg-gray-700 rounded-lg border-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-primary focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " />
                     <label for="server" class="absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-4 scale-75 top-4 z-10 origin-[0] left-2.5 peer-focus:text-blue-600 peer-focus:dark:text-primary peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-4">Server public IP (205.23.4.1)</label>
                 </div>
-                <button type="submit" class="my-3 mx-auto mt-5 w-36 py-2 flex justify-center text-light rounded-lg border-2 border-light hover:text-primary hover:border-primary disabled:border-stone-500 disabled:text-stone-500 font-semibold transition-colors">
-                    {#if isLoading}
-                        <div class="border border-t-4 border-b-2 border-primary rounded-full  animate-spin">
-                            <div class="p-2"></div>
-                        </div>
-                    {:else}
-                        Save settings
-                    {/if}
-                </button>
+                <div class="flex flex-col items-center align-middle">
+                    <button type="submit" class="my-3 mx-auto mt-5 w-36 py-2 flex justify-center text-light rounded-lg border-2 border-light hover:text-primary hover:border-primary disabled:border-stone-500 disabled:text-stone-500 font-semibold transition-colors">
+                        {#if isLoading}
+                            <div class="border border-t-4 border-b-2 border-primary rounded-full  animate-spin">
+                                <div class="p-2"></div>
+                            </div>
+                        {:else}
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="mr-2 w-6 h-6">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75m-16.5-3.75v3.75m16.5 0v3.75C20.25 16.153 16.556 18 12 18s-8.25-1.847-8.25-4.125v-3.75m16.5 0c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125" />
+                          </svg>
+                            Save settings
+                        {/if}
+                    </button>
+                    <div on:click={getPublicIp} class="font-semibold bg-dark flex flex-row items-center justify-center mb-4 pb-2 rounded-lg border-2 border-light p-2 hover:text-primary hover:border-primary hover:cursor-pointer">                                                       
+                          {#if isLoading2}
+                          <div class="border border-t-4 border-b-2 border-primary rounded-full  animate-spin">
+                              <div class="p-2"></div>
+                          </div>
+                        {:else}
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="mr-2 w-6 h-6">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15a4.5 4.5 0 004.5 4.5H18a3.75 3.75 0 001.332-7.257 3 3 0 00-3.758-3.848 5.25 5.25 0 00-10.233 2.33A4.502 4.502 0 002.25 15z" />
+                            </svg>  
+                            <p class="">Guess public ip</p>
+                        {/if}
+                    </div>
+                </div>
             </form>
             {#if portTitleErrorMessage}
                 <ErrorMessage title={portTitleErrorMessage} body={portBodyErrorMessage} />

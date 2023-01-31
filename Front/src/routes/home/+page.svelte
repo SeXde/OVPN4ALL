@@ -3,11 +3,12 @@
 	import { saveAs } from 'file-saver';
     import Cookies from 'js-cookie';
 	import Spinner from "$lib/components/Spinner.svelte";
-	import { isErrorOverlayOpen, isInfoOverlayOpen } from "../stores/OverlayStore";
+	import { isErrorOverlayOpen, isInfoOverlayOpen, isModalOverlayOpen } from "../../lib/stores/OverlayStore";
 	import ErrorOverlay from "$lib/components/ErrorOverlay.svelte";
 	import InfoOverlay from "$lib/components/InfoOverlay.svelte";
 	import { goto } from "$app/navigation";
 	import { onMount } from "svelte";
+	import ModalOverlay from "$lib/components/ModalOverlay.svelte";
 
 	export let data
 	let [setup, dataError] = data.setup
@@ -37,8 +38,13 @@
 
 	let selectedPage: Array<boolean> = [true, false, false, false, false, false];
 	let logsName: Array<string> = ["createServerConfigLog", "createUserCertLog", "createUserVPNFileLog", "deleteUserLog", "OVPNLog"];
+	let logTopics: Array<string> = ["/topic/log/createServerConfig", "/topic/log/createUserCert", "/topic/log/createUserVPNFile", "/topic/log/deleteUser", "/topic/log/OVPN"];
 	let lines: number = 500;
 	let values: Array<number> = [100, 200, 500, 800, 1200, 2000];
+	let searchedValue: string = "";
+	let userToDisconnect;
+	let modalAction;
+	let modalParams;
 
 	if (setup != null) {
 		port = setup.port;
@@ -135,27 +141,16 @@
 		let socket = new SockJS(`http://localhost:8082/ovpn4all-ws?ws-token=Bearer ${Cookies.get('jwt')}`);
         stompClient = Stomp.over(socket);
         stompClient.connect({}, (frame) => {
-            stompClient.subscribe('/topic/log/createServerConfig', (log) => {
-                logs[0] = JSON.parse(log.body);
-            });
-            stompClient.subscribe('/topic/log/createUserCert', (log) => {
-				logs[1] = JSON.parse(log.body)
-            });
-            stompClient.subscribe('/topic/log/createUserVPNFile', (log) => {
-				logs[2] = JSON.parse(log.body);
-            });
-			stompClient.subscribe('/topic/log/deleteUser', (log) => {
-				logs[3] = JSON.parse(log.body);
-            });
-			stompClient.subscribe('/topic/log/OVPN', (log) => {
-				logs[4] = JSON.parse(log.body);
-            });
+			for (let i = 0; i < logTopics.length; i++) {
+					stompClient.subscribe(logTopics[i], (log) => {
+					logs[i] = JSON.parse(log.body).filter(line => line.toLowerCase().includes(searchedValue.toLowerCase()));
+				});
+			}
 			stompClient.subscribe('/topic/users/info', (info) => {
 				usersInfo = JSON.parse(info.body);
             });
 			stompClient.subscribe('/topic/server/info', (info) => {
-                const infoParsed = JSON.parse(info.body);
-                bandwidthData = infoParsed;
+                bandwidthData = JSON.parse(info.body);
             });
         });
 	}
@@ -216,7 +211,7 @@
 			}
 		})
 		loading = false;
-	}
+	};
 
 	onMount(() => {
 		webSocketConnect();
@@ -238,6 +233,9 @@
 	{/if}
 	{#if $isInfoOverlayOpen}
 		<InfoOverlay infoTitle="Config not detected" infoMessage="Please, fill vpn configuration" link="/setup" linkMessage="Go to config setup" />
+	{/if}
+	{#if $isModalOverlayOpen}
+		<ModalOverlay content={`You're going to disconnect user '${userToDisconnect}', is it correct?`} action={modalAction} params={modalParams}/>
 	{/if}
 	<div class="flex flex-row m-5">
 		<div class="flex flex-col">
@@ -311,10 +309,35 @@
 					{/if}
 				</p>
 			</div>
-			{#if connected}
-				<div class="bg-blacky my-5 border rounded-lg">
-					<table class="w-full text-sm text-left px-5">
-						<thead class="text-xs">
+			<div class="flex items-center align-middle mt-3">
+				{#if !dataError}
+					<button on:click={() => changeVpnStatus()} class="mr-3 my-3 mt-5 w-36 py-2 flex flex-col items-center justify-center text-light rounded-lg border-2 border-light hover:text-primary hover:border-primary disabled:border-stone-500 disabled:text-stone-500 font-semibold transition-colors">
+						{#if !connected}
+							<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+								<path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+								<path stroke-linecap="round" stroke-linejoin="round" d="M15.91 11.672a.375.375 0 010 .656l-5.603 3.113a.375.375 0 01-.557-.328V8.887c0-.286.307-.466.557-.327l5.603 3.112z" />
+							</svg>
+							Turn on
+						{:else}
+							<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+								<path stroke-linecap="round" stroke-linejoin="round" d="M14.25 9v6m-4.5 0V9M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+							</svg>
+							Turn off		
+						{/if}
+					</button>
+				{/if}
+				<button on:click={() => downloadLogs()} class="my-3 mt-5 w-36 py-2 flex flex-col items-center justify-center text-light rounded-lg border-2 border-light hover:text-primary hover:border-primary disabled:border-stone-500 disabled:text-stone-500 font-semibold transition-colors">
+					<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+						<path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+					</svg>
+					Download logs
+				</button>
+			</div>
+			<Spinner loading={loading}></Spinner>
+			{#if usersInfo.length > 0}
+				<div class="my-5">
+					<table class="w-full text-sm text-left text-gray-500 dark:text-gray-400 rounded-lg">
+						<thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
 							<tr>
 								<th scope="col" class="py-3 px-6">
 									<div class="flex flex-col items-center">
@@ -368,7 +391,7 @@
 						</thead>
 						<tbody class="bg-other_dark">
 							{#each usersInfo as entry}
-								<tr class="hover:bg-gray-700 border-t-2 mt-2">
+								<tr class="bg-white dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 border-t-2 mt-2">
 									<td class="text-center py-4 px-6 text-gray-900 whitespace-nowrap dark:text-white">
 										{entry.userName}
 									</td>
@@ -384,7 +407,7 @@
 									<td class="py-4 px-6 text-center">
 										{entry.connectedSince}
 									</td>
-									<td on:click={()  => disconnectUser(entry.userName)} class="flex flex-col items-center justify-center py-4 px-6 text-center text-red-500 hover:text-secondary hover:cursor-pointer">
+									<td on:click={()  => {userToDisconnect=entry.userName;modalAction=disconnectUser;modalParams=entry.userName;isModalOverlayOpen.set(true)}} class="flex flex-col items-center justify-center py-4 px-6 text-center text-red-500 hover:text-secondary hover:cursor-pointer">
 										<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 ">
 											<path stroke-linecap="round" stroke-linejoin="round" d="M3 3l8.735 8.735m0 0a.374.374 0 11.53.53m-.53-.53l.53.53m0 0L21 21M14.652 9.348a3.75 3.75 0 010 5.304m2.121-7.425a6.75 6.75 0 010 9.546m2.121-11.667c3.808 3.807 3.808 9.98 0 13.788m-9.546-4.242a3.733 3.733 0 01-1.06-2.122m-1.061 4.243a6.75 6.75 0 01-1.625-6.929m-.496 9.05c-3.068-3.067-3.664-7.67-1.79-11.334M12 12h.008v.008H12V12z" />
 										</svg>										  
@@ -397,56 +420,40 @@
 					</table>
 				</div>
 			{/if}
-			<div class="flex items-center align-middle mt-2">
-				{#if !dataError}
-					<button on:click={() => changeVpnStatus()} class="mr-3 my-3 mt-5 w-36 py-2 flex flex-col items-center justify-center text-light rounded-lg border-2 border-light hover:text-primary hover:border-primary disabled:border-stone-500 disabled:text-stone-500 font-semibold transition-colors">
-						{#if !connected}
-							<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-								<path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-								<path stroke-linecap="round" stroke-linejoin="round" d="M15.91 11.672a.375.375 0 010 .656l-5.603 3.113a.375.375 0 01-.557-.328V8.887c0-.286.307-.466.557-.327l5.603 3.112z" />
-							</svg>
-							Turn on
-						{:else}
-							<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-								<path stroke-linecap="round" stroke-linejoin="round" d="M14.25 9v6m-4.5 0V9M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-							</svg>
-							Turn off		
-						{/if}
-					</button>
-				{/if}
-				<button on:click={() => downloadLogs()} class="my-3 mt-5 w-36 py-2 flex flex-col items-center justify-center text-light rounded-lg border-2 border-light hover:text-primary hover:border-primary disabled:border-stone-500 disabled:text-stone-500 font-semibold transition-colors">
-					<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-						<path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-					</svg>
-					Download logs
-				</button>
-			</div>
-			<Spinner loading={loading}></Spinner>
 		</div>
 		{/if}
 		{#each logs as log, i}
 			{#if selectedPage[i+1]}
-			<div class="mx-auto text-green-500 bg-light_dark w-3/5 p-14 rounded-lg relative">
-				<div class="absolute top-2 right-3 text-slate-700">
-					<div class="flex flex-row">
-						<div on:click={() => copyText(i)} class="flex flex-col items-center justify-center m-5 hover:text-slate-200 hover:cursor-pointer">
-							<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-								<path stroke-linecap="round" stroke-linejoin="round" d="M8.25 7.5V6.108c0-1.135.845-2.098 1.976-2.192.373-.03.748-.057 1.123-.08M15.75 18H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08M15.75 18.75v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5A3.375 3.375 0 006.375 7.5H5.25m11.9-3.664A2.251 2.251 0 0015 2.25h-1.5a2.251 2.251 0 00-2.15 1.586m5.8 0c.065.21.1.433.1.664v.75h-6V4.5c0-.231.035-.454.1-.664M6.75 7.5H4.875c-.621 0-1.125.504-1.125 1.125v12c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V16.5a9 9 0 00-9-9z" />
-							</svg>														 
-							<p>Copy</p>
-						</div>
-						<div on:click={() => downloadText(i)} class="flex flex-col items-center justify-center m-5 hover:text-slate-200 hover:cursor-pointer">
-							<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-								<path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-							</svg>														 
-							<p>Download</p>
+			<label for="table-search" class="sr-only">Search</label>
+			<div class="flex flex-col items-center justify-center w-4/5">
+				<div class="relative mb-5">
+					<div class="flex absolute inset-y-0 left-0 items-center pl-3 pointer-events-none">
+						<svg class="w-5 h-5 text-gray-500 dark:text-gray-400" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"></path></svg>
+					</div>
+					<input bind:value={searchedValue} type="text" id="table-search-users" class="block p-2 pl-10 w-80 text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-secondary dark:focus:border-secondary" placeholder="Search words">
+				</div>
+				<div class="mx-auto text-green-500 bg-light_dark w-3/5 p-14 rounded-lg relative overflow-scroll h-[38rem]">
+					<div class="z-10 top-[11rem] right-[33rem] fixed text-slate-700">
+						<div class="flex flex-row">
+							<div on:click={() => copyText(i)} class="flex flex-col items-center justify-center m-5 hover:text-slate-200 hover:cursor-pointer">
+								<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+									<path stroke-linecap="round" stroke-linejoin="round" d="M8.25 7.5V6.108c0-1.135.845-2.098 1.976-2.192.373-.03.748-.057 1.123-.08M15.75 18H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08M15.75 18.75v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5A3.375 3.375 0 006.375 7.5H5.25m11.9-3.664A2.251 2.251 0 0015 2.25h-1.5a2.251 2.251 0 00-2.15 1.586m5.8 0c.065.21.1.433.1.664v.75h-6V4.5c0-.231.035-.454.1-.664M6.75 7.5H4.875c-.621 0-1.125.504-1.125 1.125v12c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V16.5a9 9 0 00-9-9z" />
+								</svg>														 
+								<p>Copy</p>
+							</div>
+							<div on:click={() => downloadText(i)} class="flex flex-col items-center justify-center m-5 hover:text-slate-200 hover:cursor-pointer">
+								<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+									<path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+								</svg>														 
+								<p>Download</p>
+							</div>
 						</div>
 					</div>
+					<br>
+					{#each log as line, j}
+						<p class="p-1 hover:bg-gray-700 rounded-md hover:text-secondary"><span class="text-slate-600 mr-5">{j+1}</span>  {line}</p>
+					{/each}
 				</div>
-				<br>
-				{#each log as line, j}
-					<p class="p-1 hover:bg-gray-700 rounded-md hover:text-secondary"><span class="text-slate-600 mr-5">{j+1}</span>  {line}</p>
-				{/each}
 			</div>
 			{/if}
 		{/each}

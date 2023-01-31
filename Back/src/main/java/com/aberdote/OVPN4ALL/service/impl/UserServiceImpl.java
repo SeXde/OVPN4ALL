@@ -235,7 +235,8 @@ public class UserServiceImpl implements UserService {
             throw new CustomException("User is last Admin", HttpStatus.FORBIDDEN);
         }
         try {
-            if (!commandService.deleteUser(userEntity.getName()) || !commandService.killClient(userEntity.getName())) {
+            if (commandService.isActive()) commandService.killClient(userEntity.getName());
+            if (!commandService.deleteUser(userEntity.getName())) {
                 throw new CustomException(String.format("Cannot delete user '%s', execution failed, see logs for more details", userEntity.getName()), HttpStatus.INTERNAL_SERVER_ERROR);
             }
             log.info("Deleting user {}", userEntity.getName());
