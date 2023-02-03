@@ -1,7 +1,6 @@
 package com.aberdote.OVPN4ALL.service.impl;
 
 import com.aberdote.OVPN4ALL.exception.CustomException;
-import com.aberdote.OVPN4ALL.repository.UserRepository;
 import com.aberdote.OVPN4ALL.service.CommandService;
 import com.aberdote.OVPN4ALL.service.LogService;
 import com.aberdote.OVPN4ALL.utils.file.FileUtils;
@@ -20,7 +19,6 @@ import java.util.List;
 public class LogServiceImpl implements LogService {
 
     private final CommandService commandService;
-    private final UserRepository userRepository;
 
     @Value("${server.path.working-directory}")
     private String workingDir;

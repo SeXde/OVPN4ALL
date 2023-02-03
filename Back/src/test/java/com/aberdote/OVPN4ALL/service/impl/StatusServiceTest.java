@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Stream;
 
+import static com.aberdote.OVPN4ALL.TestUtils.testException;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -197,13 +198,6 @@ public class StatusServiceTest {
         doThrow(new IOException(msg)).when(commandService).readThroughput();
         testException(HttpStatus.INTERNAL_SERVER_ERROR, msg, () -> statusService.getThroughput());
         verify(commandService, times(1)).readThroughput();
-    }
-
-    private void testException(HttpStatus expectedStatus, String expectedError, Runnable code) {
-        final var exception = assertThrows(CustomException.class, code::run);
-        assertEquals(expectedStatus, exception.getHttpStatus());
-        assertNotNull(exception.getError());
-        assertTrue(exception.getError().contains(expectedError));
     }
 
 }
