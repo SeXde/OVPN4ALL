@@ -1,4 +1,4 @@
-package com.aberdote.OVPN4ALL.service.impl.impl;
+package com.aberdote.OVPN4ALL.service.impl;
 
 import com.aberdote.OVPN4ALL.common.constanst.RoleConstants;
 import com.aberdote.OVPN4ALL.common.constanst.UserReservedConstants;
@@ -15,7 +15,6 @@ import com.aberdote.OVPN4ALL.repository.UserRepository;
 import com.aberdote.OVPN4ALL.service.CommandService;
 import com.aberdote.OVPN4ALL.service.ConfigService;
 import com.aberdote.OVPN4ALL.service.UserService;
-import com.aberdote.OVPN4ALL.service.impl.UserServiceImpl;
 import com.aberdote.OVPN4ALL.utils.converter.EntityConverter;
 import org.assertj.core.util.Files;
 import org.junit.jupiter.api.BeforeEach;
@@ -522,7 +521,7 @@ public class UserServiceTest {
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, customException.getHttpStatus());
         verify(userRepository, times(1)).findByNameIgnoreCase("Paco");
         verify(commandService, times(1)).deleteUser(anyString());
-        verify(commandService, never()).isActive();
+        verify(commandService, times(1)).isActive();
         verify(commandService, never()).startUp();
         verify(commandService, never()).shutdown();
         verify(userRepository, never()).delete(any(UserEntity.class));
@@ -541,7 +540,7 @@ public class UserServiceTest {
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, customException.getHttpStatus());
         verify(userRepository, times(1)).findByNameIgnoreCase("Paco");
         verify(commandService, times(1)).deleteUser(anyString());
-        verify(commandService, never()).isActive();
+        verify(commandService, times(1)).isActive();
         verify(commandService, never()).startUp();
         verify(commandService, never()).shutdown();
         verify(userRepository, never()).delete(any(UserEntity.class));

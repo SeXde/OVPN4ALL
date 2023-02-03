@@ -43,8 +43,12 @@ public class StatusServiceImpl implements StatusService {
                 commandService.shutdown();
                 commandService.startUp();
             } while(!commandService.isActive());
-            return commandService.isActive();
-        } catch (IOException | InterruptedException e) {
+            return true;
+        } catch (CustomException ce) {
+            final String message = String.format("Cannot execute start openvpn script, ErrorMessage: '%s'", ce.getError());
+            log.error(message);
+            throw new CustomException(message, ce.getHttpStatus());
+        } catch (Exception e) {
             final String message = String.format("Cannot execute start openvpn script, ErrorMessage: '%s'", e.getMessage());
             log.error(message);
             throw new CustomException(message, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -59,7 +63,11 @@ public class StatusServiceImpl implements StatusService {
                 commandService.shutdown();
             } while(commandService.isActive());
             return true;
-        } catch (IOException | InterruptedException e) {
+        } catch (CustomException e) {
+            final String message = String.format("Cannot execute stop openvpn script, ErrorMessage: '%s'", e.getError());
+            log.error(message);
+            throw new CustomException(message, e.getHttpStatus());
+        } catch (Exception e) {
             final String message = String.format("Cannot execute stop openvpn script, ErrorMessage: '%s'", e.getMessage());
             log.error(message);
             throw new CustomException(message, HttpStatus.INTERNAL_SERVER_ERROR);

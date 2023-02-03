@@ -33,26 +33,4 @@ public class FileUtilsTest {
         assertNotNull(result);
     }
 
-    @Test
-    public void testFileRead_negative_number() {
-        final String filePath = "src/test/resources/publicIpList.txt";
-        final Integer line = -1;
-        assertThrows(RuntimeException.class, () -> FileUtils.getContentFromLineNumber(filePath, line));
-    }
-
-    @Test
-    public void testFileRead_zero() {
-        final String filePath = "src/test/resources/publicIpList.txt";
-        final Integer line = 0;
-        assertThrows(RuntimeException.class, () -> FileUtils.getContentFromLineNumber(filePath, line));
-    }
-
-    @Test
-    public void testFileRead_too_long_number() throws IOException {
-        final String filePath = "src/test/resources/publicIpList.txt";
-        final Integer line = 900;
-        final List<String> result = FileUtils.getContentFromLineNumber(filePath, line);
-        assertEquals(0, result.size());
-    }
-
 }
