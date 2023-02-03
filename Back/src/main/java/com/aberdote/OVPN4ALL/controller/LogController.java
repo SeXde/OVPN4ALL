@@ -1,7 +1,6 @@
 package com.aberdote.OVPN4ALL.controller;
 
 import com.aberdote.OVPN4ALL.dto.ErrorDTO;
-import com.aberdote.OVPN4ALL.dto.parser.UserInfoDTO;
 import com.aberdote.OVPN4ALL.dto.user.UserResponseDTO;
 import com.aberdote.OVPN4ALL.exception.CustomException;
 import com.aberdote.OVPN4ALL.service.LogService;
@@ -20,14 +19,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.transaction.Transactional;
 import java.io.File;
 import java.net.MalformedURLException;
-import java.util.List;
 
 @RequiredArgsConstructor @Transactional @Slf4j
 @RestController
@@ -60,32 +57,6 @@ public class LogController {
             log.error(message);
             throw new CustomException(message, HttpStatus.INTERNAL_SERVER_ERROR);
         }
-    }
-
-    @GetMapping("/{user}/info")
-    public ResponseEntity<UserInfoDTO> getUserInfo(@PathVariable String user){
-        log.info("Request to get {} info", user);
-        final UserInfoDTO userInfoDTO = logService.getUserInfo(user);
-        if (userInfoDTO == null) throw new CustomException("User has no info", HttpStatus.NOT_FOUND);
-        return ResponseEntity.ok(userInfoDTO);
-    }
-
-    @GetMapping("/users/info")
-    public ResponseEntity<List<UserInfoDTO>> getUsersInfo(){
-        log.info("Request to get all users info");
-        return ResponseEntity.ok(logService.getAllUsersInfo());
-    }
-
-    @GetMapping("/users/connections")
-    public ResponseEntity<Integer> getNumberOfUsersConnected(){
-        log.info("Request to get number of users connected");
-        return ResponseEntity.ok(logService.getNumberOfUsersConnected());
-    }
-
-    @GetMapping("/users/connected")
-    public ResponseEntity<List<UserResponseDTO>> getUsersConnected() {
-        log.info("Request to get users connected");
-        return ResponseEntity.ok(logService.getUsersConnected());
     }
 
 
