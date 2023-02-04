@@ -1,4 +1,4 @@
-package com.aberdote.OVPN4ALL;
+package com.aberdote.OVPN4ALL.unit;
 
 import com.aberdote.OVPN4ALL.exception.CustomException;
 import org.springframework.http.HttpStatus;

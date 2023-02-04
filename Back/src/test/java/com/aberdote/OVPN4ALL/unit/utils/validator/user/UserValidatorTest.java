@@ -1,5 +1,7 @@
-package com.aberdote.OVPN4ALL.utils.validator.user;
+package com.aberdote.OVPN4ALL.unit.utils.validator.user;
 
+import com.aberdote.OVPN4ALL.utils.validator.user.UserValidator;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -13,7 +15,7 @@ public class UserValidatorTest {
     @DisplayName("validateEmail test with valid emails")
     @ValueSource(strings = {"pacco@test.com", "pedro@domain.com", "far@lopa.ch", "muca@sica.kr", "pano@bano.es"})
     public void validateEmailWithValidEmails(String email) {
-        assertTrue(UserValidator.validateEmail(email));
+        Assertions.assertTrue(UserValidator.validateEmail(email));
     }
 
     @ParameterizedTest @DisplayName("validateEmail test with non-valid emails")

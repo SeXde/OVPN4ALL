@@ -1,4 +1,4 @@
-package com.aberdote.OVPN4ALL.service.impl;
+package com.aberdote.OVPN4ALL.unit.service.impl;
 
 import com.aberdote.OVPN4ALL.dto.SetupDTO;
 import com.aberdote.OVPN4ALL.entity.ConfigEntity;
@@ -6,6 +6,7 @@ import com.aberdote.OVPN4ALL.exception.CustomException;
 import com.aberdote.OVPN4ALL.repository.ConfigRepository;
 import com.aberdote.OVPN4ALL.service.CommandService;
 import com.aberdote.OVPN4ALL.service.ConfigService;
+import com.aberdote.OVPN4ALL.service.impl.ConfigServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

@@ -1,4 +1,4 @@
-package com.aberdote.OVPN4ALL.service.impl;
+package com.aberdote.OVPN4ALL.unit.service.impl;
 
 import com.aberdote.OVPN4ALL.common.constanst.RoleConstants;
 import com.aberdote.OVPN4ALL.common.constanst.UserReservedConstants;
@@ -15,6 +15,7 @@ import com.aberdote.OVPN4ALL.repository.UserRepository;
 import com.aberdote.OVPN4ALL.service.CommandService;
 import com.aberdote.OVPN4ALL.service.ConfigService;
 import com.aberdote.OVPN4ALL.service.UserService;
+import com.aberdote.OVPN4ALL.service.impl.UserServiceImpl;
 import com.aberdote.OVPN4ALL.utils.converter.EntityConverter;
 import org.assertj.core.util.Files;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,6 +32,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static com.aberdote.OVPN4ALL.unit.TestUtils.testException;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.*;
@@ -544,5 +546,37 @@ public class UserServiceTest {
         verify(commandService, never()).startUp();
         verify(commandService, never()).shutdown();
         verify(userRepository, never()).delete(any(UserEntity.class));
+    }
+
+    @DisplayName("Test register first user not admin")
+    @Test
+    void registerFirstUser_not_admin() {
+        createUserRequestDTO.setRoles(createUserRequestDTO
+                .getRoles()
+                .parallelStream()
+                .filter(role -> !Objects.equals(role.getRoleName(), RoleConstants.ROLE_ADMIN))
+                .collect(Collectors.toList())
+        );
+        testException(HttpStatus.BAD_REQUEST, "is not admin", () -> userService.registerFirstUser(createUserRequestDTO));
+    }
+
+    @DisplayName("Test register first user not first user")
+    @Test
+    void registerFirstUser_not_first_user() {
+        when(userRepository.findAll()).thenReturn(List.of(EntityConverter.fromCreateUserDTOToUserEntity(createUserRequestDTO)));
+        testException(HttpStatus.BAD_REQUEST, "is not first user", () -> userService.registerFirstUser(createUserRequestDTO));
+    }
+
+    @DisplayName("test register first user ok")
+    @Test
+    void registerFirstUser_ok() throws IOException, InterruptedException {
+        when(userRepository.findAll()).thenReturn(Collections.emptyList());
+        createUserRequestDTO.setRoles(List.of(new RoleDTO(RoleConstants.ROLE_ADMIN)));
+        when(userRepository.findByNameIgnoreCase(anyString())).thenReturn(Optional.empty());
+        when(commandService.addUser(anyString(), anyString())).thenReturn(true);
+        when(roleRepository.findByRoleName(anyString())).thenReturn(Optional.of(new RoleEntity(RoleConstants.ROLE_ADMIN)));
+        final var userEntity = EntityConverter.fromCreateUserDTOToUserEntity(createUserRequestDTO);
+        when(userRepository.save(any(UserEntity.class))).thenReturn(userEntity);
+        assertNotNull(userService.registerFirstUser(createUserRequestDTO));
     }
 }

@@ -1,7 +1,8 @@
-package com.aberdote.OVPN4ALL.service.impl;
+package com.aberdote.OVPN4ALL.unit.service.impl;
 
 import com.aberdote.OVPN4ALL.service.CommandService;
 import com.aberdote.OVPN4ALL.service.LogService;
+import com.aberdote.OVPN4ALL.service.impl.LogServiceImpl;
 import org.assertj.core.util.Files;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -14,7 +15,7 @@ import org.springframework.http.HttpStatus;
 import java.io.File;
 import java.io.IOException;
 
-import static com.aberdote.OVPN4ALL.TestUtils.testException;
+import static com.aberdote.OVPN4ALL.unit.TestUtils.testException;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 

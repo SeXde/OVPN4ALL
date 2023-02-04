@@ -1,10 +1,11 @@
-package com.aberdote.OVPN4ALL.service.impl;
+package com.aberdote.OVPN4ALL.unit.service.impl;
 
 import com.aberdote.OVPN4ALL.dto.BandwidthDTO;
 import com.aberdote.OVPN4ALL.exception.CustomException;
 import com.aberdote.OVPN4ALL.service.CommandService;
 import com.aberdote.OVPN4ALL.service.ConfigService;
 import com.aberdote.OVPN4ALL.service.StatusService;
+import com.aberdote.OVPN4ALL.service.impl.StatusServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -20,7 +21,7 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Stream;
 
-import static com.aberdote.OVPN4ALL.TestUtils.testException;
+import static com.aberdote.OVPN4ALL.unit.TestUtils.testException;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 

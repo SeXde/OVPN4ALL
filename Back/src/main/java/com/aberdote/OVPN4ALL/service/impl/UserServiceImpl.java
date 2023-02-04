@@ -2,6 +2,7 @@ package com.aberdote.OVPN4ALL.service.impl;
 
 import com.aberdote.OVPN4ALL.common.constanst.RoleConstants;
 import com.aberdote.OVPN4ALL.common.constanst.UserReservedConstants;
+import com.aberdote.OVPN4ALL.dto.RoleDTO;
 import com.aberdote.OVPN4ALL.dto.user.CreateUserRequestDTO;
 import com.aberdote.OVPN4ALL.dto.user.LoginUserRequestDTO;
 import com.aberdote.OVPN4ALL.dto.user.UserResponseDTO;
@@ -29,7 +30,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @Slf4j @Service
@@ -45,6 +48,7 @@ public class UserServiceImpl implements UserService {
     public UserResponseDTO addUser(CreateUserRequestDTO createUserRequestDTO) {
         validateUser(createUserRequestDTO);
         try {
+            commandService.deleteUser(createUserRequestDTO.getName());
             if (!commandService.addUser(createUserRequestDTO.getName(), createUserRequestDTO.getPassword())) {
                 throw new CustomException(String.format("Cannot add user '%s', execution failed, see logs for more details", createUserRequestDTO.getName()), HttpStatus.INTERNAL_SERVER_ERROR);
             }
@@ -175,6 +179,23 @@ public class UserServiceImpl implements UserService {
     @Override
     public void disconnectUser(Long id) {
         disconnectUser(userRepository.findById(id));
+    }
+
+    @Override
+    public UserResponseDTO registerFirstUser(CreateUserRequestDTO newUser) {
+        final Predicate<String> isAdmin = (role) -> Objects.equals(role, RoleConstants.ROLE_ADMIN);
+        if (newUser.getRoles().parallelStream().map(RoleDTO::getRoleName).noneMatch(isAdmin)) {
+            final var msg = String.format("User %s is not admin", newUser.getName());
+            log.error(msg);
+            throw new CustomException(msg, HttpStatus.BAD_REQUEST);
+        }
+        if (!userRepository.findAll().isEmpty()) {
+            final var msg = String.format("User %s is not first user", newUser.getName());
+            log.error(msg);
+            throw new CustomException(msg, HttpStatus.BAD_REQUEST);
+        }
+        log.info("Adding user {}", newUser.getName());
+        return addUser(newUser);
     }
 
     private File downloadUserVPN(Optional<UserEntity> optionalUserEntity) {
