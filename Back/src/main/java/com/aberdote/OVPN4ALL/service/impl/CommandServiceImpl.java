@@ -178,7 +178,7 @@ public class CommandServiceImpl implements CommandService {
     @Override
     public List<UserConnectionInfoDTO> getUsersConnected() {
         managementInterfaceClient.init(ip, port);
-        final List<UserConnectionInfoDTO> userConnectionInfoDTOList= UserInfoParser.parseUserConnectionInfo(managementInterfaceClient.status());
+        final List<UserConnectionInfoDTO> userConnectionInfoDTOList = UserInfoParser.parseUserConnectionInfo(managementInterfaceClient.status());
         userConnectionInfoDTOList.sort(Comparator.comparing(UserConnectionInfoDTO::getUserName));
         return userConnectionInfoDTOList;
     }
