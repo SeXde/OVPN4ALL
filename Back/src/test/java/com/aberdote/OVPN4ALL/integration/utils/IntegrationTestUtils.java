@@ -7,7 +7,6 @@ import io.restassured.path.json.JsonPath;
 import org.springframework.http.HttpStatus;
 
 import java.util.*;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static com.aberdote.OVPN4ALL.common.constanst.ApiConstants.APPLICATION_JSON;
@@ -20,16 +19,15 @@ public final class IntegrationTestUtils {
     private IntegrationTestUtils() {}
 
     public static Stream<CreateUserRequestDTO> provideUsers(RoleDTO roleDTO, Integer users, boolean notRandomRole) {
+
         final Faker faker = new Faker();
-        return IntStream.range(0, users)
-                .mapToObj(i ->
-                        new CreateUserRequestDTO(
-                                faker.name().firstName(),
-                                faker.internet().emailAddress(),
-                                faker.internet().password(),
-                                notRandomRole ? List.of(roleDTO) : generateRandomRoles(roleDTO)
-                        )
-                );
+        return Stream.generate(() -> new CreateUserRequestDTO(
+                faker.name().firstName(),
+                faker.internet().emailAddress(),
+                faker.internet().password(),
+                notRandomRole ? List.of(roleDTO) : generateRandomRoles(roleDTO)
+        )).limit(users);
+
     }
     public static List<RoleDTO> generateRandomRoles(RoleDTO role) {
 
