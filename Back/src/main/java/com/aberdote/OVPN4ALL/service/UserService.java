@@ -28,4 +28,6 @@ public interface UserService {
 
     void disconnectUser(String userName);
     void disconnectUser(Long id);
+
+    UserResponseDTO registerFirstUser(CreateUserRequestDTO newUser);
 }

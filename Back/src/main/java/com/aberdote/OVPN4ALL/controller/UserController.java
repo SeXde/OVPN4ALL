@@ -158,9 +158,15 @@ public class UserController {
     }
 
     @GetMapping("/disconnect/{userName}")
-    public ResponseEntity<Void> disconnectUser(@PathVariable String userName){
+    public ResponseEntity<Void> disconnectUser(@PathVariable String userName) {
         userService.disconnectUser(userName);
         return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<UserResponseDTO> registerFirstUser(@RequestBody CreateUserRequestDTO newUser) {
+        log.info("Received request to register new user {}", newUser.getName());
+        return ResponseEntity.ok().body(userService.registerFirstUser(newUser));
     }
 
 }
