@@ -163,7 +163,7 @@ public class UserController {
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/register")
+    @PostMapping("/firstUser")
     public ResponseEntity<UserResponseDTO> registerFirstUser(@RequestBody CreateUserRequestDTO newUser) {
         log.info("Received request to register new user {}", newUser.getName());
         return ResponseEntity.ok().body(userService.registerFirstUser(newUser));
