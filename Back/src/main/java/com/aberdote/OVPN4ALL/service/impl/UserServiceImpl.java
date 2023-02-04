@@ -48,6 +48,7 @@ public class UserServiceImpl implements UserService {
     public UserResponseDTO addUser(CreateUserRequestDTO createUserRequestDTO) {
         validateUser(createUserRequestDTO);
         try {
+            commandService.deleteUser(createUserRequestDTO.getName());
             if (!commandService.addUser(createUserRequestDTO.getName(), createUserRequestDTO.getPassword())) {
                 throw new CustomException(String.format("Cannot add user '%s', execution failed, see logs for more details", createUserRequestDTO.getName()), HttpStatus.INTERNAL_SERVER_ERROR);
             }

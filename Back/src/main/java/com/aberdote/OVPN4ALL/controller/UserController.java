@@ -118,6 +118,20 @@ public class UserController {
         return ResponseEntity.ok(userService.getUsersPaginated(0, Integer.parseInt(UserReservedConstants.MAX_USERS_PER_PAGE)));
     }
 
+    @Operation(summary = "Delete user")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "User deleted"),
+            @ApiResponse(responseCode = "400", description = "Wrong Parameter", content = {@Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = ErrorDTO.class)))}),
+            @ApiResponse(responseCode = "403", description = "Unauthorized access", content = {@Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = ErrorDTO.class)))}),
+            @ApiResponse(responseCode = "500", description = "Error trying to delete user", content = {@Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = ErrorDTO.class)))})
+    })
+    @DeleteMapping("/name/{name}")
+    public ResponseEntity<UserResponsePageDTO> deleteUserWithName(@Parameter(description = "The id of the user") @PathVariable(required = true) String name) {
+        log.info("Request to delete user {}", name);
+        userService.deleteUser(name);
+        return ResponseEntity.ok(userService.getUsersPaginated(0, Integer.parseInt(UserReservedConstants.MAX_USERS_PER_PAGE)));
+    }
+
     @Operation(summary = "Test if token is working")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Token is working"),

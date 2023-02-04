@@ -1,4 +1,4 @@
-package com.aberdote.OVPN4ALL.service.impl;
+package com.aberdote.OVPN4ALL.unit.service.impl;
 
 import com.aberdote.OVPN4ALL.common.constanst.RoleConstants;
 import com.aberdote.OVPN4ALL.common.constanst.UserReservedConstants;
@@ -15,6 +15,7 @@ import com.aberdote.OVPN4ALL.repository.UserRepository;
 import com.aberdote.OVPN4ALL.service.CommandService;
 import com.aberdote.OVPN4ALL.service.ConfigService;
 import com.aberdote.OVPN4ALL.service.UserService;
+import com.aberdote.OVPN4ALL.service.impl.UserServiceImpl;
 import com.aberdote.OVPN4ALL.utils.converter.EntityConverter;
 import org.assertj.core.util.Files;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,7 +32,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static com.aberdote.OVPN4ALL.TestUtils.testException;
+import static com.aberdote.OVPN4ALL.unit.TestUtils.testException;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.*;

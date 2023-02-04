@@ -1,4 +1,4 @@
-package com.aberdote.OVPN4ALL.utils.converter;
+package com.aberdote.OVPN4ALL.unit.utils.converter;
 
 import com.aberdote.OVPN4ALL.common.constanst.RoleConstants;
 import com.aberdote.OVPN4ALL.dto.RoleDTO;
@@ -7,6 +7,7 @@ import com.aberdote.OVPN4ALL.dto.user.CreateUserRequestDTO;
 import com.aberdote.OVPN4ALL.dto.user.UserResponseDTO;
 import com.aberdote.OVPN4ALL.entity.ConfigEntity;
 import com.aberdote.OVPN4ALL.entity.UserEntity;
+import com.aberdote.OVPN4ALL.utils.converter.EntityConverter;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;

@@ -1,6 +1,7 @@
-package com.aberdote.OVPN4ALL.utils.parser;
+package com.aberdote.OVPN4ALL.unit.utils.parser;
 
 import com.aberdote.OVPN4ALL.dto.user.UserConnectionInfoDTO;
+import com.aberdote.OVPN4ALL.utils.parser.UserInfoParser;
 import org.apache.commons.codec.DecoderException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

@@ -36,10 +36,13 @@ public class DatabaseInitializer {
     @Value("${email}")
     private String email;
 
+    private static final boolean testingFront = false;
+
 
     @PostConstruct
     public void populateDatabase () {
         roleRepository.saveAll(RoleConstants.ROLES.stream().map(RoleEntity::new).toList());
+        if (!testingFront) return;
         final List<CreateUserRequestDTO> users = List.of(new CreateUserRequestDTO("Admin","dummy@mail.com",
                 "Admin",
                 List.of(new RoleDTO(RoleConstants.ROLE_ADMIN))),

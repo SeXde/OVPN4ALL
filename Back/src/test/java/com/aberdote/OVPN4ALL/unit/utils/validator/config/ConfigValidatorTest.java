@@ -1,5 +1,7 @@
-package com.aberdote.OVPN4ALL.utils.validator.config;
+package com.aberdote.OVPN4ALL.unit.utils.validator.config;
 
+import com.aberdote.OVPN4ALL.utils.validator.config.ConfigValidator;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -36,7 +38,7 @@ public class ConfigValidatorTest {
     @ParameterizedTest
     @MethodSource("testPublicIps")
     void validatePublicIp(String publicIp) {
-        assertTrue(ConfigValidator.validatePublicIp(publicIp));
+        Assertions.assertTrue(ConfigValidator.validatePublicIp(publicIp));
     }
 
     @DisplayName("Test invalid public ip")

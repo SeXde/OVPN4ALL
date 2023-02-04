@@ -1,5 +1,6 @@
-package com.aberdote.OVPN4ALL.utils.file;
+package com.aberdote.OVPN4ALL.unit.utils.file;
 
+import com.aberdote.OVPN4ALL.utils.file.FileUtils;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
