@@ -43,7 +43,7 @@ public class UserController {
     @Autowired
     private JwtTokenUtil jwtTokenUtil;
 
-    @Operation(summary = "Save user passed in the body")
+    @Operation(summary = "Save user")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "User was saved", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = UserResponseDTO.class))}),
             @ApiResponse(responseCode = "400", description = "Wrong data was passed", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ErrorDTO.class))}),
@@ -54,7 +54,7 @@ public class UserController {
     public ResponseEntity<UserResponseDTO> saveUser(@RequestBody CreateUserRequestDTO createUserDTO) {
         log.info("Request to save user {}", createUserDTO.getName());
         final UserResponseDTO userResponseDTO = userService.addUser(createUserDTO);
-        return new ResponseEntity<>(userResponseDTO, HttpStatus.CREATED);
+        return new ResponseEntity<>(userResponseDTO, HttpStatus.OK);
     }
 
     @Operation(summary = "Get users by page")

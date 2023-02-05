@@ -14,6 +14,7 @@ import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.HttpStatus;
 
 import static com.aberdote.OVPN4ALL.common.constanst.ApiConstants.APPLICATION_JSON;
+import static com.aberdote.OVPN4ALL.common.constanst.ApiConstants.USER_PATH;
 import static io.restassured.RestAssured.given;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
@@ -22,7 +23,6 @@ public class FirstUserTest {
 
     @LocalServerPort
     private int port;
-    private final static String ENDPOINT_PATH = "/api/users/";
 
     @Autowired
     private UserRepository userRepository;
@@ -63,7 +63,7 @@ public class FirstUserTest {
                 .contentType(APPLICATION_JSON)
                 .body(newUser)
         .when()
-                .post("http://localhost:".concat(String.valueOf(port)).concat(ENDPOINT_PATH).concat("firstUser"))
+                .post("http://localhost:".concat(String.valueOf(port)).concat(USER_PATH).concat("firstUser"))
         .then()
                 .statusCode(httpStatus.value());
 

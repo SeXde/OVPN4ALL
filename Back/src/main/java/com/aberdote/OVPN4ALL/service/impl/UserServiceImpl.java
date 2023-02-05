@@ -297,8 +297,11 @@ public class UserServiceImpl implements UserService {
         String msg = null;
         if (createUserRequestDTO == null) {
             msg = "User is null";
-        }
-        else if (UserReservedConstants.PASSWORD_FORBIDDEN.contains(createUserRequestDTO.getPassword())) {
+        } else if (createUserRequestDTO.getName().isEmpty()) {
+            msg = "Username cannot be empty";
+        } else if (createUserRequestDTO.getPassword().isEmpty()) {
+            msg = "Password cannot be empty";
+        } else if (UserReservedConstants.PASSWORD_FORBIDDEN.contains(createUserRequestDTO.getPassword())) {
             msg = String.format("Password %s is not valid", createUserRequestDTO.getPassword());
         }
         else if (!UserValidator.validateEmail(createUserRequestDTO.getEmail())) {
