@@ -1,24 +1,21 @@
 package com.aberdote.OVPN4ALL.service.impl;
 
-
-import com.aberdote.OVPN4ALL.dto.SetupDTO;
 import com.aberdote.OVPN4ALL.exception.CustomException;
-import com.aberdote.OVPN4ALL.repository.ConfigRepository;
 import com.aberdote.OVPN4ALL.service.CommandService;
+import com.aberdote.OVPN4ALL.repository.ConfigRepository;
 import com.aberdote.OVPN4ALL.service.ConfigService;
 import com.aberdote.OVPN4ALL.utils.validator.config.ConfigValidator;
 import com.aberdote.OVPN4ALL.utils.converter.EntityConverter;
+import com.aberdote.OVPN4ALL.dto.SetupDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-
 import javax.transaction.Transactional;
 import java.io.IOException;
 
 @Slf4j @Service @Transactional @RequiredArgsConstructor
 public class ConfigServiceImpl implements ConfigService {
-
     private final ConfigRepository configRepository;
     private final CommandService commandService;
 

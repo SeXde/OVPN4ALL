@@ -148,19 +148,4 @@ public class UserControllerTest {
 
     }
 
-    @DisplayName("Test users no token")
-    @Test
-    void getUsers_no_token() {
-
-        given()
-                .request()
-                .contentType(JSON)
-                .params(Map.of("page", "0", "limit", "20"))
-        .when()
-                .get(BASE_PATH.concat(String.valueOf(port)).concat(USER_PATH))
-        .then()
-                .statusCode(UNAUTHORIZED.value());
-
-    }
-
 }

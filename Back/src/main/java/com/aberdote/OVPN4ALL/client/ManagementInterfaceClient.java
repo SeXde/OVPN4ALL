@@ -5,7 +5,6 @@ import com.aberdote.OVPN4ALL.utils.converter.StringConverter;
 import lombok.Data;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.http.HttpStatus;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
