@@ -8,9 +8,8 @@ import org.junit.jupiter.params.provider.ArgumentsProvider;
 import java.util.stream.Stream;
 
 import static com.aberdote.OVPN4ALL.common.constanst.RoleConstants.ROLE_USER;
-import static com.aberdote.OVPN4ALL.integration.utils.IntegrationTestUtils.provideUsers;
 
-public class RegularUserProvider implements ArgumentsProvider {
+public class RegularUserProvider extends GoodUserProvider implements ArgumentsProvider {
 
     private final static Integer MAX = 20;
 

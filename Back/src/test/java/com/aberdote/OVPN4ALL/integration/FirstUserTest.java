@@ -6,6 +6,7 @@ import com.aberdote.OVPN4ALL.integration.argument.provider.AdminUserProvider;
 import com.aberdote.OVPN4ALL.integration.argument.provider.RegularUserProvider;
 import com.aberdote.OVPN4ALL.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,7 +15,9 @@ import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.HttpStatus;
 
 import static com.aberdote.OVPN4ALL.common.constanst.ApiConstants.APPLICATION_JSON;
+import static com.aberdote.OVPN4ALL.common.constanst.ApiConstants.USER_PATH;
 import static io.restassured.RestAssured.given;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 @SpringBootTest(webEnvironment = RANDOM_PORT)
@@ -22,7 +25,6 @@ public class FirstUserTest {
 
     @LocalServerPort
     private int port;
-    private final static String ENDPOINT_PATH = "/api/users/";
 
     @Autowired
     private UserRepository userRepository;
@@ -63,7 +65,7 @@ public class FirstUserTest {
                 .contentType(APPLICATION_JSON)
                 .body(newUser)
         .when()
-                .post("http://localhost:".concat(String.valueOf(port)).concat(ENDPOINT_PATH).concat("firstUser"))
+                .post("http://localhost:".concat(String.valueOf(port)).concat(USER_PATH).concat("firstUser"))
         .then()
                 .statusCode(httpStatus.value());
 
@@ -71,8 +73,25 @@ public class FirstUserTest {
 
     }
 
+    @DisplayName("Test No users true")
+    @Test
+    void noUser_true() {
 
+        final String result =
+        given()
+                .request()
+                .contentType(APPLICATION_JSON)
+        .when()
+                .get("http://localhost:".concat(String.valueOf(port)).concat(USER_PATH).concat("noUsers"))
+        .then()
+                .statusCode(HttpStatus.OK.value())
+                .extract()
+                .body()
+                .asString();
+        assertEquals("true", result);
 
+        userRepository.deleteAll();
 
+    }
 
 }

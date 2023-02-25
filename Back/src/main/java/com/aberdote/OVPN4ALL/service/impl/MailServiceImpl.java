@@ -5,6 +5,7 @@ import com.aberdote.OVPN4ALL.dto.mail.MailResponseDTO;
 import com.aberdote.OVPN4ALL.entity.MailEntity;
 import com.aberdote.OVPN4ALL.exception.CustomException;
 import com.aberdote.OVPN4ALL.repository.MailRepository;
+import com.aberdote.OVPN4ALL.repository.UserRepository;
 import com.aberdote.OVPN4ALL.service.CommandService;
 import com.aberdote.OVPN4ALL.service.ConfigService;
 import com.aberdote.OVPN4ALL.service.MailService;
@@ -29,6 +30,7 @@ import java.util.Properties;
 public class MailServiceImpl implements MailService {
 
     private final MailRepository mailRepository;
+    private final UserRepository userRepository;
     private final CommandService commandService;
     private final ConfigService configService;
 
@@ -78,6 +80,7 @@ public class MailServiceImpl implements MailService {
     @Override
     public void sendMail(String mailSubject, String ovpnFileName) {
         log.debug("Request to send mail to {}", mailSubject);
+        userRepository.findByNameIgnoreCase(ovpnFileName).orElseThrow(() -> new CustomException("Cannot find user "+ovpnFileName, HttpStatus.NOT_FOUND));
         mailRepository.findAll().stream().findFirst().ifPresentOrElse(mailEntity -> {
         final Session session = setSession(setProperties(mailEntity), mailEntity.getUsername(), mailEntity.getPassword());
         final Message message = new MimeMessage(session);
