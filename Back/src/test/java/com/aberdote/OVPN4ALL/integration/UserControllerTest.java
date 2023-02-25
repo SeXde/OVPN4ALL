@@ -30,8 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
-import static com.aberdote.OVPN4ALL.common.constanst.ApiConstants.BASE_PATH;
-import static com.aberdote.OVPN4ALL.common.constanst.ApiConstants.USER_PATH;
+import static com.aberdote.OVPN4ALL.common.constanst.ApiConstants.*;
 import static com.aberdote.OVPN4ALL.common.constanst.RoleConstants.ROLE_ADMIN;
 import static com.aberdote.OVPN4ALL.integration.utils.IntegrationTestUtils.*;
 import static io.restassured.RestAssured.given;
@@ -453,6 +452,47 @@ public class UserControllerTest {
                 .get(BASE_PATH.concat(String.valueOf(port)).concat(USER_PATH).concat("disconnect/test"))
         .then()
                 .statusCode(UNAUTHORIZED.value());
+
+    }
+
+    @DisplayName("Test No users true")
+    @Test
+    void noUser_true() {
+
+        userRepository.deleteAll();
+        final String result =
+                given()
+                        .request()
+                        .contentType(APPLICATION_JSON)
+                .when()
+                        .get("http://localhost:".concat(String.valueOf(port)).concat(USER_PATH).concat("noUsers"))
+                .then()
+                        .statusCode(HttpStatus.OK.value())
+                        .extract()
+                        .body()
+                        .asString();
+        assertEquals("true", result);
+
+    }
+
+    @DisplayName("Test No users false")
+    @Test
+    void noUser_false() {
+
+        final String result =
+                given()
+                        .request()
+                        .contentType(APPLICATION_JSON)
+                .when()
+                        .get("http://localhost:".concat(String.valueOf(port)).concat(USER_PATH).concat("noUsers"))
+                .then()
+                        .statusCode(HttpStatus.OK.value())
+                        .extract()
+                        .body()
+                        .asString();
+        assertEquals("false", result);
+
+        userRepository.deleteAll();
 
     }
 

@@ -183,4 +183,9 @@ public class UserController {
         return ResponseEntity.ok().body(userService.registerFirstUser(newUser));
     }
 
+    @GetMapping("/noUsers")
+    public ResponseEntity<Boolean> noUsers() {
+        return ResponseEntity.ok(userService.noUsers());
+    }
+
 }

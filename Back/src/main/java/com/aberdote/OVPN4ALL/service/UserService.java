@@ -30,4 +30,6 @@ public interface UserService {
     void disconnectUser(Long id);
 
     UserResponseDTO registerFirstUser(CreateUserRequestDTO newUser);
+
+    Boolean noUsers();
 }

@@ -198,6 +198,11 @@ public class UserServiceImpl implements UserService {
         return addUser(newUser);
     }
 
+    @Override
+    public Boolean noUsers() {
+        return userRepository.findAll().isEmpty();
+    }
+
     private File downloadUserVPN(Optional<UserEntity> optionalUserEntity) {
         if (optionalUserEntity.isEmpty()) {
             final String msg = "Cannot find user to download vpn";
