@@ -10,6 +10,7 @@ public final class ApiConstants {
     public final static String CONFIG_PATH = "/api/setup";
     public final static String LOG_PATH = "/api/logs";
     public final static String MAIL_PATH = "/api/mail";
+    public final static String API_STATUS = "/api/status";
     public final static String APPLICATION_ZIP = "application/zip";
 
 }
