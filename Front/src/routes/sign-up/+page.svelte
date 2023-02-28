@@ -4,8 +4,9 @@
 	import ErrorOverlay from '$lib/components/ErrorOverlay.svelte';
 	import Header from "$lib/components/header.svelte";
 	import {emailValidator} from '$lib/helpers/validators';
+	import { isErrorOverlayOpen } from '$lib/stores/OverlayStore';
 	import { postWithJWT } from '$lib/utils/requestUtils';
-	import { isErrorOverlayOpen } from '../stores/OverlayStore';
+	import Cookies from 'js-cookie';
 	
 	type RoleDTO = {
 		roleName: string
@@ -67,6 +68,7 @@
 	async function sendData() {
 
 		isLoading = true;
+		postError = null;
 		if (isAdmin) roles.push({roleName: 'ROLE_ADMIN'})
 		if (isUser) roles.push({roleName: 'ROLE_USER'})
 		const data: string = JSON.stringify({
@@ -75,13 +77,32 @@
 			password,
 			roles
 		});
-		const[, error] = await postWithJWT('http://localhost:8082/api/users', 201, data)
+		await fetch('http://localhost:8082/api/users', {
+			method: 'POST',
+			mode: 'cors',
+			headers: {
+				Authorization: 'Bearer '+Cookies.get('jwt'),
+				'Content-Type': 'application/json'
+			},
+			body: data
+		}).then(res => {
+			if (!res.ok) {
+				return res.json();
+			}
+			return null;
+		}).then(res => {
+			if (res) {
+				postError = res.message;
+			}
+		}).catch(() => {
+			postError = "Cannot contact with server";
+		});
+		console.log("Error:", postError);
 		isLoading = false;
-		if (!error) {
+		if (!postError) {
 			goto("/users");
 			return;
 		}
-        postError = error.message;
 		isErrorOverlayOpen.set(true);
 		if (postError.includes("token")) {
 			goto("/sign-in");

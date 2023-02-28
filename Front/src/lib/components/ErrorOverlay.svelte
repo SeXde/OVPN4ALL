@@ -1,6 +1,6 @@
 <script>
+	import { isErrorOverlayOpen } from "$lib/stores/OverlayStore";
     import { stop_propagation } from "svelte/internal";
-    import {isErrorOverlayOpen} from "../../routes/stores/OverlayStore";
     import { fade } from 'svelte/transition';
     export let errorTitle;
     export let errorMessage;

@@ -1,6 +1,7 @@
 <script>
+	import { isInfoOverlayOpen } from "$lib/stores/OverlayStore";
     import { stop_propagation } from "svelte/internal";
-    import {isInfoOverlayOpen} from "../../routes/stores/OverlayStore";
+
     import { fade } from 'svelte/transition';
     export let infoTitle;
     export let infoMessage;
