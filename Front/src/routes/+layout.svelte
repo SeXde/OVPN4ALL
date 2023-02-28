@@ -4,6 +4,7 @@
 	import Cookies from 'js-cookie';
 	import { goto } from '$app/navigation';
 	import { fade } from 'svelte/transition';
+	import { isErrorOverlayOpen } from '$lib/stores/OverlayStore';
 	
 
 	const API_URL: string = 'http://localhost:8082/api'
@@ -20,6 +21,7 @@
 		})
 
 		if (response.status !== 200) {
+			isErrorOverlayOpen.set(false);
 			goto('/sign-in')
 		}
 		
@@ -27,7 +29,6 @@
 
 	onMount(() => {
 		let currentPath = window.location.pathname;
-		console.log('klklklklk: ',currentPath)
 		if (currentPath !== "/" && currentPath !== "/sign-in") {
 			canIAccess()
 		}

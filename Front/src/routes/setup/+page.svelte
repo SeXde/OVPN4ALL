@@ -4,10 +4,9 @@
     import {portValidator, gatewayValidator, netmaskValidator, fqdnValidator, emailValidator} from '$lib/helpers/validators';
     import Header from "$lib/components/header.svelte";
     import { postWithJWT } from '$lib/utils/requestUtils';
-	import { isErrorOverlayOpen, isInfoOverlayOpen } from '../stores/OverlayStore';
 	import ErrorOverlay from '$lib/components/ErrorOverlay.svelte';
 	import InfoOverlay from '$lib/components/InfoOverlay.svelte';
-
+	import { isErrorOverlayOpen, isInfoOverlayOpen } from '$lib/stores/OverlayStore';
 
     let portTitleErrorMessage: string, gatewayTitleErrorMessage: string, netmaskTitleErrorMessage: string, portBodyErrorMessage: string, gatewayBodyErrorMessage: string, netmaskBodyErrorMessage: string, postError: string;
     let smtpHostTitleMessage: string

@@ -3,6 +3,9 @@
 	import { PUBLIC_SERVER_URL } from '$env/static/public';
 	import ErrorMessage from '$lib/components/errorMessage.svelte';
 	import {emailValidator} from '$lib/helpers/validators';
+	import { goto } from '$app/navigation';
+	import { isErrorOverlayOpen } from '$lib/stores/OverlayStore';
+	import ErrorOverlay from '$lib/components/ErrorOverlay.svelte';
 
 	export let data;
 	let [error, firstUser] = data.firstUser;
@@ -66,9 +69,27 @@
 				'Content-Type': 'application/json'
 			},
 			body: data
+		}).then(res => {
+			if (!res.ok) {
+				return res.json();
+			} else {
+				return null;
+			}
+		}).then(res => {
+			if (res) {
+				error = res.message;
+			}
+		}).catch(() => {
+			error = "Cannot contact with server";
 		});
 		isLoading = false;
+		if (!error) {
+			goto("/sign-in");
+		} else {
+			isErrorOverlayOpen.set(true);
+		}
 	}
+	console.log("firstUser: ", firstUser);
 
 </script>
 
@@ -78,6 +99,9 @@
 </svelte:head>
 
 <Header navbar={false}/>
+{#if $isErrorOverlayOpen}
+		<ErrorOverlay errorTitle="Error saving user" errorMessage={error}/>
+{/if}
 <div class="flex flex-col justify-center items-center my-auto">
 	<div class="flex flex-col justify-center items-center w-80 rounded-lg border-x-2 border-light px-5 py-5 hover:border-primary hover:border-x-4">
 		<p>OVPN4ALL allows you to create a VPN server using the <i>OpenVPN</i> implementation. It's completely free and easy to use.</p>

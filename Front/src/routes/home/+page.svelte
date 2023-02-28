@@ -3,13 +3,13 @@
 	import { saveAs } from 'file-saver';
     import Cookies from 'js-cookie';
 	import Spinner from "$lib/components/Spinner.svelte";
-	import { isErrorOverlayOpen, isInfoOverlayOpen, isModalOverlayOpen } from "../../lib/stores/OverlayStore";
 	import ErrorOverlay from "$lib/components/ErrorOverlay.svelte";
 	import InfoOverlay from "$lib/components/InfoOverlay.svelte";
 	import { goto } from "$app/navigation";
 	import { onMount } from "svelte";
 	import ModalOverlay from "$lib/components/ModalOverlay.svelte";
-
+	import { isErrorOverlayOpen, isInfoOverlayOpen, isModalOverlayOpen } from "$lib/stores/OverlayStore";
+	
 	export let data
 	let [setup, dataError] = data.setup
 	let errorTitle: string = "Server error"

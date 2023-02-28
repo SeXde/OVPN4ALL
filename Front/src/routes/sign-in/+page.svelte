@@ -1,10 +1,9 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import ErrorMessage from '$lib/components/errorMessage.svelte';
 	import ErrorOverlay from '$lib/components/ErrorOverlay.svelte';
 	import Header from "$lib/components/header.svelte";
+	import { isErrorOverlayOpen } from '$lib/stores/OverlayStore';
 	import { logAndSetToken } from '$lib/utils/requestUtils';
-	import { isErrorOverlayOpen } from '../stores/OverlayStore';
 
 	let username: string, password: string;
 	let postError: string | null = null;
