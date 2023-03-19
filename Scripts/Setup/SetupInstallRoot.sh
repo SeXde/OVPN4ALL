@@ -14,7 +14,7 @@ function ctrl_c() {
 # Check if arguments are wrong
 if test "$#" -ne $ARG_NUMBER; then
     printf "Usage: %s [Log file].\n" "$0" >&2
-    prinf "Expected %s argument/s but %s were passed" "$ARG_NUMBER" "$#"
+    printf "Expected %s argument/s but %s were passed" "$ARG_NUMBER" "$#"
     exit 1
 fi
 

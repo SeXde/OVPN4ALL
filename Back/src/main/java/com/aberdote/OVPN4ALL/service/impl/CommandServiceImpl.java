@@ -53,6 +53,9 @@ public class CommandServiceImpl implements CommandService {
     @Value("${server.management.port}")
     private Integer port;
 
+    @Value("${using.sudo}")
+    private boolean usingSudo;
+
     private final ManagementInterfaceClient managementInterfaceClient = ManagementInterfaceClient.getInstance();
 
     @Override
@@ -80,8 +83,10 @@ public class CommandServiceImpl implements CommandService {
         return executeCommand(String.format("%s/Scripts/Server/%s.sh", workingDir, createServerConfigScript),
                 "server config", workingDir,
                 String.format("Logs/%s.log", createServerConfigScript), port, gateway, netmask) &&
-                executeCommand("sudo", "iptables", "-S",
-                        String.format("%s/Scripts/Server/%s.sh", workingDir, createIptables), port);
+                usingSudo 
+                ? executeCommand("sudo", "iptables", "-S",
+                        String.format("%s/Scripts/Server/%s.sh", workingDir, createIptables), port)
+                : executeCommand(String.format("%s/Scripts/Server/%s.sh", workingDir, createIptables), "iptables", port);
     }
 
     @Override
@@ -91,13 +96,16 @@ public class CommandServiceImpl implements CommandService {
 
     @Override
     public void shutdown() throws IOException, InterruptedException {
-        ScriptExec.execNoWait("sudo pkill -9 openvpn");
+
+        ScriptExec.execNoWait(usingSudo ? "sudo pkill -9 openvpn" : "pkill -9 openvpn");
         managementInterfaceClient.close();
     }
 
     @Override
     public void startUp() throws IOException, InterruptedException {
-        final String cmd = String.format("sudo openvpn %s/Server/OVPN4ALL.conf", workingDir);
+        final String cmd = usingSudo
+                ? String.format("sudo openvpn %s/Server/OVPN4ALL.conf", workingDir)
+                : String.format("openvpn %s/Server/OVPN4ALL.conf", workingDir);
         log.debug("Executing script: {}", cmd);
         ScriptExec.execNoWait(cmd);
     }
@@ -134,22 +142,14 @@ public class CommandServiceImpl implements CommandService {
 
     @Override
     public boolean clearLogs() throws IOException, InterruptedException {
-        return executeCommand("sudo", "clear logs",
-                "-S", "rm", "-r", String.format("%s/Logs/*", workingDir));
+        return usingSudo
+                ? executeCommand("sudo", "clear logs", "-S", "rm", "-r", String.format("%s/Logs/*", workingDir))
+                : executeCommand("rm", "clear logs", "-r", String.format("%s/Logs/*", workingDir));
     }
 
     @Override
     public boolean isActive() throws IOException, InterruptedException {
         return new ProcBuilder("pgrep").withArg("openvpn").ignoreExitStatus().run().getExitValue() == 0;
-    }
-
-    @Override
-    public String readOvpnLogs() throws IOException, InterruptedException, ExecutionException {
-        return new ProcBuilder("sudo")
-                .withArgs("-S", "cat", "/var/log/openvpn.log")
-                .withInput(password)
-                .run()
-                .getOutputString();
     }
 
     @Override

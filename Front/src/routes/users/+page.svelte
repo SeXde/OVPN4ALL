@@ -1,17 +1,15 @@
 <script lang="ts">
 	import Header from "$lib/components/header.svelte";
-    import ErrorMessage from "$lib/components/errorMessage.svelte";
 	import { deleteWithJWT, getWithJWT } from "$lib/utils/requestUtils";
-    import { fly } from 'svelte/transition';
 	import { goto } from "$app/navigation";
     import { saveAs } from 'file-saver';
     import Cookies from 'js-cookie';
 	import Spinner from "$lib/components/Spinner.svelte";
-    import { isErrorOverlayOpen, isInfoOverlayOpen } from '../stores/OverlayStore';
-    import { isModalOverlayOpen } from "$lib/stores/OverlayStore";
+    import { isErrorOverlayOpen, isInfoOverlayOpen, isModalOverlayOpen } from "$lib/stores/OverlayStore";
 	import ErrorOverlay from "$lib/components/ErrorOverlay.svelte";
 	import InfoOverlay from "$lib/components/InfoOverlay.svelte";
 	import ModalOverlay from "$lib/components/ModalOverlay.svelte";
+    import { PUBLIC_SERVER_URL } from '$env/static/public';
 
     interface Role {
         roleName: string;
@@ -143,18 +141,35 @@
 
     const deleteUser = async (userId: number): Promise<void> => {
         loading = true;
-        let errorDelete;
-        [usersPage, errorDelete] = await deleteWithJWT('http://localhost:8082/api/users/' + userId, 200)
-        if (errorDelete) {
-            error = errorDelete.message
-            if (errorDelete.message === 'invalid token') goto('/sign-in')
-        }
+        let usersPage;
+        await fetch(`${PUBLIC_SERVER_URL}/api/users/` + userId, {
+            method: 'DELETE',
+                mode: 'cors',
+                headers: {
+                    Authorization: 'Bearer '+Cookies.get('jwt')
+                }
+
+        }).then(async res => {
+            if (res.ok) {
+                usersPage = await res.json();
+            } else {
+                return res.json();
+            }
+        }).then(res => {
+            if (res) {
+                error = res.message;
+            }
+        }).catch( () => {
+            error = "Cannot contact with server";
+        });
+
         if (!error) {
             users = [... transFormUsers(usersPage.users)];
             filteredUsers = [... transFormUsers(usersPage.users)];
             limit = defaultLimit;
             generatePages();
         } else {
+            loading = false;
             errorTitle = `Cannot delete user ${userId}`;
             isErrorOverlayOpen.set(true);
         }
@@ -164,7 +179,7 @@
     const fetchPage = async(page: number, changeUsersPerPage: boolean): Promise<void> => {
         if (changeUsersPerPage || (page < usersPage.totalPages && page >= 0 && page !== usersPage.currentPage)) {
             loading = true;
-            [usersPage, errorBody] = await getWithJWT(`http://localhost:8082/api/users?page=${page}&limit=${limit}`, 200)
+            [usersPage, errorBody] = await getWithJWT(`${PUBLIC_SERVER_URL}/api/users?page=${page}&limit=${limit}`, 200)
             if (errorBody !== null ) {
                 error = errorBody.message;
                 if (error === 'invalid token') goto('/sign-in')
@@ -184,7 +199,7 @@
     const downloadUserConfig = async (userId: number, userName: string): Promise<void> => {
         loading = true;
         errorTitle = "Cannot download vpn file";
-        await fetch('http://localhost:8082/api/users/' + userId + '/ovpn', {
+        await fetch(`${PUBLIC_SERVER_URL}/api/users/` + userId + '/ovpn', {
                 method: 'GET',
                 mode: 'cors',
                 headers: {
@@ -224,7 +239,7 @@
         const email = data.email;
         loading = true;
         errorTitle = "Cannot send vpn file";
-        await fetch(`http://localhost:8082/api/mail/${email}/file/${name}`, {
+        await fetch(`${PUBLIC_SERVER_URL}/api/mail/${email}/file/${name}`, {
             method: 'GET',
             mode: 'cors',
             headers: {

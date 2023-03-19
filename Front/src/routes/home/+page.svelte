@@ -3,13 +3,14 @@
 	import { saveAs } from 'file-saver';
     import Cookies from 'js-cookie';
 	import Spinner from "$lib/components/Spinner.svelte";
-	import { isErrorOverlayOpen, isInfoOverlayOpen, isModalOverlayOpen } from "../../lib/stores/OverlayStore";
 	import ErrorOverlay from "$lib/components/ErrorOverlay.svelte";
 	import InfoOverlay from "$lib/components/InfoOverlay.svelte";
 	import { goto } from "$app/navigation";
 	import { onMount } from "svelte";
 	import ModalOverlay from "$lib/components/ModalOverlay.svelte";
-
+	import { isErrorOverlayOpen, isInfoOverlayOpen, isModalOverlayOpen } from "$lib/stores/OverlayStore";
+	import { PUBLIC_SERVER_URL } from '$env/static/public';
+	
 	export let data
 	let [setup, dataError] = data.setup
 	let errorTitle: string = "Server error"
@@ -59,7 +60,7 @@
 	
 	const downloadLogs = async (): Promise<void> => {
 		loading = true;
-		await fetch('http://localhost:8082/api/logs/', {
+		await fetch(`${PUBLIC_SERVER_URL}/api/logs/`, {
                 method: 'GET',
                 mode: 'cors',
                 headers: {
@@ -92,7 +93,7 @@
 	const changeVpnStatus = async () => {
 		loading = true;
 		let error: true;
-		const endpoint = connected ? 'http://localhost:8082/api/status/off' : 'http://localhost:8082/api/status/on'
+		const endpoint = connected ? `${PUBLIC_SERVER_URL}/api/status/off` : `${PUBLIC_SERVER_URL}/api/status/on`
 		await fetch(endpoint, {
                 method: 'GET',
                 mode: 'cors',
@@ -138,7 +139,7 @@
 	}
 
 	const webSocketConnect = () => {
-		let socket = new SockJS(`http://localhost:8082/ovpn4all-ws?ws-token=Bearer ${Cookies.get('jwt')}`);
+		let socket = new SockJS(`${PUBLIC_SERVER_URL}/ovpn4all-ws?ws-token=Bearer ${Cookies.get('jwt')}`);
         stompClient = Stomp.over(socket);
         stompClient.connect({}, (frame) => {
 			for (let i = 0; i < logTopics.length; i++) {
@@ -181,7 +182,7 @@
 	const disconnectUser = async (userName: string): Promise<void> => {
 		loading = true;
 		let error: true;
-		const endpoint = `http://localhost:8082/api/users/disconnect/${userName}`;
+		const endpoint = `${PUBLIC_SERVER_URL}/api/users/disconnect/${userName}`;
 		await fetch(endpoint, {
                 method: 'GET',
                 mode: 'cors',

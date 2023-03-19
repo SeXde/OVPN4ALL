@@ -14,13 +14,14 @@
         Cookies.remove('jwt')
         goto('/sign-in')
     }
-    onMount(() => {
+    onMount(() => {  
         if (navbar){
             let action = window.location.pathname
             if (action === '/sign-up') action = '/users'
             actions[action]()
         } 
 	});
+    
 </script>
 
 <div class="flex flex-row h-[30] px-5 py-5 bg-light_dark border-b border-b-light">

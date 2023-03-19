@@ -4,10 +4,10 @@
     import {portValidator, gatewayValidator, netmaskValidator, fqdnValidator, emailValidator} from '$lib/helpers/validators';
     import Header from "$lib/components/header.svelte";
     import { postWithJWT } from '$lib/utils/requestUtils';
-	import { isErrorOverlayOpen, isInfoOverlayOpen } from '../stores/OverlayStore';
 	import ErrorOverlay from '$lib/components/ErrorOverlay.svelte';
 	import InfoOverlay from '$lib/components/InfoOverlay.svelte';
-
+	import { isErrorOverlayOpen, isInfoOverlayOpen } from '$lib/stores/OverlayStore';
+    import { PUBLIC_SERVER_URL } from '$env/static/public';
 
     let portTitleErrorMessage: string, gatewayTitleErrorMessage: string, netmaskTitleErrorMessage: string, portBodyErrorMessage: string, gatewayBodyErrorMessage: string, netmaskBodyErrorMessage: string, postError: string;
     let smtpHostTitleMessage: string
@@ -110,7 +110,7 @@
             subnet : netmask,
             server
         });
-        const [, error] = await postWithJWT('http://localhost:8082/api/setup', 201, data)
+        const [, error] = await postWithJWT(`${PUBLIC_SERVER_URL}/api/setup`, 201, data)
         isLoading = false;
         if (!error) {
             infoMessage = "VPN config was saved";
@@ -135,7 +135,7 @@
             username,
             password
         });
-        const [, error] = await postWithJWT('http://localhost:8082/api/mail', 200, data)
+        const [, error] = await postWithJWT(`${PUBLIC_SERVER_URL}/api/mail`, 200, data)
         isLoading = false;
         if (!error) {
             infoMessage = "Email config was saved";
