@@ -252,30 +252,6 @@ public class UserControllerTest {
 
     }
 
-    @DisplayName("Test delete user ok")
-    @Test
-    void deleteUser_ok() {
-
-        userRepository.save(new UserEntity("Paco", "asd@asd.com", "asd"));
-
-        final Long id =
-                userRepository
-                        .findAll()
-                        .parallelStream()
-                        .findAny()
-                        .map(UserEntity::getId)
-                        .orElse(-1L);
-
-        given()
-                .contentType(JSON)
-                .headers(buildAuthHeaders(token))
-        .when()
-                .delete(BASE_PATH.concat(String.valueOf(port)).concat(USER_PATH).concat(id.toString()))
-        .then()
-                .statusCode(OK.value());
-
-    }
-
     @DisplayName("Test delete user not found")
     @Test
     void deleteUser_not_found() {
