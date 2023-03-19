@@ -5,9 +5,10 @@
 	import { goto } from '$app/navigation';
 	import { fade } from 'svelte/transition';
 	import { isErrorOverlayOpen } from '$lib/stores/OverlayStore';
+	import { PUBLIC_SERVER_URL } from '$env/static/public';
 	
 
-	const API_URL: string = 'http://localhost:8082/api'
+	const API_URL: string = `${PUBLIC_SERVER_URL}/api`
 	let isReady = false;
 	export const canIAccess = async () => {
 		let token: any = Cookies.get('jwt')

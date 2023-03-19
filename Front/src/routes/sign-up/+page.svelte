@@ -7,6 +7,7 @@
 	import { isErrorOverlayOpen } from '$lib/stores/OverlayStore';
 	import { postWithJWT } from '$lib/utils/requestUtils';
 	import Cookies from 'js-cookie';
+	import { PUBLIC_SERVER_URL } from '$env/static/public';
 	
 	type RoleDTO = {
 		roleName: string
@@ -77,7 +78,7 @@
 			password,
 			roles
 		});
-		await fetch('http://localhost:8082/api/users', {
+		await fetch(`${PUBLIC_SERVER_URL}/api/users`, {
 			method: 'POST',
 			mode: 'cors',
 			headers: {
