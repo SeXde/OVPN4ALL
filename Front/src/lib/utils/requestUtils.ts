@@ -1,7 +1,7 @@
 import Cookies from 'js-cookie';
-import { PUBLIC_SERVER_URL } from '$env/static/public';
+import { PUBLIC_INTERNAL_SERVER_URL } from '$env/static/public';
 
-const API_URL: string = `${PUBLIC_SERVER_URL}/api`
+const API_URL: string = `${PUBLIC_INTERNAL_SERVER_URL}/api`
 
 export const canIAccess = async (): Promise<boolean> => {
     let token: any = Cookies.get('jwt')
