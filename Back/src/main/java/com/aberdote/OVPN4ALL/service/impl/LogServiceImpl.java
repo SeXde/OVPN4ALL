@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import javax.transaction.Transactional;
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 
 @Service @Transactional @Slf4j @RequiredArgsConstructor
@@ -80,7 +81,7 @@ public class LogServiceImpl implements LogService {
         try {
             return FileUtils.getContentFromLineNumber(file, lines);
         } catch (IOException e) {
-            throw new CustomException(String.format("Cannot read file %s: %s", file, e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+            return Collections.emptyList();
         }
     }
 
