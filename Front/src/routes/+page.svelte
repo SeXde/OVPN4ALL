@@ -153,9 +153,6 @@
 				{:else}
 					<button disabled type="submit" class="my-3 disabled:opacity-25 mx-auto mt-5 w-36 py-2 flex justify-center text-light rounded-lg border-2 border-light hover:text-primary hover:border-primary disabled:border-stone-500 disabled:text-stone-500 font-semibold transition-colors">Add</button>
 				{/if}
-					<a class="ml-3 my-3 mx-auto mt-5 w-36 py-2 flex justify-center text-light rounded-lg border-2 border-light hover:text-primary hover:border-primary disabled:border-stone-500 disabled:text-stone-500 font-semibold transition-colors" href="/users">
-						Cancel
-					</a>
 			</div>
 		</form>
 	  </div>
