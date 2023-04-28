@@ -144,7 +144,7 @@
         stompClient.connect({}, (frame) => {
 			for (let i = 0; i < logTopics.length; i++) {
 					stompClient.subscribe(logTopics[i], (log) => {
-					logs[i] = JSON.parse(log.body).filter(line => line.toLowerCase().includes(searchedValue.toLowerCase()));
+					logs[i] = JSON.parse(log.body).filter(line => line.toLowerCase().includes(searchedValue.toLowerCase())).reverse();
 				});
 			}
 			stompClient.subscribe('/topic/users/info', (info) => {
@@ -434,7 +434,7 @@
 					<input bind:value={searchedValue} type="text" id="table-search-users" class="block p-2 pl-10 w-80 text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-secondary dark:focus:border-secondary" placeholder="Search words">
 				</div>
 				<div class="mx-auto text-green-500 bg-light_dark w-3/5 p-14 rounded-lg relative overflow-scroll h-[38rem]">
-					<div class="z-10 top-[11rem] right-[33rem] fixed text-slate-700">
+					<div class="z-10 top-[11rem] right-[50rem] fixed text-slate-700">
 						<div class="flex flex-row">
 							<div on:click={() => copyText(i)} class="flex flex-col items-center justify-center m-5 hover:text-slate-200 hover:cursor-pointer">
 								<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
@@ -452,7 +452,7 @@
 					</div>
 					<br>
 					{#each log as line, j}
-						<p class="p-1 hover:bg-gray-700 rounded-md hover:text-secondary"><span class="text-slate-600 mr-5">{j+1}</span>  {line}</p>
+						<p class="p-1 hover:bg-gray-700 rounded-md hover:text-secondary">{line}</p>
 					{/each}
 				</div>
 			</div>
