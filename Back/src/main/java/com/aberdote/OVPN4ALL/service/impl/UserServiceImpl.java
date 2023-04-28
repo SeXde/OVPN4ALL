@@ -1,69 +1,88 @@
 package com.aberdote.OVPN4ALL.service.impl;
 
 import com.aberdote.OVPN4ALL.common.constanst.RoleConstants;
+import com.aberdote.OVPN4ALL.common.constanst.UserReservedConstants;
+import com.aberdote.OVPN4ALL.dto.RoleDTO;
 import com.aberdote.OVPN4ALL.dto.user.CreateUserRequestDTO;
-import com.aberdote.OVPN4ALL.dto.ErrorDTO;
 import com.aberdote.OVPN4ALL.dto.user.LoginUserRequestDTO;
 import com.aberdote.OVPN4ALL.dto.user.UserResponseDTO;
+import com.aberdote.OVPN4ALL.dto.user.UserResponsePageDTO;
 import com.aberdote.OVPN4ALL.entity.RoleEntity;
 import com.aberdote.OVPN4ALL.entity.UserEntity;
+import com.aberdote.OVPN4ALL.exception.CustomException;
 import com.aberdote.OVPN4ALL.repository.RoleRepository;
-import com.aberdote.OVPN4ALL.service.UserService;
-import com.aberdote.OVPN4ALL.util.Converter;
 import com.aberdote.OVPN4ALL.repository.UserRepository;
+import com.aberdote.OVPN4ALL.service.CommandService;
+import com.aberdote.OVPN4ALL.service.ConfigService;
+import com.aberdote.OVPN4ALL.service.UserService;
+import com.aberdote.OVPN4ALL.utils.converter.EntityConverter;
+import com.aberdote.OVPN4ALL.utils.converter.PageConverter;
+import com.aberdote.OVPN4ALL.utils.validator.user.UserValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
-import javax.transaction.Transactional;
-import java.nio.charset.StandardCharsets;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.util.*;
 
-import static com.aberdote.OVPN4ALL.util.Validator.validateRole;
+import javax.transaction.Transactional;
+import java.io.File;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 @Slf4j @Service
 @Transactional @RequiredArgsConstructor
-public class UserServiceImpl implements UserService, UserDetailsService {
-
-    @Value("$(auth.cookie.hmac-key:secret.key)")
-    private String secretKey;
+public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
-
     private final RoleRepository roleRepository;
-
-
+    private final PasswordEncoder bCryptPasswordEncoder;
+    private final CommandService commandService;
+    private final ConfigService configService;
 
     @Override
-    public ErrorDTO addUser(CreateUserRequestDTO createUserRequestDTO) {
-        final ErrorDTO errorDTO = new ErrorDTO(null);
-        if (userRepository.findByNameIgnoreCase(createUserRequestDTO.getName()).isPresent()) {
-            log.error("Cannot add user "+createUserRequestDTO.getName() + " already exists");
-            errorDTO.setError("User "+createUserRequestDTO.getName()+" already exists");
-        } else {
-            log.info("Adding user "+createUserRequestDTO.getName());
-            final UserEntity userEntity = Converter.convertFromDTOUser(createUserRequestDTO);
-            userEntity.setPassword(this.cipher(userEntity.getPassword()));
-            userRepository.save(userEntity);
+    public UserResponseDTO addUser(CreateUserRequestDTO createUserRequestDTO) {
+        validateUser(createUserRequestDTO);
+        try {
+            commandService.deleteUser(createUserRequestDTO.getName());
+            if (!commandService.addUser(createUserRequestDTO.getName(), createUserRequestDTO.getPassword())) {
+                throw new CustomException(String.format("Cannot add user '%s', execution failed, see logs for more details", createUserRequestDTO.getName()), HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+            log.info("Adding user {}", createUserRequestDTO.getName());
+            final UserEntity userEntity = EntityConverter.fromCreateUserDTOToUserEntity(createUserRequestDTO);
+            userEntity.setRoles(createUserRequestDTO.getRoles().stream()
+                    .map(role -> roleRepository.findByRoleName(role.getRoleName())
+                            .orElseThrow(() -> {
+                                log.error("Cannot add user {}, role {} doesn't exist", createUserRequestDTO.getName(), role.getRoleName());
+                                throw new CustomException("Cannot add user "+createUserRequestDTO.getName()+", role "+role.getRoleName()+" doesn't exist", HttpStatus.BAD_REQUEST);
+                            }))
+                    .collect(Collectors.toSet())
+            );
+            userEntity.setUser(userEntity.getRoles().stream().map(RoleEntity::getRoleName).anyMatch(role -> role.equals(RoleConstants.ROLE_USER)));
+            userEntity.setPassword(bCryptPasswordEncoder.encode(userEntity.getPassword()));
+            return EntityConverter.fromUserEntityToUserResponseDTO(userRepository.save(userEntity));
+        } catch (IOException | InterruptedException e) {
+            final String message = String.format("Cannot execute add user script, ErrorMessage: '%s'", e.getMessage());
+            log.error(message);
+            throw new CustomException(message, HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        return errorDTO;
+    }
+
+    public void addAllUsers(List<CreateUserRequestDTO> createUsersRequestDTO) {
+        createUsersRequestDTO.forEach(this::addUser);
     }
 
     @Override
-    public ErrorDTO deleteUser(String userName) {
-        return this.deleteUser(userRepository.findByNameIgnoreCase(userName));
+    public void deleteUser(String userName) {
+        deleteUser(this.userRepository.findByNameIgnoreCase(userName));
     }
 
     @Override
-    public ErrorDTO deleteUser(Long id) {
-        return this.deleteUser(userRepository.findById(id));
+    public void deleteUser(Long id){this.deleteUser(userRepository.findById(id));
     }
 
     @Override
@@ -79,157 +98,230 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     @Override
     public Collection<UserResponseDTO> getUsers() {
         log.info("Getting all users");
-        return userRepository.findAll().stream().map(Converter::convertDTOUser).toList();
+        return userRepository.findAll().stream().map(EntityConverter::fromUserEntityToUserResponseDTO).toList();
     }
 
     @Override
-    public ErrorDTO validateUser(LoginUserRequestDTO loginUserRequestDTO) {
-        ErrorDTO errorDTO = new ErrorDTO("User or password is not valid");
+    public UserResponsePageDTO getUsersPaginated(int pageNumber, int usersPerPage) {
+        return PageConverter.fromPagetoUserResponsePageDTO(userRepository.findAllByOrderByIsUserDesc(PageRequest.of(pageNumber, usersPerPage)).map(EntityConverter::fromUserEntityToUserResponseDTO));
+    }
+
+    @Override
+    public void validateUser(LoginUserRequestDTO loginUserRequestDTO) {
+        if (loginUserRequestDTO == null) {
+            final String msg = "User cannot be null";
+            log.error(msg);
+            throw new CustomException(msg, HttpStatus.BAD_REQUEST);
+        }
         Optional<UserEntity> optUser = userRepository.findByNameIgnoreCase(loginUserRequestDTO.getName());
         if (optUser.isEmpty()){
-            log.error("User "+loginUserRequestDTO.getName()+" does not exist");
-            return errorDTO;
+            log.error("User {} does not exist", loginUserRequestDTO.getName());
+            throw new CustomException("User "+loginUserRequestDTO.getName()+" does not exist", HttpStatus.NOT_FOUND);
         }
-        UserEntity user = optUser.get();
-        if (!this.isAdmin(user) && !this.isOwner(user)){
-            log.error("User "+user.getName()+" has not privileges");
-            errorDTO.setError("User has no privileges");
+        final UserEntity user = optUser.get();
+        if (!this.isAdmin(user)){
+            log.error("User {} has not privileges", user.getName());
+            throw new CustomException("User "+user.getName()+" has not privileges", HttpStatus.UNAUTHORIZED);
         }
-        else if (user.getPassword().equals(this.cipher(loginUserRequestDTO.getPassword()))){
-            log.info("User " + user.getName()+" has been validated");
-            errorDTO.setError(null);
-        } else {
-            log.error("Password is not correct for user "+user.getName());
+        if (!bCryptPasswordEncoder.matches(loginUserRequestDTO.getPassword(), user.getPassword())){
+            log.info("Password is not correct for user {}", user.getName());
+            throw new CustomException("Password is not correct for user "+user.getName(), HttpStatus.UNAUTHORIZED);
         }
-        return errorDTO;
+        log.info("User {} has been validated", user.getName());
     }
 
     @Override
-    public ErrorDTO addRoleToUser(String sender, String receiver, String roleName) {
-        final ErrorDTO errorDTO = new ErrorDTO(null);
+    public UserResponseDTO addRoleToUser(String sender, String receiver, String roleName) {
         Optional<UserEntity> senderUserOpt = userRepository.findByNameIgnoreCase(sender);
         if (senderUserOpt.isEmpty()) {
-            log.error("User "+sender+" does not exist");
-            errorDTO.setError("User "+sender+" does not exist");
-            return errorDTO;
+            log.error("User {} does not exist", sender);
+            throw new CustomException("User "+sender+" does not exist", HttpStatus.NOT_FOUND);
+        }
+        Optional<RoleEntity> roleEntityOpt = roleRepository.findByRoleName(roleName);
+        if (roleEntityOpt.isEmpty()) {
+            log.error("Role {} not found", roleName);
+            throw new CustomException("Role "+roleName+" not found", HttpStatus.NOT_FOUND);
         }
         UserEntity senderUser = senderUserOpt.get();
-        if (!validateRole(senderUser, roleName)) {
-            log.error("User is not allowed to add role "+roleName);
-            errorDTO.setError("User is not allowed to add role "+roleName);
-            return errorDTO;
+        if (!UserValidator.validateRole(senderUser, roleName)) {
+            final String msg = String.format("User %s is not allowed to add role %s", senderUser.getName(), roleName);
+            log.error(msg);
+            throw new CustomException(msg, HttpStatus.NOT_FOUND);
         }
         return userRepository.findByNameIgnoreCase(receiver)
                 .map(user -> {
-                    Optional<RoleEntity> roleEntityOpt = roleRepository.findByRoleName(roleName);
-                    if (roleEntityOpt.isEmpty()) {
-                        log.error("Role "+roleName+" not found");
-                        errorDTO.setError("Role "+roleName+" not found");
-                        return errorDTO;
-                    }
                     user.getRoles().add(roleEntityOpt.get());
+                    // userRepository.save(user);
                     log.info("User "+receiver+" has got new role: "+roleName);
-                    return errorDTO;
+                    return EntityConverter.fromUserEntityToUserResponseDTO(user);
                 })
                 .orElseGet(() -> {
-                    log.error("User "+receiver+" not found");
-                    errorDTO.setError("User "+receiver+" not found");
-                    return errorDTO;
+                    log.error("User {} does not exist", receiver);
+                    throw new CustomException("User "+receiver+" does not exist", HttpStatus.NOT_FOUND);
                 });
     }
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        return userRepository.findByNameIgnoreCase(username)
-                .map((user) -> {
-                    log.info("User {} found in the database", username);
-                    return new org.springframework.security.core.userdetails.User(user.getName(),
-                            user.getPassword(),
-                            user.getRoles()
-                                    .stream()
-                                    .map(role -> new SimpleGrantedAuthority(role.getRoleName())).toList());
-                })
-                .orElseThrow(() -> {
-                    log.error("User {} not found in the database", username);
-                    throw new UsernameNotFoundException("User "+username+" not found");
-                });
+    public File downloadUserVPN(String user) {
+        return downloadUserVPN(userRepository.findByNameIgnoreCase(user));
     }
 
-    private String cipher(String username) {
-        byte[] secretKeyBytes = Objects.requireNonNull(secretKey)
-                .getBytes(StandardCharsets.UTF_8);
-        byte [] valueBytes = username
-                .getBytes(StandardCharsets.UTF_8);
+    @Override
+    public File downloadUserVPN(Long id) {
+        return downloadUserVPN(userRepository.findById(id));
+    }
+
+    @Override
+    public void disconnectUser(String userName) {
+        disconnectUser(userRepository.findByNameIgnoreCase(userName));
+    }
+
+    @Override
+    public void disconnectUser(Long id) {
+        disconnectUser(userRepository.findById(id));
+    }
+
+    @Override
+    public UserResponseDTO registerFirstUser(CreateUserRequestDTO newUser) {
+        final Predicate<String> isAdmin = (role) -> Objects.equals(role, RoleConstants.ROLE_ADMIN);
+        if (newUser.getRoles().parallelStream().map(RoleDTO::getRoleName).noneMatch(isAdmin)) {
+            final var msg = String.format("User %s is not admin", newUser.getName());
+            log.error(msg);
+            throw new CustomException(msg, HttpStatus.BAD_REQUEST);
+        }
+        if (!userRepository.findAll().isEmpty()) {
+            final var msg = String.format("User %s is not first user", newUser.getName());
+            log.error(msg);
+            throw new CustomException(msg, HttpStatus.BAD_REQUEST);
+        }
+        log.info("Adding user {}", newUser.getName());
+        return addUser(newUser);
+    }
+
+    @Override
+    public Boolean noUsers() {
+        return userRepository.findAll().isEmpty();
+    }
+
+    private File downloadUserVPN(Optional<UserEntity> optionalUserEntity) {
+        if (optionalUserEntity.isEmpty()) {
+            final String msg = "Cannot find user to download vpn";
+            log.error(msg);
+            throw new CustomException(msg, HttpStatus.NOT_FOUND);
+        }
+        final UserEntity userEntity = optionalUserEntity.get();
         try {
-            Mac mac = Mac.getInstance("HmacSHA512");
-            SecretKeySpec sec = new SecretKeySpec(secretKeyBytes, "HmacSHA512");
-            mac.init(sec);
-            byte [] hmacBytes = mac.doFinal(valueBytes);
-            return Base64.getEncoder().encodeToString(hmacBytes);
-        } catch (NoSuchAlgorithmException | InvalidKeyException e) {
-            throw new RuntimeException(e);
+            final File ovpnFile = commandService.downloadOVPNFile(userEntity.getName(), configService.getConfig());
+            if (ovpnFile == null || !ovpnFile.exists()) {
+                final String msg = "Cannot create user config, for more details check logs";
+                log.error(msg);
+                throw new CustomException(msg, HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+            return ovpnFile;
+        } catch (IOException | InterruptedException e) {
+            final String msg = String.format("Cannot download config file, ErrorMessage: %s", e.getMessage());
+            log.error(msg);
+            throw new CustomException(msg, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    private boolean isAdmin(UserEntity userEntity) {
+    private boolean isRole(UserEntity userEntity, String roleName) {
         return userEntity.getRoles()
                 .stream()
                 .map(RoleEntity::getRoleName)
                 .toList()
-                .contains(RoleConstants.ROLE_ADMIN);
+                .contains(roleName);
+    }
+
+    private boolean isAdmin(UserEntity userEntity) {
+        return isRole(userEntity, RoleConstants.ROLE_ADMIN);
     }
 
     private boolean isUser(UserEntity userEntity) {
-        return userEntity.getRoles()
-                .stream()
-                .map(RoleEntity::getRoleName)
-                .toList()
-                .contains(RoleConstants.ROLE_USER);
+        return isRole(userEntity, RoleConstants.ROLE_USER);
     }
 
-    private boolean isOwner(UserEntity userEntity) {
-        return userEntity.getRoles()
-                .stream()
-                .map(RoleEntity::getRoleName)
-                .toList()
-                .contains(RoleConstants.ROLE_OWNER);
-    }
-
-    private boolean isLastOwner(UserEntity userEntity) {
-        return  this.isOwner(userEntity)
+    private boolean isLastAdmin(UserEntity userEntity) {
+        return  this.isAdmin(userEntity)
                 && userRepository.findAll()
                 .stream()
-                .filter(this::isOwner)
+                .filter(this::isAdmin)
                 .toList()
                 .size() == 1;
     }
 
-    private ErrorDTO deleteUser(Optional<UserEntity> optionalUserEntity) {
-        final ErrorDTO errorDTO = new ErrorDTO(null);
+    private void deleteUser(Optional<UserEntity> optionalUserEntity) {
         if (optionalUserEntity.isEmpty()) {
             log.error("Cannot find user to delete");
-            errorDTO.setError("User not found");
-            return errorDTO;
+            throw new CustomException("Cannot find user to delete", HttpStatus.NOT_FOUND);
         }
-        if (this.isLastOwner(optionalUserEntity.get())) {
-            log.error("User is last Admin or Owner");
-            errorDTO.setError("Cannot delete last Administrator");
-            return errorDTO;
+        final UserEntity userEntity = optionalUserEntity.get();
+        if (this.isLastAdmin(userEntity)) {
+            log.error("User is last Admin");
+            throw new CustomException("User is last Admin", HttpStatus.FORBIDDEN);
         }
-        log.info("Deleting user "+optionalUserEntity.get().getName());
-        userRepository.delete(optionalUserEntity.get());
-        return errorDTO;
+        try {
+            if (commandService.isActive()) commandService.killClient(userEntity.getName());
+            if (!commandService.deleteUser(userEntity.getName())) {
+                throw new CustomException(String.format("Cannot delete user '%s', execution failed, see logs for more details", userEntity.getName()), HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+            log.info("Deleting user {}", userEntity.getName());
+            userRepository.delete(optionalUserEntity.get());
+        } catch (IOException | InterruptedException e) {
+            final String message = String.format("Cannot execute delete user script, ErrorMessage: '%s'", e.getMessage());
+            log.error(message);
+            throw new CustomException(message, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    private void disconnectUser(Optional<UserEntity> optionalUserEntity) {
+        optionalUserEntity.ifPresentOrElse((user -> {
+            try {
+                commandService.killClient(user.getName());
+            } catch (IOException | InterruptedException e) {
+                final String message = String.format("Cannot disconnect user, ErrorMessage: '%s'", e.getMessage());
+                log.error(message);
+                throw new CustomException(message, HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        }), () -> {
+            log.error("Cannot find user to delete");
+            throw new CustomException("Cannot find user to delete", HttpStatus.NOT_FOUND);
+        });
     }
 
     private UserResponseDTO getUser(Optional<UserEntity> optionalUserEntity) {
         return optionalUserEntity
             .map(user -> {
-                log.info("Getting user "+optionalUserEntity.get().getName());
-                return Converter.convertDTOUser(user);
+                log.info("Getting user {}", optionalUserEntity.get().getName());
+                return EntityConverter.fromUserEntityToUserResponseDTO(user);
             })
-            .orElseGet(() -> {
-                log.error("Cannot get user, it doesn't exists");
-                return null;
-            });
+            .orElseThrow(() -> new CustomException("Cannot get user, it doesn't exists", HttpStatus.NOT_FOUND));
     }
+
+    private void validateUser(CreateUserRequestDTO createUserRequestDTO) {
+        String msg = null;
+        if (createUserRequestDTO == null) {
+            msg = "User is null";
+        } else if (createUserRequestDTO.getName().isEmpty()) {
+            msg = "Username cannot be empty";
+        } else if (createUserRequestDTO.getPassword().isEmpty()) {
+            msg = "Password cannot be empty";
+        } else if (UserReservedConstants.PASSWORD_FORBIDDEN.contains(createUserRequestDTO.getPassword())) {
+            msg = String.format("Password %s is not valid", createUserRequestDTO.getPassword());
+        }
+        else if (!UserValidator.validateEmail(createUserRequestDTO.getEmail())) {
+            msg = String.format("Email %s is not valid", createUserRequestDTO.getEmail());
+        }
+        else if (userRepository.findByNameIgnoreCase(createUserRequestDTO.getName()).isPresent()) {
+            msg = String.format("User %s is already registered", createUserRequestDTO.getName());
+        }
+        else if (createUserRequestDTO.getRoles() == null ||createUserRequestDTO.getRoles().isEmpty()) {
+            msg  = "Roles cannot be empty or null";
+        }
+        if (msg != null) {
+            log.error(msg);
+            throw new CustomException(msg, HttpStatus.BAD_REQUEST);
+        }
+    }
+
 }

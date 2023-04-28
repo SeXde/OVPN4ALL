@@ -1,9 +1,12 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import ErrorMessage from '$lib/components/errorMessage.svelte';
+	import ErrorOverlay from '$lib/components/ErrorOverlay.svelte';
 	import Header from "$lib/components/header.svelte";
+	import { isErrorOverlayOpen } from '$lib/stores/OverlayStore';
+	import { logAndSetToken } from '$lib/utils/requestUtils';
+
 	let username: string, password: string;
-	let postError: string = null;
+	let postError: string | null = null;
 	let validData: boolean = false;
 	let isLoading: boolean = false;
 	
@@ -16,26 +19,19 @@
 		postError = null;
 		isLoading = true;
 		const data: string = JSON.stringify({
-			'name' : username,
-			'password' : password,
-		});
-		
-		await fetch("http://localhost:8082/api/users/signIn",
-		{
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: data
-        })
-		.then(res => res.json())
-		.then(res => postError = !res ? null : res.error)
-		.catch(e => {postError = "Cannot reach server";console.log(e)})
+        'name' : username,
+        'password' : password,
+    });
+    
+		isLoading = true;
+		postError = await logAndSetToken(username, password);
 		isLoading = false;
-		if (!postError) {
+		if (postError) {
+			isErrorOverlayOpen.set(true);
+			return;
 			goto("/home");
 		}
-		
+		goto("/home");
 	}
 
 </script>
@@ -46,6 +42,9 @@
 </svelte:head>
 
 <Header navbar={false}/>
+{#if $isErrorOverlayOpen}
+	<ErrorOverlay errorTitle="Sign in error" errorMessage={postError}/>
+{/if}
 <div class="mx-auto my-auto w-full max-w-xs">
     <form on:change={checkDefault} on:submit|preventDefault={sendData} class= "px-8 pt-6 pb-8 mb-4">
         <div class="flex flex-col items-center">
@@ -74,9 +73,6 @@
             </button>
         {:else}
             <button disabled type="submit" class="my-3 disabled:opacity-25 mx-auto mt-5 w-36 py-2 flex justify-center text-light rounded-lg border-2 border-light hover:text-primary hover:border-primary disabled:border-stone-500 disabled:text-stone-500 font-semibold transition-colors">Sign in</button>
-        {/if}
-        {#if postError}
-            <ErrorMessage title={"Oups!"} body={postError} />
         {/if}
     </form>
   </div>

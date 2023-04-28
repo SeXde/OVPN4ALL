@@ -19,6 +19,9 @@ target/
 *.iml
 *.ipr
 
+### Spring Boot Env ###
+*.properties
+
 ### NetBeans ###
 /nbproject/private/
 /nbbuild/
@@ -31,3 +34,12 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Scripts ###
+/Logs
+/Install
+/Server
+/Users
+*.log
+*.zip
+Back/src/main/*/application.yml

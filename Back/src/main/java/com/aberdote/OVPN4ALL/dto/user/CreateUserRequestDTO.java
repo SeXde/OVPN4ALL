@@ -11,8 +11,10 @@ import java.util.Collection;
 public class CreateUserRequestDTO {
 
     @NotNull
-    private String name, password;
+    private String name, email, password;
     @NotNull
     private Collection<RoleDTO> roles;
+
+
 
 }

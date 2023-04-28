@@ -1,0 +1,19 @@
+At the core of everything that the Spring Framework does, its most essential task is to
+wire together all of the components that make up an application. It does this by reading
+a wiring specification (whether it be XML, Java-based, Groovy-based, or otherwise),
+instantiating beans in an application context, and injecting beans into other beans
+that depend on them.
+When integration testing a Spring application, it’s important to let Spring wire up
+the beans that are the target of the test the same way it wires up those beans when the
+application is running in production. Sure, you might be able to manually instantiate
+the components and inject them into each other, but for any substantially big application,
+that can be an arduous task. Moreover, Spring offers additional facilities such as
+component-scanning, autowiring, and declarative aspects such as caching, transactions,
+and security. Given all that would be required to recreate what Spring does, it’s
+generally best to let Spring do the heavy lifting, even in an integration test.
+Spring has offered excellent support for integration testing since version 1.1.1.
+Since Spring 2.5, integration testing support has been offered in the form of
+SpringJUnit4ClassRunner, a JUnit class runner that loads a Spring application context
+for use in a JUnit test and enables autowiring of beans into the test class.
+For example, consider the following listing, which shows a very basic Spring integration
+test.

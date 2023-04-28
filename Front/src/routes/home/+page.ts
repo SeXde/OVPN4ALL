@@ -1,18 +1,22 @@
+import { getWithJWT } from '$lib/utils/requestUtils';
+import Cookies from 'js-cookie';
+import { PUBLIC_INTERNAL_SERVER_URL } from '$env/static/public';
+
 export const load = async ({ fetch }) => {
     
+    
     const fetchSetup = async () => {
-        let setup;
-        await fetch("http://localhost:8082/api/setup/data")
-        .then(res => res.json()) 
-        .then(res => setup = res)
-        .catch(e => {
-            console.log(e); 
-            setup = null;
-        });
-        return setup;
+        const [setup, error] = await getWithJWT(`${PUBLIC_INTERNAL_SERVER_URL}/api/setup`, 200);
+        return [setup, error]
     }
-        
+
+    const fetchState = async ():Promise<any> => {
+        const [status, error] = await getWithJWT(`${PUBLIC_INTERNAL_SERVER_URL}/api/status`, 200);
+        return [status, error]
+    }
+    
     return {
-        setup: fetchSetup()
+        setup: fetchSetup(),
+        state: fetchState()
     }
 }

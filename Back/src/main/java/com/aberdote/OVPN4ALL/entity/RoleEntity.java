@@ -1,23 +1,27 @@
 package com.aberdote.OVPN4ALL.entity;
 
-import com.sun.istack.NotNull;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
+import java.util.Collection;
 import java.util.Objects;
 
 @Entity
 @Data
 @NoArgsConstructor
+@AllArgsConstructor
 public class RoleEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
-    @NotNull
+    @Column(unique = true)
     private String roleName;
 
+    @ManyToMany(mappedBy = "roles")
+    private Collection<UserEntity> users;
     public RoleEntity(String roleName) {
         this.roleName = roleName;
     }

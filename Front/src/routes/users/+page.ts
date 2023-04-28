@@ -1,15 +1,10 @@
+import { getWithJWT } from '$lib/utils/requestUtils';
+import { PUBLIC_INTERNAL_SERVER_URL } from '$env/static/public';
 export const load = async ({ fetch }) => {
     
-    const fetchUsers = async () => {
-        let users;
-        await fetch("http://localhost:8082/api/users")
-        .then(res => res.json()) 
-        .then(res => users = res)
-        .catch(e => {
-            console.log(e); 
-            users = {};
-        });
-        return users;
+    const fetchUsers = async (): Promise<[Object, string]> => {
+        const [users, error] = await getWithJWT(`${PUBLIC_INTERNAL_SERVER_URL}/api/users?page=0`, 200)
+        return [users, error]
     }
         
     return {
