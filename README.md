@@ -21,6 +21,4 @@ This proyect is under development, for the moment you can download the whole pro
 - Run backend ```mvnw spring-boot:run```
 - Run frontend ```npm run dev```
 
-In future versions this will be dockerized and it will be easy as running a docker compose file.
-
 **You have to open the vpn server port configured in your router**
