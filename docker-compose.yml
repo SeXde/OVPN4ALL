@@ -1,0 +1,51 @@
+version: "3.9"
+services:
+  ovpn4all-db:
+    container_name: ovpn4all-db
+    image: mysql:8
+    restart: always
+    environment:
+      MYSQL_DATABASE: 'ovpn4alldb'
+      MYSQL_ROOT_PASSWORD: 'root'
+    ports:
+      - '3306:3306'
+    expose:
+      - '3306'
+    healthcheck:
+        test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+        timeout: 20s
+        retries: 10
+    networks:
+          - openvpn4all-network
+  ovpn4all-backend:
+        container_name: ovpn4all-backend
+        image: lsedev/openvpn4all-back:v1.9.1
+        ports:
+            - 8082:8082
+        expose:
+        - '8082'
+        networks:
+            - openvpn4all-network
+        depends_on:
+            ovpn4all-db:
+              condition: service_healthy
+        links:
+          - "ovpn4all-db:ovpn4all-db" # resolve the hostname "db" with the ip of the db container
+        deploy:
+          restart_policy:
+            condition: on-failure
+            delay: 5s
+            max_attempts: 3
+            window: 120s
+  ovpn4all-frontend:
+      container_name: ovpn4all-frontend
+      image: lsedev/openvpn4all-front:v1.2
+      ports:
+          - 3000:3000
+      networks:
+          - openvpn4all-network
+      links:
+          - "ovpn4all-backend:ovpn4all-backend"
+networks:
+    openvpn4all-network:
+        driver: bridge
