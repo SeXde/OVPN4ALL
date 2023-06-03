@@ -1,0 +1,31 @@
+server:
+  path:
+    working-directory: /home/openvpn
+  name:
+    user:
+      create:
+        config: CreateUserVPNFile
+        cert: CreateUserCert
+      delete: DeleteUser
+    create:
+      config: CreateServerConfig
+      cert: CreateServerCert
+      iptables: CreateIptables
+    read:
+      ovpn:
+        logs: ReadLogs
+    clear:
+      ovpn:
+        logs: ClearLogs
+    download:
+      logs: DownloadLogs
+  password: 
+  management:
+    ip: localhost
+    port: 4447
+spring:
+  banner:
+    location: classpath:banner.txt
+
+using:
+  sudo: true

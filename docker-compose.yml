@@ -19,7 +19,7 @@ services:
           - openvpn4all-network
   ovpn4all-backend:
         container_name: ovpn4all-backend
-        image: lsedev/openvpn4all-back:v1.9.1
+        image: lsedev/openvpn4all-back:v1.9.5
         ports:
             - 8082:8082
         expose:
@@ -39,7 +39,7 @@ services:
             window: 120s
   ovpn4all-frontend:
       container_name: ovpn4all-frontend
-      image: lsedev/openvpn4all-front:v1.2
+      image: lsedev/openvpn4all-front:v1.5
       ports:
           - 3000:3000
       networks:
