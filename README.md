@@ -13,7 +13,7 @@ It has been build with *Sveltekit* and *Spring Boot*.
 
 This proyect is under development, for the moment you can download the virtual box machine and try it:
 - Download OpenVPN4all VM [here](https://duckduckgo.com).
-- User: *sexde*, password: *Ovpn4all2023!*
+- User: `sexde`, password: `Ovpn4all2023!`
 - (Recommended) Configure a static ip for VM.
 -  Execute `sudo docker start ovpn4all-mysql`. This will start the database
 -  Execute `ovpn4all`. This is a custom scripts which execute Front, Back and then opens a firefox window.
