@@ -12,7 +12,7 @@ It has been build with *Sveltekit* and *Spring Boot*.
 ### How to use it:
 
 This proyect is under development, for the moment you can download the virtual box machine and try it:
-- Download OpenVPN4all VM [here](https://duckduckgo.com).
+- Download OpenVPN4all VM [here](https://mega.nz/file/3xQU3IoS#Zn8YYa98AMNWsOVFACl-fpfVbTvvR-bHEsZBIFSfi18).
 - User: `sexde`, password: `Ovpn4all2023!`
 - (Recommended) Configure a static ip for VM.
 -  Execute `sudo docker start ovpn4all-mysql`. This will start the database
