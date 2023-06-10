@@ -14,7 +14,7 @@ public final class UserInfoParser {
     private UserInfoParser() {}
 
     public static List<UserConnectionInfoDTO> parseUserConnectionInfo(String info) {
-        final String regexPattern = "(\\w+),([\\d.:]+),(\\d+),(\\d+),([ \\w:]+)\\n";
+        final String regexPattern = "(\\w+),([\\d.:]+),(\\d+),(\\d+),([ \\w:-]+)\\n";
         final Matcher connectionMatcher = Pattern.compile(regexPattern).matcher(info);
         final List<UserConnectionInfoDTO> userConnectionInfoDTOList = new ArrayList<>();
         while (connectionMatcher.find()) {
