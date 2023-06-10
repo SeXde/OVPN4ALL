@@ -1,0 +1,28 @@
+#!/bin/bash
+
+# Trap SigINT
+trap ctrl_c INT
+
+ARG_NUMBER=1
+
+function ctrl_c() {
+    printf "Exiting ...\n"
+    sleep 1
+    exit 1
+}
+
+# Check if arguments are wrong
+if test "$#" -ne $ARG_NUMBER; then
+    printf "Usage: %s [server ip].\n" "$0" >&2
+    printf "Expected %s argument/s but %s were passed\n" "$ARG_NUMBER" "$#"
+    exit 1
+fi
+
+SERVER_IP="$1"
+
+sudo docker start ovpn4all-mysql
+printf 'PUBLIC_SERVER_URL="http://%s:8082"\nPUBLIC_INTERNAL_SERVER_URL="http://%s:8082"' '192.168.5.111' '192.168.5.111' > /home/sexde/OVPN4ALL/Front/.env
+cd /home/sexde/OVPN4ALL/Front
+npm run dev -- --host &
+sleep 20
+sudo java -jar /home/sexde/OVPN4ALL/Back/OVPN4ALL-1.1.0.jar &
