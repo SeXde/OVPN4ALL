@@ -17,7 +17,7 @@ This proyect is under development, for the moment you can download the virtual b
 - (Recommended) Configure a static ip for VM.
 - Check VM ip address ` ip a | grep enp0s3`
 - Choose any port for the vpn server.
-- Configure router settings for redirect traffic from choosen port to the VM ip address 
+- Configure router settings for redirect traffic from chosen port to the VM ip address 
 - Execute `ovpn4all [VM ip]`. This script receive the VM ip address and starts DB, Front and Back.
 - Open with your favorite browser the url `http://[VM ip]:5173`. It's highly recomended to use dark mode when using OVPN4ALL webpage.
 
